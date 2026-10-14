@@ -4,6 +4,7 @@ import * as React from 'react';
 import { motion } from 'framer-motion';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
+import { getStatusMeta } from '../functions/getStatusBadge.js';
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -43,6 +44,12 @@ const badgeVariants = cva(
   }
 );
 
+const indicatorColors: Record<string, string> = {
+  success: 'bg-success', destructive: 'bg-destructive', warning: 'bg-warning',
+  scheduled: 'bg-info', info: 'bg-info', default: 'bg-muted-foreground',
+  secondary: 'bg-secondary', tertiary: 'bg-tertiary',
+};
+
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLElement>,
   VariantProps<typeof badgeVariants> {
@@ -59,6 +66,9 @@ export interface BadgeProps
   pill?: boolean;
   animated?: boolean;
   pulse?: boolean;
+  status?: string | null;
+  display?: 'badge' | 'indicator';
+  showLabel?: boolean;
 }
 
 function Badge({
@@ -74,14 +84,30 @@ function Badge({
   pill = false,
   animated = true,
   pulse = false,
+  status,
+  display = 'badge',
+  showLabel = true,
   ...props
 }: BadgeProps) {
+  const meta = status === undefined ? null : getStatusMeta(status);
+  const resolvedVariant = meta?.variant ?? variant;
+  const content = children ?? (showLabel ? meta?.label : undefined);
+  if (display === 'indicator') {
+    return <span className={cn('inline-flex items-center gap-2 text-xs text-muted-foreground', className)} {...props}>
+      <span className="relative flex size-2.5" aria-hidden="true">
+        {pulse && <span className={cn('absolute inline-flex size-full animate-ping rounded-full opacity-40', indicatorColors[resolvedVariant ?? 'default'])} />}
+        <span className={cn('relative inline-flex size-2.5 rounded-full', indicatorColors[resolvedVariant ?? 'default'])} />
+      </span>
+      {content && <span>{content}</span>}
+      {!content && <span className="sr-only">{meta?.label ?? 'Status'}</span>}
+    </span>;
+  }
   const Component = clickable ? 'button' : 'div';
 
   const badge = (
     <Component
       className={cn(
-        badgeVariants({ variant, size }),
+        badgeVariants({ variant: resolvedVariant, size }),
         clickable && 'cursor-pointer hover:scale-105 active:scale-95',
         pill && 'rounded-full',
         className
@@ -96,15 +122,15 @@ function Badge({
         <span
           className={cn(
             'relative inline-flex h-2 w-2 rounded-full',
-            variant === 'success' && 'bg-success',
-            variant === 'warning' && 'bg-warning',
-            variant === 'destructive' && 'bg-destructive',
-            variant === 'info' && 'bg-info',
-            variant === 'default' && 'bg-primary-foreground',
-            variant === 'secondary' && 'bg-secondary-foreground',
-            variant === 'outline' && 'bg-foreground',
-            variant === 'tertiary' && 'bg-tertiary',
-            variant === 'gradient' && 'bg-white'
+            resolvedVariant === 'success' && 'bg-success',
+            resolvedVariant === 'warning' && 'bg-warning',
+            resolvedVariant === 'destructive' && 'bg-destructive',
+            resolvedVariant === 'info' && 'bg-info',
+            resolvedVariant === 'default' && 'bg-primary-foreground',
+            resolvedVariant === 'secondary' && 'bg-secondary-foreground',
+            resolvedVariant === 'outline' && 'bg-foreground',
+            resolvedVariant === 'tertiary' && 'bg-tertiary',
+            resolvedVariant === 'gradient' && 'bg-white'
           )}
         />
         </span>
@@ -118,7 +144,7 @@ function Badge({
       )}
 
       {/* Content */}
-      <span className="truncate">{children}</span>
+      <span className="truncate">{content}</span>
 
       {/* Right icon */}
       {rightIcon && (

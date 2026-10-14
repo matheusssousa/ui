@@ -173,15 +173,15 @@ export function ProfileForm() {
 }
 ```
 
-O `Text` recebe a prop obrigatória `text`. `Loading` tem export **default** no caminho direto. `Pagination` recebe páginas numeradas a partir de 1:
+O `Text` recebe a prop obrigatória `text`. Use `Spinner` em modo `block` para carregamento de página e `overlay` dentro de um contêiner com `position: relative`:
 
 ```tsx
 import Text from '@matheusssousa/ui/components/text';
-import Loading from '@matheusssousa/ui/components/loading';
+import { Spinner } from '@matheusssousa/ui/components/spinner';
 import { Pagination } from '@matheusssousa/ui/components/pagination';
 
 <Text text="Visão geral" variant="emphasis" />
-<Loading label="Carregando resultados" compact />
+<Spinner mode="block" label="Carregando resultados" compact />
 <Pagination currentPage={2} totalPages={5} onPageChange={(page) => console.log(page)} />
 ```
 
@@ -211,16 +211,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
 | --- | --- |
 | `accordion`, `log-accordion` | Seções expansíveis; `LogAccordion` é o export default de `log-accordion`. |
 | `alert`, `toast`, `empty-state` | Feedback em página, aviso temporário e estado vazio. Para criar toasts, use `useToast`. |
-| `avatar`, `badge`, `status-indicator` | Pessoa, rótulo e indicador de estado. `Avatar` recebe `name`, `src` e `status`. |
+| `avatar`, `badge` | Pessoa, rótulo e indicador de estado. `Avatar` recebe `name`, `src` e `status`. |
 | `breadcrumbs`, `tabs`, `pagination` | Navegação hierárquica, por abas e por páginas. |
 | `button`, `speed-dial`, `bulk-actions` | Ação comum, botão flutuante e ações para seleção. |
-| `card`, `section`, `summary-card`, `kpi-card`, `info` | Blocos de conteúdo, resumos e métricas. `KpiCard` recebe `title`, `value` e `icon`. |
+| `card`, `section`, `info` | Blocos de conteúdo e métricas. Use `Card` com a prop `metric`. |
 | `input`, `textarea`, `select`, `switch`, `form-field`, `search` | Campos, controles e busca. `Input` aceita `label`, `error`, `mask` e `validation`; `Select` recebe `options`. |
 | `modal`, `dropdown-menu` | Camadas acionadas pelo usuário. `Modal` recebe `isOpen` e `onClose`. |
 | `table`, `draggable-table` | Tabelas com `columns` e `data`; a segunda permite reordenar linhas. |
 | `calendar`, `carousel`, `gallery`, `image` | Datas e conteúdo visual. `Calendar` recebe `mode`, `selected` e `onSelect`. |
 | `chart`, `progress-bar` | Visualização de valores. Os gráficos usam `--chart-1` a `--chart-8`. |
-| `spinner`, `loading`, `skeleton` | Indicadores de carregamento de tamanhos diferentes. `Loading` é export default. |
+| `spinner`, `skeleton` | `Spinner` oferece os modos `inline`, `block` e `overlay`. |
 | `text`, `tip`, `separator`, `motion` | Texto, dica, divisor e animação. `Text` é export default e recebe `text`. |
 | `theme` | Tipos e classes compartilhados de cor, tamanho e raio. |
 
@@ -253,6 +253,43 @@ formatDateValue(new Date());
 
 Todos esses exports nomeados também estão disponíveis pela raiz: `import { formatBytes } from '@matheusssousa/ui'`.
 
+
+## Hooks e HTTP
+
+Importe hooks por `@matheusssousa/ui/hooks/<nome>`. Todos executam em componentes cliente. `useAction` recebe uma Server Action do React e callbacks/notificações opcionais; `useFetch` recebe qualquer função assíncrona; `useCep` consulta o ViaCEP com `fetch`. `useApi` recebe um cliente HTTP e, opcionalmente, um notificador com métodos `success` e `error`.
+
+```tsx
+import { useApi } from '@matheusssousa/ui/hooks/useApi';
+import { createAxiosClient, createFetchClient } from '@matheusssousa/ui/functions/http';
+
+// Crie o cliente fora do componente para preservar sua identidade.
+const axiosClient = createAxiosClient(api); // instância Axios da aplicação, com interceptors próprios
+const fetchClient = createFetchClient({ baseUrl: '/api', credentials: 'include' });
+
+function Example() {
+  const { get, post, isLoading } = useApi(fetchClient);
+  // get<User[]>('/users', { page: 1 }); post<User>('/users', { name: 'Ana' });
+  return null;
+}
+```
+
+`createFetchClient` aceita `headers` (valor ou função para tokens atualizados), `credentials`, `fetcher` e `onUnauthorized`. Quando `onUnauthorized` renova as credenciais e retorna `true`, a requisição é repetida uma vez. `createAxiosClient` usa a instância recebida, inclusive seus interceptors para autenticação e renovação de sessão. `useApi` retorna `null` em falhas e expõe notificações opcionais. `useFetch` e `useCep` retornam estado, dados e erro.
+
+Para chamadas no servidor do Next, use a entrada separada. As opções `cache` e `next` são repassadas ao `fetch` do ambiente:
+
+```ts
+import { createServerFetch } from '@matheusssousa/ui/server';
+
+const request = createServerFetch({ baseUrl: 'https://api.example.com' });
+const users = await request<User[]>('/users', { cache: 'force-cache', next: { revalidate: 60, tags: ['users'] } });
+```
+
+## Migração da versão 0.2
+
+- `Loading` e `LoadingOverlay` → `Spinner mode="block"` e `Spinner mode="overlay"`.
+- `KpiCard` e `SummaryCard` → `Card metric={{ label, value, icon, description, tone, format, change }}`.
+- `StatusIndicator` → `Badge status={status} display="indicator"`; `Badge` também aceita `status` no formato normal.
+- Os caminhos antigos foram removidos. A versão 0.3 atualiza a API, mas não migra as cópias locais no frontend do SaaS.
 ## Desenvolvimento e publicação
 
 Na pasta `Codes/packages/ui`, execute `npm install` e `npm run build`. `npm pack --dry-run` confere os arquivos que serão enviados. O `prepack` compila a biblioteca antes de cada `npm publish`.

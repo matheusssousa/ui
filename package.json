@@ -1,7 +1,7 @@
 {
   "name": "@matheusssousa/ui",
-  "version": "0.2.0",
-  "description": "Componentes e hooks de interface privados",
+  "version": "0.3.0",
+  "description": "Componentes, hooks e clientes HTTP compartilhados",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
@@ -37,10 +37,15 @@
       "types": "./dist/functions/*.d.ts",
       "default": "./dist/functions/*.js"
     },
+    "./server": {
+      "types": "./dist/functions/serverFetch.d.ts",
+      "default": "./dist/functions/serverFetch.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/copy-styles.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.json && node scripts/copy-styles.mjs",
+    "test": "npm run build && node --test tests/*.test.mjs",
     "prepack": "npm run build"
   },
   "peerDependencies": {

@@ -6,6 +6,19 @@ import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '../utils.js';
 import { fluidTransition, motionPresets, type MotionPreset } from './motion.js';
 import { radiusClasses, type UIColor, type UIRadius } from './theme.js';
+import { toneClasses } from './theme.js';
+import { Skeleton } from './skeleton.js';
+import { formatCurrency } from '../functions/formatCurrency.js';
+
+export interface CardMetric {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  description?: React.ReactNode;
+  icon?: React.ReactNode;
+  tone?: UIColor;
+  format?: 'currency' | 'number';
+  change?: number;
+}
 
 const cardVariants = cva(
   'relative flex flex-col border border-border bg-card text-card-foreground',
@@ -105,6 +118,7 @@ export interface CardProps
   motionPreset?: MotionPreset;
   animationDelay?: number;
   children?: React.ReactNode;
+  metric?: CardMetric;
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
@@ -126,6 +140,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
     motionPreset,
     animationDelay = 0,
     children,
+    metric,
     ...props
   },
   ref,
@@ -147,8 +162,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
       className={cn(cardVariants({ variant: interactive ? 'interactive' : variant, size, color }), radiusClasses[radius], loading && 'pointer-events-none overflow-hidden', className)}
       {...props}
     >
-      {loading && <span className="absolute inset-0 z-10 animate-pulse bg-muted/65 backdrop-blur-[1px]" aria-hidden="true" />}
-      {(title || description || icon || action) && (
+      {loading && !metric && <span className="absolute inset-0 z-10 animate-pulse bg-muted/65 backdrop-blur-[1px]" aria-hidden="true" />}
+      {!metric && (title || description || icon || action) && (
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-2">
             {icon && <span className="flex-shrink-0 p-2 rounded-md bg-primary/10 text-primary">{icon}</span>}
@@ -160,7 +175,18 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
           {action && <div className="shrink-0">{action}</div>}
         </div>
       )}
-      {children}
+      {metric ? <div className="flex min-h-24 flex-col justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <span className="min-w-0 truncate text-xs font-medium text-foreground">{metric.label}</span>
+          {metric.icon && <span className={cn('grid size-9 shrink-0 place-items-center rounded-xl', toneClasses[metric.tone ?? 'primary'].soft)}>{metric.icon}</span>}
+        </div>
+        {loading ? <div className="space-y-2"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-3 w-1/2" /></div> :
+          <div className="min-w-0">
+            <div className={cn('truncate text-lg font-semibold', toneClasses[metric.tone ?? 'primary'].text)}>{typeof metric.value === 'number' && metric.format === 'currency' ? formatCurrency(metric.value) : typeof metric.value === 'number' && metric.format === 'number' ? metric.value.toLocaleString('pt-BR') : metric.value}</div>
+            {metric.description && <p className="mt-0.5 truncate text-xs text-muted-foreground">{metric.description}</p>}
+            {metric.change !== undefined && <p className={cn('text-xs font-medium', metric.change >= 0 ? 'text-success' : 'text-destructive')}>{metric.change >= 0 ? '+' : ''}{metric.change.toFixed(1)}% <span className="text-muted-foreground">vs anterior</span></p>}
+          </div>}
+      </div> : children}
       {footer && <div className="mt-auto border-t border-border/70 pt-4">{footer}</div>}
     </motion.div>
   );

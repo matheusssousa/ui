@@ -13,20 +13,18 @@ const colorClasses: Record<UIColor, string> = {
   background: 'border-foreground/20 border-t-foreground',
 };
 
-export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> { size?: UISize; color?: UIColor; label?: string; }
+export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> { size?: UISize; color?: UIColor; label?: string; mode?: 'inline' | 'block' | 'overlay'; visible?: boolean; compact?: boolean; }
 
-export function Spinner({ size = 'md', color = 'primary', label = 'Carregando', className, ...props }: SpinnerProps) {
-  return (
-    <span role="status" aria-label={label} className={cn('inline-flex', className)} {...props}>
-      <motion.span aria-hidden="true" className={cn('block rounded-full', sizeClasses[size], colorClasses[color])} animate={{ rotate: 360 }} transition={{ duration: 0.8, ease: 'linear', repeat: Infinity }} />
-      <span className="sr-only">{label}</span>
-    </span>
-  );
-}
-
-export function LoadingOverlay({ label = 'Carregando...', visible = true, className }: { label?: string; visible?: boolean; className?: string }) {
+export function Spinner({ size, color = 'primary', label = 'Carregando', mode = 'inline', visible = true, compact = false, className, ...props }: SpinnerProps) {
   if (!visible) return null;
-  return <div className={cn('absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-background/75 backdrop-blur-sm', className)}><Spinner size="lg" /><p className="text-xs font-medium text-muted-foreground">{label}</p></div>;
+  return <span role="status" aria-label={label} className={cn(
+    mode === 'inline' ? 'inline-flex' : 'flex flex-col items-center justify-center gap-3',
+    mode === 'block' && (compact ? 'w-full py-4' : 'w-full py-12'),
+    mode === 'overlay' && 'absolute inset-0 z-40 bg-background/75 backdrop-blur-sm', className,
+  )} {...props}>
+    <motion.span aria-hidden="true" className={cn('block rounded-full', sizeClasses[size ?? (mode === 'inline' ? 'md' : mode === 'block' ? 'xl' : 'lg')], colorClasses[color])} animate={{ rotate: 360 }} transition={{ duration: 0.8, ease: 'linear', repeat: Infinity }} />
+    {mode === 'inline' ? <span className="sr-only">{label}</span> : <span aria-hidden="true" className="text-xs font-medium text-muted-foreground">{label}</span>}
+  </span>;
 }
 
 
