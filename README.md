@@ -235,7 +235,7 @@ import { SpeedDial } from "@matheusssousa/ui";
   openIcon="XIcon"
   triggerLabel="Ações rápidas"
   actions={[
-    { id: "novo", label: "Novo", icon: "FilePlusIcon", onClick: criar },
+    { id: "novo", label: "Novo", icon: "FilePlusIcon", active: true, onClick: criar },
     {
       id: "compartilhar",
       label: "Compartilhar",
@@ -248,7 +248,31 @@ import { SpeedDial } from "@matheusssousa/ui";
 />
 ```
 
-`icon` e `openIcon` aceitam o nome exportado por `@phosphor-icons/react/dist/ssr` (por exemplo, `"PlusIcon"`) ou um elemento React. Cada ação aceita `id`, `label`, `icon`, `onClick`, `disabled` e `children` para subitens. Uma ação com `children` expande seus subitens; uma ação sem filhos chama `onClick`. Use `actionSize` e `buttonSize` para os tamanhos, e `closeOnAction={false}` para manter o menu aberto depois de uma ação.
+`icon` e `openIcon` aceitam o nome exportado por `@phosphor-icons/react/dist/ssr` (por exemplo, `"PlusIcon"`) ou um elemento React. Cada ação aceita `id`, `label`, `icon`, `onClick`, `disabled`, `active` e `children` para subitens. `active: true` destaca a opção; o estado é definido por quem usa o componente. Uma ação com `children` expande seus subitens; uma ação sem filhos chama `onClick`. Use `actionSize` e `buttonSize` para os tamanhos, e `closeOnAction={false}` para manter o menu aberto depois de uma ação.
+
+### SpeedDialTabs
+
+O `SpeedDialTabs` mostra texto no botão principal e reúne ícone e texto em cada opção. Ele pode ocupar qualquer canto, o centro das bordas ou o centro da tela: `top-left`, `top-center`, `top-right`, `middle-left`, `middle-center`, `middle-right`, `bottom-left`, `bottom-center` e `bottom-right`.
+
+```tsx
+import { SpeedDialTabs } from "@matheusssousa/ui";
+
+<SpeedDialTabs
+  position="bottom-center"
+  triggerLabel="Minhas áreas"
+  icon="SquaresFourIcon"
+  openIcon="XIcon"
+  defaultValue="home"
+  onValueChange={area => mudarArea(area)}
+  tabs={[
+    { value: "home", label: "Home", icon: "HouseIcon" },
+    { value: "viagens", label: "Viagens", icon: "AirplaneIcon" },
+    { value: "desejos", label: "Lista de desejos", icon: "MagicWandIcon" },
+  ]}
+/>
+```
+
+Use `value` e `onValueChange` para controlar a seleção externamente, ou `defaultValue` para mantê-la no componente. `closeOnSelect={false}` mantém as opções abertas. A prop `size` aceita `small`, `medium` e `large`.
 
 Componentes que usam `next/link`, `next/navigation` ou `next/dynamic` exigem Next.js. O `Avatar` da biblioteca recebe `name` explicitamente; ele não acessa a autenticação do projeto.
 

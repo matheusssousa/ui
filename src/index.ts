@@ -43,6 +43,8 @@ export * from './components/image.js';
 export * from './components/search.js';
 export { SpeedDial, speedDialVariants, buttonVariants } from './components/speed-dial.js';
 export type { SpeedDialAction, SpeedDialIcon, SpeedDialProps } from './components/speed-dial.js';
+export { SpeedDialTabs, speedDialTabsVariants } from './components/speed-dial-tabs.js';
+export type { SpeedDialTab, SpeedDialTabsProps } from './components/speed-dial-tabs.js';
 export * from './components/table.js';
 export * from './components/tip.js';
 export * from './components/breadcrumbs.js';

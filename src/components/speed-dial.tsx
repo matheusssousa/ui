@@ -24,7 +24,7 @@ const buttonVariants = cva(
                 trigger: "bg-primary hover:bg-primary/90 focus:ring-primary/50 active:scale-95",
                 action: "bg-secondary hover:bg-secondary/90 focus:ring-secondary/50 active:scale-95",
             },
-            size: { small: "h-11 w-11", medium: "h-14 w-14", large: "h-16 w-16" },
+            size: { xsmall: "h-9 w-9", small: "h-11 w-11", medium: "h-14 w-14", large: "h-16 w-16" },
         },
         defaultVariants: { variant: "trigger", size: "medium" },
     }
@@ -39,6 +39,7 @@ export interface SpeedDialAction {
     onClick?: () => void;
     children?: SpeedDialAction[];
     disabled?: boolean;
+    active?: boolean;
 }
 
 export interface SpeedDialProps
@@ -46,7 +47,7 @@ export interface SpeedDialProps
     actions: SpeedDialAction[];
     icon?: SpeedDialIcon;
     openIcon?: SpeedDialIcon;
-    buttonSize?: VariantProps<typeof buttonVariants>["size"];
+    buttonSize?: "small" | "medium" | "large";
     actionSize?: VariantProps<typeof buttonVariants>["size"];
     triggerLabel?: string;
     closeOnAction?: boolean;
@@ -71,7 +72,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
             icon = "PlusIcon",
             openIcon,
             buttonSize = "medium",
-            actionSize = "small",
+            actionSize,
             triggerLabel = "Abrir ações",
             closeOnAction = true,
             ...props
@@ -85,6 +86,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
         const isLeft = position?.includes("left");
         const isTop = position?.includes("top");
         const actionColumnWidth = buttonSize === "small" ? "w-11" : buttonSize === "large" ? "w-16" : "w-14";
+        const resolvedActionSize = actionSize ?? (buttonSize === "small" ? "xsmall" : buttonSize === "large" ? "medium" : "small");
 
         useEffect(() => {
             if (!isOpen) return;
@@ -126,6 +128,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                                         type="button"
                                         disabled={action.disabled}
                                         aria-label={action.label}
+                                        aria-pressed={action.active ?? false}
                                         aria-expanded={hasChildren ? expanded : undefined}
                                         aria-controls={hasChildren ? childrenId : undefined}
                                         onClick={() => {
@@ -136,9 +139,13 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                                                 if (closeOnAction) setIsOpen(false);
                                             }
                                         }}
-                                        className={cn(buttonVariants({ variant: "action", size: actionSize }), "shrink-0 disabled:cursor-not-allowed disabled:opacity-50")}
+                                        className={cn(
+                                            buttonVariants({ variant: "action", size: resolvedActionSize }),
+                                            "shrink-0 disabled:cursor-not-allowed disabled:opacity-50",
+                                            action.active && "bg-primary hover:bg-primary/90"
+                                        )}
                                     >
-                                        {renderIcon(action.icon, 20)}
+                                        {renderIcon(action.icon, resolvedActionSize === "xsmall" ? 18 : resolvedActionSize === "small" ? 20 : resolvedActionSize === "large" ? 28 : 24)}
                                     </button>
                                 </div>
                                 <span className={cn(

@@ -9,6 +9,7 @@ import { useAction } from '../dist/hooks/useAction.js';
 import { useFetch } from '../dist/hooks/useFetch.js';
 import { useApi } from '../dist/hooks/useApi.js';
 import { useCep } from '../dist/hooks/useCep.js';
+import { SpeedDialTabs } from '../dist/components/speed-dial-tabs.js';
 
 test('consolidated loading and status have accessible labels', () => {
   const spinner = renderToStaticMarkup(React.createElement(Spinner, { mode: 'block', label: 'Carregando dados' }));
@@ -34,4 +35,18 @@ test('all four client hooks render with their initial state', () => {
     return React.createElement('p', null, [action.pending, fetched.loading, api.isLoading, cep.loading].join(','));
   }
   assert.match(renderToStaticMarkup(React.createElement(Fixture)), /false,false,false,false/);
+});
+
+test('speed dial tabs renders a labelled trigger at a center position', () => {
+  const markup = renderToStaticMarkup(React.createElement(SpeedDialTabs, {
+    position: 'bottom-center',
+    triggerLabel: 'Minhas áreas',
+    icon: 'SquaresFourIcon',
+    tabs: [{ value: 'home', label: 'Home', icon: 'HouseIcon' }],
+  }));
+  assert.match(markup, /bottom-4/);
+  assert.match(markup, /left-1\/2/);
+  assert.match(markup, /aria-expanded="false"/);
+  assert.match(markup, /Minhas áreas/);
+  assert.match(markup, /<svg/);
 });
