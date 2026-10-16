@@ -224,6 +224,32 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
 | `text`, `tip`, `separator`, `motion` | Texto, dica, divisor e animação. `Text` é export default e recebe `text`. |
 | `theme` | Tipos e classes compartilhados de cor, tamanho e raio. |
 
+### SpeedDial
+
+```tsx
+import { SpeedDial } from "@matheusssousa/ui";
+
+<SpeedDial
+  position="bottom-left"
+  icon="PlusIcon"
+  openIcon="XIcon"
+  triggerLabel="Ações rápidas"
+  actions={[
+    { id: "novo", label: "Novo", icon: "FilePlusIcon", onClick: criar },
+    {
+      id: "compartilhar",
+      label: "Compartilhar",
+      icon: "ShareIcon",
+      children: [
+        { id: "copiar", label: "Copiar link", icon: "LinkIcon", onClick: copiarLink },
+      ],
+    },
+  ]}
+/>
+```
+
+`icon` e `openIcon` aceitam o nome exportado por `@phosphor-icons/react/dist/ssr` (por exemplo, `"PlusIcon"`) ou um elemento React. Cada ação aceita `id`, `label`, `icon`, `onClick`, `disabled` e `children` para subitens. Uma ação com `children` expande seus subitens; uma ação sem filhos chama `onClick`. Use `actionSize` e `buttonSize` para os tamanhos, e `closeOnAction={false}` para manter o menu aberto depois de uma ação.
+
 Componentes que usam `next/link`, `next/navigation` ou `next/dynamic` exigem Next.js. O `Avatar` da biblioteca recebe `name` explicitamente; ele não acessa a autenticação do projeto.
 
 ## Funções utilitárias

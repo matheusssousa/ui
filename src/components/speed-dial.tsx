@@ -1,27 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import { cn } from "../utils.js"; // Supondo que você tenha esta função utilitária
+import React, { useEffect, useId, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion, AnimatePresence } from "framer-motion";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import * as PhosphorIcons from "@phosphor-icons/react/dist/ssr";
+import { cn } from "../utils.js";
 
-// --- VARIANTES DE ESTILO COM CVA ---
-
-const speedDialVariants = cva(
-    "fixed z-50 flex flex-col gap-2",
-    {
-        variants: {
-            position: {
-                "bottom-right": "bottom-4 right-4 items-end",
-                "bottom-left": "bottom-4 left-4 items-start",
-                "top-right": "top-4 right-4 flex-col-reverse items-end",
-                "top-left": "top-4 left-4 flex-col-reverse items-start",
-            },
+const speedDialVariants = cva("fixed z-50 flex flex-col gap-2", {
+    variants: {
+        position: {
+            "bottom-right": "bottom-4 right-4 items-end",
+            "bottom-left": "bottom-4 left-4 items-start",
+            "top-right": "top-4 right-4 flex-col-reverse items-end",
+            "top-left": "top-4 left-4 flex-col-reverse items-start",
         },
-        defaultVariants: {
-            position: "bottom-right",
-        },
-    }
-);
+    },
+    defaultVariants: { position: "bottom-right" },
+});
 
 const buttonVariants = cva(
     "flex items-center justify-center rounded-full shadow-lg text-white transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer",
@@ -31,39 +24,43 @@ const buttonVariants = cva(
                 trigger: "bg-primary hover:bg-primary/90 focus:ring-primary/50 active:scale-95",
                 action: "bg-secondary hover:bg-secondary/90 focus:ring-secondary/50 active:scale-95",
             },
-            size: {
-                small: "h-11 w-11",
-                medium: "h-14 w-14",
-                large: "h-16 w-16",
-            },
+            size: { small: "h-11 w-11", medium: "h-14 w-14", large: "h-16 w-16" },
         },
-        defaultVariants: {
-            variant: "trigger",
-            size: "medium",
-        },
+        defaultVariants: { variant: "trigger", size: "medium" },
     }
 );
 
-
-// --- TIPOS E INTERFACES ---
+export type SpeedDialIcon = React.ReactNode | keyof typeof PhosphorIcons;
 
 export interface SpeedDialAction {
-    icon: React.ReactNode;
+    id?: string;
+    icon?: SpeedDialIcon;
     label: string;
-    onClick: () => void;
+    onClick?: () => void;
+    children?: SpeedDialAction[];
+    disabled?: boolean;
 }
 
 export interface SpeedDialProps
-    extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof speedDialVariants> {
+    extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof speedDialVariants> {
     actions: SpeedDialAction[];
-    icon?: React.ReactNode;
-    openIcon?: React.ReactNode;
+    icon?: SpeedDialIcon;
+    openIcon?: SpeedDialIcon;
     buttonSize?: VariantProps<typeof buttonVariants>["size"];
+    actionSize?: VariantProps<typeof buttonVariants>["size"];
+    triggerLabel?: string;
+    closeOnAction?: boolean;
 }
 
-
-// --- COMPONENTE PRINCIPAL ---
+function renderIcon(icon: SpeedDialIcon | undefined, size: number): React.ReactNode {
+    if (typeof icon !== "string") return icon;
+    const Icon = (PhosphorIcons as Record<string, unknown>)[icon];
+    if (typeof Icon !== "function" && typeof Icon !== "object") return null;
+    return React.createElement(Icon as React.ComponentType<{ size: number; "aria-hidden": boolean }>, {
+        size,
+        "aria-hidden": true,
+    });
+}
 
 const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
     (
@@ -71,175 +68,150 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
             className,
             position = "bottom-right",
             actions,
-            icon = <PlusIcon size={25} />,
-            openIcon, // Opcional, se não fornecido, o ícone principal irá girar
+            icon = "PlusIcon",
+            openIcon,
             buttonSize = "medium",
+            actionSize = "small",
+            triggerLabel = "Abrir ações",
+            closeOnAction = true,
             ...props
         },
         ref
     ) => {
         const [isOpen, setIsOpen] = useState(false);
+        const [expandedPath, setExpandedPath] = useState<string[]>([]);
         const internalRef = useRef<HTMLDivElement>(null);
+        const menuId = useId();
+        const isLeft = position?.includes("left");
+        const isTop = position?.includes("top");
 
-        // Hook para fechar o menu ao clicar fora
         useEffect(() => {
-            const handleClickOutside = (event: MouseEvent) => {
+            if (!isOpen) return;
+            const handlePointerDown = (event: PointerEvent) => {
                 if (internalRef.current && !internalRef.current.contains(event.target as Node)) {
                     setIsOpen(false);
                 }
             };
-
-            if (isOpen) {
-                document.addEventListener("mousedown", handleClickOutside);
-            } else {
-                document.removeEventListener("mousedown", handleClickOutside);
-            }
-
+            const handleKeyDown = (event: KeyboardEvent) => {
+                if (event.key === "Escape") {
+                    setIsOpen(false);
+                    internalRef.current?.querySelector<HTMLButtonElement>("[data-speed-dial-trigger]")?.focus();
+                }
+            };
+            document.addEventListener("pointerdown", handlePointerDown);
+            document.addEventListener("keydown", handleKeyDown);
             return () => {
-                document.removeEventListener("mousedown", handleClickOutside);
+                document.removeEventListener("pointerdown", handlePointerDown);
+                document.removeEventListener("keydown", handleKeyDown);
             };
         }, [isOpen]);
 
-        const iconSizeClass = buttonVariants({ size: buttonSize });
+        useEffect(() => {
+            if (!isOpen) setExpandedPath([]);
+        }, [isOpen]);
 
-        const isReversed = position?.includes("top");
-
-        const listVariants = {
-            hidden: {
-                opacity: 0,
-                transition: {
-                    when: "afterChildren",
-                    staggerChildren: 0.03,
-                    staggerDirection: isReversed ? -1 : 1,
-                },
-            },
-            visible: {
-                opacity: 1,
-                transition: {
-                    when: "beforeChildren",
-                    staggerChildren: 0.03,
-                    staggerDirection: isReversed ? 1 : -1,
-                },
-            },
-        };
-
-        const itemVariants = {
-            hidden: { 
-                opacity: 0, 
-                y: isReversed ? -10 : 10, 
-                scale: 0.9,
-            },
-            visible: { 
-                opacity: 1, 
-                y: 0, 
-                scale: 1,
-            },
-            exit: {
-                opacity: 0,
-                scale: 0.9,
-                y: isReversed ? -5 : 5,
-            }
-        };
+        const renderActions = (items: SpeedDialAction[], depth = 0) => (
+            <div className={cn("flex flex-col gap-2", isLeft ? "items-start" : "items-end")}>
+                {items.map((action, index) => {
+                    const key = action.id ?? `${depth}-${index}`;
+                    const expanded = expandedPath[depth] === key;
+                    const hasChildren = Boolean(action.children?.length);
+                    const childrenId = `${menuId}-${depth}-${index}`;
+                    return (
+                        <div key={key} className={cn("flex flex-col gap-2", isLeft ? "items-start" : "items-end")}>
+                            <div className={cn("group relative flex items-center gap-2", isLeft && "flex-row-reverse")}>
+                                <span className={cn(
+                                    "whitespace-nowrap rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-md",
+                                    "md:pointer-events-none md:absolute md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100",
+                                    isLeft ? "md:left-full md:ml-2" : "md:right-full md:mr-2"
+                                )}>
+                                    {action.label}
+                                </span>
+                                <button
+                                    type="button"
+                                    disabled={action.disabled}
+                                    aria-label={action.label}
+                                    aria-expanded={hasChildren ? expanded : undefined}
+                                    aria-controls={hasChildren ? childrenId : undefined}
+                                    onClick={() => {
+                                        if (hasChildren) {
+                                            setExpandedPath(current => expanded ? current.slice(0, depth) : [...current.slice(0, depth), key]);
+                                        } else {
+                                            action.onClick?.();
+                                            if (closeOnAction) setIsOpen(false);
+                                        }
+                                    }}
+                                    className={cn(buttonVariants({ variant: "action", size: actionSize }), "shrink-0 disabled:cursor-not-allowed disabled:opacity-50")}
+                                >
+                                    {renderIcon(action.icon, 20)}
+                                </button>
+                            </div>
+                            {hasChildren && expanded && (
+                                <div id={childrenId} className={cn("border-border", isLeft ? "ml-5 border-l pl-3" : "mr-5 border-r pr-3")}>
+                                    {renderActions(action.children!, depth + 1)}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        );
 
         return (
             <>
-                {/* Backdrop para mobile */}
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             transition={{ duration: 0.15 }}
                             onClick={() => setIsOpen(false)}
-                            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+                            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
+                            aria-hidden="true"
                         />
                     )}
                 </AnimatePresence>
-
                 <div
-                    ref={internalRef}
-                    className={cn(speedDialVariants({ position }), className, 'space-y-4')}
                     {...props}
+                    ref={node => {
+                        internalRef.current = node;
+                        if (typeof ref === "function") ref(node);
+                        else if (ref) ref.current = node;
+                    }}
+                    className={cn(speedDialVariants({ position }), className)}
                 >
-                    {/* Botões de Ação */}
                     <AnimatePresence>
                         {isOpen && (
                             <motion.div
-                                variants={listVariants}
-                                initial="hidden"
-                                animate="visible"
-                                exit="hidden"
-                                className="flex flex-col gap-2 items-end md:items-center w-auto mr-1.5"
+                                id={menuId}
+                                initial={{ opacity: 0, y: isTop ? -8 : 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: isTop ? -8 : 8 }}
+                                transition={{ duration: 0.15 }}
+                                className={cn("max-h-[min(70vh,32rem)] overflow-y-auto", isLeft ? "self-start" : "self-end")}
                             >
-                                {actions.map((action, index) => (
-                                    <motion.div 
-                                        key={index} 
-                                        variants={itemVariants}
-                                        className="group relative flex items-center gap-2 md:gap-0"
-                                    >
-                                        {/* Label sempre visível no mobile, tooltip no desktop */}
-                                        <motion.div
-                                            initial={{ opacity: 0, x: 5 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 5 }}
-                                            transition={{ duration: 0.15, delay: index * 0.02 }}
-                                            className={cn(
-                                                "whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium shadow-md order-first",
-                                                "bg-card text-foreground border border-border",
-                                                "md:order-none md:absolute md:bg-neutral md:text-neutral-foreground md:border-0 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity",
-                                                position?.includes("right") ? "md:right-full md:mr-2" : "md:left-full md:ml-2"
-                                            )}
-                                        >
-                                            {action.label}
-                                        </motion.div>
-                                        
-                                        {/* Botão de Ação */}
-                                        <button
-                                            onClick={() => {
-                                                action.onClick();
-                                                setIsOpen(false);
-                                            }}
-                                            className={cn(
-                                                buttonVariants({ variant: 'action', size: 'small' }),
-                                                "relative shrink-0"
-                                            )}
-                                        >
-                                            <div className="w-5 h-5 flex items-center justify-center">
-                                                {action.icon}
-                                            </div>
-                                        </button>
-                                    </motion.div>
-                                ))}
+                                {renderActions(actions)}
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-                    {/* Botão de Gatilho Principal */}
                     <motion.button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className={cn(buttonVariants({ variant: 'trigger', size: buttonSize }))}
-                        aria-label="Toggle speed dial"
+                        type="button"
+                        data-speed-dial-trigger
+                        onClick={() => setIsOpen(open => !open)}
+                        className={buttonVariants({ variant: "trigger", size: buttonSize })}
+                        aria-label={triggerLabel}
                         aria-expanded={isOpen}
+                        aria-controls={menuId}
                     >
-                        <motion.div
-                            animate={{ 
-                                rotate: isOpen && !openIcon ? 45 : 0,
-                            }}
-                            transition={{ 
-                                duration: 0.2, 
-                                ease: "easeOut"
-                            }}
-                        >
-                            {isOpen && openIcon ? openIcon : icon}
-                        </motion.div>
+                        <motion.span animate={{ rotate: isOpen && !openIcon ? 45 : 0 }} transition={{ duration: 0.2 }}>
+                            {renderIcon(isOpen && openIcon ? openIcon : icon, 25)}
+                        </motion.span>
                     </motion.button>
                 </div>
             </>
         );
     }
-);SpeedDial.displayName = "SpeedDial";
+);
+
+SpeedDial.displayName = "SpeedDial";
 
 export { SpeedDial, speedDialVariants, buttonVariants };
-
-
