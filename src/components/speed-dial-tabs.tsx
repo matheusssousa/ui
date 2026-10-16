@@ -77,8 +77,8 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
         const listId = useId();
         const isTop = position?.startsWith("top");
         const isMiddle = position?.startsWith("middle");
-        const triggerSize = size === "small" ? "min-h-10 px-3 text-sm" : size === "large" ? "min-h-14 px-5 text-base" : "min-h-12 px-4 text-sm";
-        const tabSize = size === "small" ? "min-h-9 px-3 text-xs" : size === "large" ? "min-h-12 px-4 text-sm" : "min-h-10 px-3 text-sm";
+        const triggerSize = size === "small" ? "min-h-10 px-3 text-xs" : size === "large" ? "min-h-12 px-4 text-sm" : "min-h-11 px-3.5 text-sm";
+        const tabSize = size === "small" ? "min-h-9 px-2.5 text-xs" : size === "large" ? "min-h-11 px-3.5 text-sm" : "min-h-10 px-3 text-sm";
         const iconSize = size === "small" ? 18 : size === "large" ? 24 : 20;
 
         useEffect(() => {
@@ -121,9 +121,8 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                             exit={{ opacity: 0, y: isTop ? -8 : 8, scale: 0.96 }}
                             transition={{ duration: 0.16 }}
                             className={cn(
-                                "flex max-h-[min(70vh,32rem)] flex-col gap-2 overflow-y-auto",
-                                isMiddle && "max-h-[min(40vh,20rem)]",
-                                position?.endsWith("left") ? "items-start" : position?.endsWith("right") ? "items-end" : "items-center"
+                                "flex w-max min-w-44 max-w-[min(80vw,20rem)] flex-col gap-0.5 overflow-y-auto rounded-xl border border-border/70 bg-card/95 p-1.5 text-foreground shadow-lg backdrop-blur-sm",
+                                isMiddle ? "max-h-[min(40vh,20rem)]" : "max-h-[min(70vh,32rem)]"
                             )}
                         >
                             {tabs.map(tab => (
@@ -138,13 +137,14 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                                         if (closeOnSelect) setIsOpen(false);
                                     }}
                                     className={cn(
-                                        "flex items-center gap-2 whitespace-nowrap rounded-full bg-secondary font-medium text-secondary-foreground shadow-lg transition-colors hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50",
-                                        "aria-pressed:bg-primary aria-pressed:text-white",
+                                        "flex w-full items-center gap-2.5 rounded-lg text-left font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+                                        "aria-pressed:bg-primary/10 aria-pressed:text-primary",
                                         tabSize
                                     )}
                                 >
-                                    {renderIcon(tab.icon, iconSize)}
-                                    <span>{tab.label}</span>
+                                    {tab.icon && <span className="flex shrink-0 items-center justify-center" aria-hidden="true">{renderIcon(tab.icon, iconSize)}</span>}
+                                    <span className="min-w-0 flex-1 truncate">{tab.label}</span>
+                                    {selectedValue === tab.value && <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
                                 </button>
                             ))}
                         </motion.div>
@@ -157,7 +157,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                     aria-expanded={isOpen}
                     aria-controls={listId}
                     className={cn(
-                        "flex items-center gap-2 whitespace-nowrap rounded-full bg-primary font-medium text-white shadow-lg transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                        "flex items-center gap-2 whitespace-nowrap rounded-xl bg-primary font-medium text-white shadow-md transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
                         triggerSize
                     )}
                 >
@@ -176,6 +176,9 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                         </AnimatePresence>
                     )}
                     <span>{triggerLabel}</span>
+                    <motion.span aria-hidden="true" animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.18 }} className="ml-1 flex items-center">
+                        {renderIcon("CaretDownIcon", 14)}
+                    </motion.span>
                 </button>
             </div>
         );
