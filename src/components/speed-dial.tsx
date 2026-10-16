@@ -84,6 +84,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
         const menuId = useId();
         const isLeft = position?.includes("left");
         const isTop = position?.includes("top");
+        const actionColumnWidth = buttonSize === "small" ? "w-11" : buttonSize === "large" ? "w-16" : "w-14";
 
         useEffect(() => {
             if (!isOpen) return;
@@ -119,32 +120,32 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                     const childrenId = `${menuId}-${depth}-${index}`;
                     return (
                         <div key={key} className={cn("flex flex-col gap-2", isLeft ? "items-start" : "items-end")}>
-                            <div className={cn("group relative flex items-center gap-2", isLeft && "flex-row-reverse")}>
+                            <div className={cn("flex items-center gap-2", isLeft ? "flex-row" : "flex-row-reverse")}>
+                                <div className={cn("flex shrink-0 justify-center", actionColumnWidth)}>
+                                    <button
+                                        type="button"
+                                        disabled={action.disabled}
+                                        aria-label={action.label}
+                                        aria-expanded={hasChildren ? expanded : undefined}
+                                        aria-controls={hasChildren ? childrenId : undefined}
+                                        onClick={() => {
+                                            if (hasChildren) {
+                                                setExpandedPath(current => expanded ? current.slice(0, depth) : [...current.slice(0, depth), key]);
+                                            } else {
+                                                action.onClick?.();
+                                                if (closeOnAction) setIsOpen(false);
+                                            }
+                                        }}
+                                        className={cn(buttonVariants({ variant: "action", size: actionSize }), "shrink-0 disabled:cursor-not-allowed disabled:opacity-50")}
+                                    >
+                                        {renderIcon(action.icon, 20)}
+                                    </button>
+                                </div>
                                 <span className={cn(
                                     "whitespace-nowrap rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-md",
-                                    "md:pointer-events-none md:absolute md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100",
-                                    isLeft ? "md:left-full md:ml-2" : "md:right-full md:mr-2"
                                 )}>
                                     {action.label}
                                 </span>
-                                <button
-                                    type="button"
-                                    disabled={action.disabled}
-                                    aria-label={action.label}
-                                    aria-expanded={hasChildren ? expanded : undefined}
-                                    aria-controls={hasChildren ? childrenId : undefined}
-                                    onClick={() => {
-                                        if (hasChildren) {
-                                            setExpandedPath(current => expanded ? current.slice(0, depth) : [...current.slice(0, depth), key]);
-                                        } else {
-                                            action.onClick?.();
-                                            if (closeOnAction) setIsOpen(false);
-                                        }
-                                    }}
-                                    className={cn(buttonVariants({ variant: "action", size: actionSize }), "shrink-0 disabled:cursor-not-allowed disabled:opacity-50")}
-                                >
-                                    {renderIcon(action.icon, 20)}
-                                </button>
                             </div>
                             {hasChildren && expanded && (
                                 <div id={childrenId} className={cn("border-border", isLeft ? "ml-5 border-l pl-3" : "mr-5 border-r pr-3")}>
@@ -202,9 +203,24 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                         aria-expanded={isOpen}
                         aria-controls={menuId}
                     >
-                        <motion.span animate={{ rotate: isOpen && !openIcon ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                            {renderIcon(isOpen && openIcon ? openIcon : icon, 25)}
-                        </motion.span>
+                        {openIcon ? (
+                            <AnimatePresence mode="wait" initial={false}>
+                                <motion.span
+                                    key={isOpen ? "open" : "closed"}
+                                    initial={{ opacity: 0, scale: 0.7, rotate: -45 }}
+                                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                    exit={{ opacity: 0, scale: 0.7, rotate: 45 }}
+                                    transition={{ duration: 0.15, ease: "easeInOut" }}
+                                    className="flex items-center justify-center"
+                                >
+                                    {renderIcon(isOpen ? openIcon : icon, 25)}
+                                </motion.span>
+                            </AnimatePresence>
+                        ) : (
+                            <motion.span animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.2 }}>
+                                {renderIcon(icon, 25)}
+                            </motion.span>
+                        )}
                     </motion.button>
                 </div>
             </>
