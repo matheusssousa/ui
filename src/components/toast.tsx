@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { CheckCircleIcon, InfoIcon, WarningCircleIcon, XCircleIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
 import { cn } from '../utils.js';
 
 
@@ -153,19 +154,19 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps & React.HTMLAttributes
       },
       success: {
         container: 'bg-success/10 border-success/25 text-success',
-        icon: <span aria-hidden="true">?</span>,
+        icon: <CheckCircleIcon size={20} weight="fill" aria-hidden="true" />,
       },
       error: {
         container: 'bg-destructive/10 border-destructive/25 text-destructive',
-        icon: <span aria-hidden="true">×</span>,
+        icon: <XCircleIcon size={20} weight="fill" aria-hidden="true" />,
       },
       warning: {
         container: 'bg-warning/10 border-warning/25 text-warning',
-        icon: <span aria-hidden="true">!</span>,
+        icon: <WarningCircleIcon size={20} weight="fill" aria-hidden="true" />,
       },
       info: {
         container: 'bg-info/10 border-info/25 text-info',
-        icon: <span aria-hidden="true">i</span>,
+        icon: <InfoIcon size={20} weight="fill" aria-hidden="true" />,
       },
     };
 
@@ -232,7 +233,7 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps & React.HTMLAttributes
           className="flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity rounded-md p-1 hover:bg-black/5 dark:hover:bg-white/5"
           aria-label="Fechar notificaÃ§Ã£o"
         >
-          <span aria-hidden="true">×</span>
+          <XIcon size={16} aria-hidden="true" />
         </button>
       </div>
     );

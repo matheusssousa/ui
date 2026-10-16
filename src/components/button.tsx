@@ -393,17 +393,16 @@ const Button = React.forwardRef<
                 ) : (
                     // For other variants, show normal layout
                     <>
-                        {(loading || finalLeftIcon) && (
-                            <span className={cn(`mr-2 flex items-center`)}>
-                                {loading ? (
-                                    <CircleNotchIcon className={cn("animate-spin")} size={iconSizeClass} />
-                                ) : (
-                                    finalLeftIcon
-                                )}
+                        {!loading && finalLeftIcon && (
+                            <span className="mr-2 flex items-center">
+                                {finalLeftIcon}
                             </span>
                         )}
 
-                        <span className={loading ? 'opacity-75' : ''}>
+                        <span className={cn('relative', loading && 'opacity-75')}>
+                            {loading && (
+                                <CircleNotchIcon className="absolute right-full top-1/2 mr-2 -translate-y-1/2 animate-spin" size={iconSizeClass} aria-hidden="true" />
+                            )}
                             {children}
                         </span>
 
