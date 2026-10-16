@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as PhosphorIcons from "@phosphor-icons/react/dist/ssr";
 import { cn } from "../utils.js";
-import { buttonVariants, type SpeedDialIcon } from "./speed-dial.js";
+import type { SpeedDialIcon } from "./speed-dial.js";
 
 const speedDialTabsVariants = cva("fixed z-50 flex flex-col gap-2", {
     variants: {
@@ -31,13 +31,13 @@ const speedDialTabsVariants = cva("fixed z-50 flex flex-col gap-2", {
         },
         rounded: {
             none: "rounded-none",
-            sm: "rounded-sm",
-            md: "rounded-md",
-            lg: "rounded-lg",
+            sm: "rounded-md",
+            md: "rounded-xl",
+            lg: "rounded-2xl",
             full: "rounded-full",
         },
     },
-    defaultVariants: { position: "bottom-right", size: "md", width: "auto", rounded: "full" },
+    defaultVariants: { position: "bottom-right", size: "md", width: "auto", rounded: "lg" },
 });
 
 export interface SpeedDialTab {
@@ -77,7 +77,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
         {
             tabs,
             triggerLabel,
-            icon = "PlusIcon",
+            icon = "SquaresFourIcon",
             openIcon,
             value,
             defaultValue,
@@ -86,7 +86,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
             position = "bottom-right",
             size = "md",
             width = "auto",
-            rounded = "full",
+            rounded = "lg",
             className,
             ...props
         },
@@ -99,13 +99,13 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
         const listId = useId();
         const isTop = position?.startsWith("top");
         const isMiddle = position?.startsWith("middle");
-        const triggerButtonSize = size === "xs" ? "xsmall" : size === "sm" ? "small" : size === "lg" ? "large" : "medium";
-        const actionButtonSize = size === "lg" ? "medium" : size === "md" ? "small" : "xsmall";
-        const actionHeight = size === "xs" ? "h-8" : "";
+        const triggerHeight = size === "xs" ? "min-h-9" : size === "sm" ? "min-h-10" : size === "lg" ? "min-h-14" : "min-h-12";
+        const actionHeight = size === "xs" ? "min-h-8" : size === "sm" ? "min-h-9" : size === "lg" ? "min-h-12" : "min-h-10";
         const roundedClass = rounded === "none" ? "rounded-none" : rounded === "sm" ? "rounded-sm" : rounded === "md" ? "rounded-md" : rounded === "lg" ? "rounded-lg" : "rounded-full";
         const triggerTextSize = size === "xs" ? "text-xs" : size === "lg" ? "text-base" : "text-sm";
         const actionTextSize = size === "xs" ? "text-xs" : "text-sm";
         const iconSize = size === "xs" ? 16 : size === "sm" ? 18 : size === "lg" ? 24 : 20;
+        const widthClass = width === "full" ? "w-[calc(100vw-2rem)] max-w-72" : width === "fit" ? "w-fit min-w-44" : "w-52";
 
         useEffect(() => {
             if (!isOpen) return;
@@ -127,6 +127,18 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
         }, [isOpen]);
 
         return (
+            <>
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={() => setIsOpen(false)}
+                            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
+                            aria-hidden="true"
+                        />
+                    )}
+                </AnimatePresence>
             <div
                 {...props}
                 ref={node => {
@@ -134,7 +146,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                     if (typeof ref === "function") ref(node);
                     else if (ref) ref.current = node;
                 }}
-                className={cn(speedDialTabsVariants({ position, width }), className)}
+                className={cn(speedDialTabsVariants({ position }), widthClass, className)}
             >
                 <AnimatePresence>
                     {isOpen && (
@@ -147,8 +159,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                             exit={{ opacity: 0, y: isTop ? -8 : 8, scale: 0.96 }}
                             transition={{ duration: 0.16 }}
                             className={cn(
-                                "flex max-w-[min(80vw,20rem)] flex-col gap-2 overflow-y-auto",
-                                position?.endsWith("left") ? "items-start" : position?.endsWith("right") ? "items-end" : "items-center",
+                                "flex w-full flex-col gap-1.5 overflow-y-auto p-0.5",
                                 isMiddle ? "max-h-[min(40vh,20rem)]" : "max-h-[min(70vh,32rem)]"
                             )}
                         >
@@ -164,17 +175,19 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                                         if (closeOnSelect) setIsOpen(false);
                                     }}
                                     className={cn(
-                                        buttonVariants({ variant: "action", size: actionButtonSize }),
-                                        "w-auto gap-2 px-3 font-medium disabled:cursor-not-allowed disabled:opacity-50",
+                                        "flex w-full items-center gap-3 border px-3 text-left font-medium shadow-sm transition-colors duration-150",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+                                        selectedValue === tab.value
+                                            ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15"
+                                            : "border-border/70 bg-card text-foreground hover:border-primary/30 hover:bg-muted/50",
                                         actionHeight,
                                         actionTextSize,
-                                        roundedClass,
-                                        width === "full" && "w-full",
-                                        selectedValue === tab.value && "bg-primary hover:bg-primary/90"
+                                        roundedClass
                                     )}
                                 >
-                                    {tab.icon && <span className="flex shrink-0 items-center justify-center" aria-hidden="true">{renderIcon(tab.icon, iconSize)}</span>}
-                                    <span className="truncate">{tab.label}</span>
+                                    {tab.icon && <span className="flex w-5 shrink-0 items-center justify-center" aria-hidden="true">{renderIcon(tab.icon, iconSize)}</span>}
+                                    <span className="min-w-0 flex-1 truncate">{tab.label}</span>
+                                    {selectedValue === tab.value && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
                                 </button>
                             ))}
                         </motion.div>
@@ -187,11 +200,11 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                     aria-expanded={isOpen}
                     aria-controls={listId}
                     className={cn(
-                        buttonVariants({ variant: "trigger", size: triggerButtonSize }),
-                        "w-auto gap-2 px-4 font-medium",
+                        "flex w-full items-center gap-3 bg-primary px-3.5 font-semibold text-white shadow-lg transition-colors duration-150",
+                        "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        triggerHeight,
                         triggerTextSize,
-                        roundedClass,
-                        width === "full" && "w-full"
+                        roundedClass
                     )}
                 >
                     {(icon || openIcon) && (
@@ -199,7 +212,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                             <motion.span
                                 key={isOpen && openIcon ? "open" : "closed"}
                                 initial={{ opacity: 0, scale: 0.7 }}
-                                animate={{ opacity: 1, scale: 1, rotate: isOpen && !openIcon ? 45 : 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.7 }}
                                 transition={{ duration: 0.12 }}
                                 className="flex items-center justify-center"
@@ -208,9 +221,13 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                             </motion.span>
                         </AnimatePresence>
                     )}
-                    <span>{triggerLabel}</span>
+                    <span className="min-w-0 flex-1 truncate text-left">{triggerLabel}</span>
+                    <motion.span aria-hidden="true" animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.18 }} className="flex shrink-0 items-center">
+                        {renderIcon("CaretDownIcon", 16)}
+                    </motion.span>
                 </button>
             </div>
+            </>
         );
     }
 );
