@@ -13,14 +13,23 @@ const defaultIcons: Partial<Record<UIColor, React.ReactNode>> = {
   info: <InfoIcon weight="fill" />,
 };
 
+/** Aviso com tone semântico, ícone, ação e animação opcionais. */
 export interface AlertProps extends Omit<MotionBoxProps, 'title' | 'color' | 'children' | 'preset'> {
+  /** Título do aviso. */
   title?: React.ReactNode;
+  /** Descrição abaixo do título. */
   description?: React.ReactNode;
+  /** Tone do fundo suave, borda e texto; padrão `info`. */
   color?: UIColor;
+  /** Ícone personalizado; `false` o oculta. */
   icon?: React.ReactNode | false;
+  /** Ação exibida ao lado do conteúdo. */
   action?: React.ReactNode;
+  /** Exibe o botão de fechar e recebe seu clique. */
   onDismiss?: () => void;
+  /** Preset de animação de entrada. */
   motionPreset?: MotionPreset;
+  /** Conteúdo adicional do aviso. */
   children?: React.ReactNode;
 }
 

@@ -50,16 +50,25 @@ const objectFitClasses = {
     scaleDown: 'object-scale-down',
 };
 
+/** Imagem com placeholder e fallback. */
 export interface ImageProps
     extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'>,
     VariantProps<typeof imageVariants> {
+    /** URL da imagem principal. */
     src?: string | null;
+    /** Descrição acessível da imagem. */
     alt: string;
+    /** URL usada quando a imagem principal falha. */
     fallback?: string;
+    /** Classe do contêiner externo. */
     containerClassName?: string;
+    /** Mostra placeholder durante o carregamento. */
     showPlaceholder?: boolean;
+    /** Classe do placeholder. */
     placeholderClassName?: string;
+    /** Chamado após carregar a imagem. */
     onLoadSuccess?: () => void;
+    /** Chamado quando a imagem falha. */
     onLoadError?: () => void;
 }
 
@@ -171,8 +180,11 @@ const Image = React.forwardRef<HTMLDivElement, ImageProps>(
 Image.displayName = 'Image';
 
 // Avatar Image Component
+/** Imagem formatada para avatar. */
 export interface AvatarImageProps extends Omit<ImageProps, 'aspectRatio' | 'objectFit' | 'rounded'> {
+    /** Diâmetro do avatar. */
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+    /** Forma do avatar. */
     shape?: 'circle' | 'square' | 'rounded';
 }
 
@@ -213,7 +225,9 @@ const AvatarImage = React.forwardRef<HTMLDivElement, AvatarImageProps>(
 AvatarImage.displayName = 'AvatarImage';
 
 // Service Image Component
+/** Imagem com proporções prontas para serviços. */
 export interface ServiceImageProps extends Omit<ImageProps, 'aspectRatio' | 'rounded'> {
+    /** Proporção e raio aplicados à imagem. */
     variant?: 'card' | 'detail' | 'thumbnail' | 'banner';
 }
 

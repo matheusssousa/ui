@@ -7,6 +7,7 @@ import { Input } from './input.js';
 import { Select, SelectOption } from './select.js';
 import { Button } from './button.js';
 import { CalendarIcon, FunnelIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
+import { toneScopeStyle } from './theme.js';
 
 const Search = React.forwardRef<HTMLInputElement, SearchProps>(
   ({
@@ -23,6 +24,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
     showClearAll = false,
     debounceMs = 300,
     globalSearch = false,
+    color = 'primary',
     ...props
   }, ref) => {
 
@@ -145,7 +147,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
     };
 
     return (
-      <div className="w-full space-y-1">
+      <div className="w-full space-y-1" style={toneScopeStyle(color)}>
         {/* Barra de Pesquisa Principal */}
         <div className="relative">
           <Input
@@ -167,7 +169,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
                     className={cn(
                       'p-2 rounded hover:bg-accent dark:hover:bg-foreground/30 transition-colors relative',
                       isFiltersOpen && 'bg-accent dark:bg-foreground/20',
-                      hasActiveFilters && 'text-primary'
+                      hasActiveFilters && 'text-primary-text'
                     )}
                   >
                     <FunnelIcon className="h-4 w-4" />

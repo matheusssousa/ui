@@ -27,10 +27,13 @@ const skeletonVariants = cva(
   }
 );
 
+/** Placeholder para conteúdo em carregamento. */
 export interface SkeletonProps
   extends React.HTMLAttributes<HTMLDivElement>,
   VariantProps<typeof skeletonVariants> {
+  /** Largura CSS ou número em pixels. */
   width?: string | number;
+  /** Altura CSS ou número em pixels. */
   height?: string | number;
 }
 

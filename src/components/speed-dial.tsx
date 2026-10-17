@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as PhosphorIcons from "@phosphor-icons/react/dist/ssr";
 import { cn } from "../utils.js";
+import { toneClasses, type UIColor } from './theme.js';
 
 const speedDialVariants = cva("fixed z-50 flex flex-col gap-2", {
     variants: {
@@ -17,12 +18,12 @@ const speedDialVariants = cva("fixed z-50 flex flex-col gap-2", {
 });
 
 const buttonVariants = cva(
-    "flex items-center justify-center rounded-full shadow-lg transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer",
+    "flex items-center justify-center rounded-full shadow-lg transition-all duration-200 ease-out hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer",
     {
         variants: {
             variant: {
-                trigger: "bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary/50 active:scale-95",
-                action: "bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary/50 active:scale-95",
+                trigger: "bg-primary text-primary-foreground active:scale-95",
+                action: "bg-secondary text-secondary-foreground active:scale-95",
             },
             size: { xsmall: "h-9 w-9", small: "h-11 w-11", medium: "h-14 w-14", large: "h-16 w-16" },
         },
@@ -33,23 +34,44 @@ const buttonVariants = cva(
 export type SpeedDialIcon = React.ReactNode | keyof typeof PhosphorIcons;
 
 export interface SpeedDialAction {
+    /** Identificador estável da ação, usado também para controlar submenus. */
     id?: string;
+    /** Ícone React ou nome de ícone do Phosphor. */
     icon?: SpeedDialIcon;
+    /** Texto visível ao lado da ação e rótulo acessível do botão. */
     label: string;
+    /** Chamado ao selecionar uma ação sem filhos. */
     onClick?: () => void;
+    /** Ações aninhadas que abrem um submenu. */
     children?: SpeedDialAction[];
+    /** Impede a interação com esta ação. */
     disabled?: boolean;
+    /** Destaca a ação com a cor do gatilho quando `color` não é informado. */
     active?: boolean;
+    /** Sobrescreve `actionColor` para esta ação. */
+    color?: UIColor;
 }
 
+/** Botão flutuante com ações e subações; as cores usam os tones de `UIColor`. */
 export interface SpeedDialProps
     extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof speedDialVariants> {
+    /** Ações mostradas ao abrir o menu. */
     actions: SpeedDialAction[];
+    /** Ícone do gatilho fechado; padrão `PlusIcon`. */
     icon?: SpeedDialIcon;
+    /** Ícone alternativo para o gatilho aberto. */
     openIcon?: SpeedDialIcon;
+    /** Cor do gatilho e das ações com `active: true`; padrão `primary`. */
+    color?: UIColor;
+    /** Cor das ações comuns; padrão `secondary`. */
+    actionColor?: UIColor;
+    /** Tamanho do gatilho; padrão `medium`. */
     buttonSize?: "small" | "medium" | "large";
+    /** Tamanho dos botões de ação; por padrão segue `buttonSize`. */
     actionSize?: VariantProps<typeof buttonVariants>["size"];
+    /** Rótulo acessível do gatilho. */
     triggerLabel?: string;
+    /** Fecha o menu após selecionar uma ação sem filhos; padrão `true`. */
     closeOnAction?: boolean;
 }
 
@@ -71,6 +93,8 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
             actions,
             icon = "PlusIcon",
             openIcon,
+            color = 'primary',
+            actionColor = 'secondary',
             buttonSize = "medium",
             actionSize,
             triggerLabel = "Abrir ações",
@@ -142,7 +166,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                                         className={cn(
                                             buttonVariants({ variant: "action", size: resolvedActionSize }),
                                             "shrink-0 disabled:cursor-not-allowed disabled:opacity-50",
-                                            action.active && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                            toneClasses[action.color ?? (action.active ? color : actionColor)].solid
                                         )}
                                     >
                                         {renderIcon(action.icon, resolvedActionSize === "xsmall" ? 18 : resolvedActionSize === "small" ? 20 : resolvedActionSize === "large" ? 28 : 24)}
@@ -205,7 +229,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                         type="button"
                         data-speed-dial-trigger
                         onClick={() => setIsOpen(open => !open)}
-                        className={buttonVariants({ variant: "trigger", size: buttonSize })}
+                        className={cn(buttonVariants({ variant: "trigger", size: buttonSize }), toneClasses[color].solid)}
                         aria-label={triggerLabel}
                         aria-expanded={isOpen}
                         aria-controls={menuId}

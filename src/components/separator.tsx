@@ -2,11 +2,17 @@ import * as React from 'react';
 import { cn } from '../utils.js';
 import { motion } from 'framer-motion';
 
+/** Divisor horizontal ou vertical. */
 export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
+    /** Direção do divisor; padrão horizontal. */
     orientation?: 'horizontal' | 'vertical';
+    /** Aparência da linha. */
     variant?: 'default' | 'gradient' | 'dashed';
+    /** Texto central opcional. */
     text?: string;
+    /** Anima a entrada. */
     animationEntrance?: boolean;
+    /** Anima a saída. */
     animationOut?: boolean;
 }
 

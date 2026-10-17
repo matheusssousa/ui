@@ -37,27 +37,46 @@ const tableVariants = cva(
   }
 );
 
+/** Tabela com ordenação, seleção e paginação opcionais. */
 export interface TableProps extends VariantProps<typeof tableVariants> {
+  /** Definição das colunas. */
   columns: Column[];
+  /** Linhas exibidas. */
   data: TableData[];
+  /** Exibe estado de carregamento. */
   loading?: boolean;
+  /** Texto quando não há linhas. */
   emptyMessage?: string;
+  /** Classe do contêiner. */
   className?: string;
+  /** Habilita ordenação pelos cabeçalhos. */
   sortable?: boolean;
+  /** Coluna e direção de ordenação atuais. */
   sortState?: SortState;
+  /** Recebe a coluna escolhida para ordenação. */
   onSort?: (column: string) => void;
+  /** Estado da paginação. */
   pagination?: PaginationState;
+  /** Recebe a página escolhida. */
   onPageChange?: (page: number) => void;
+  /** Permite selecionar linhas. */
   selectable?: boolean;
+  /** Decide se uma linha pode ser selecionada. */
   isRowSelectable?: (row: TableData) => boolean;
+  /** Recebe as chaves das linhas selecionadas. */
   onSelectionChange?: (selectedRows: (string | number)[]) => void; // Apenas o callback
+  /** Campo que identifica cada linha. */
   rowKey?: string;
+  /** Recebe a linha e o índice após clique. */
   onRowClick?: (row: TableData, index: number) => void;
+  /** Renderiza ações para a seleção atual. */
   renderBulkActions?: (
     selectedRows: (string | number)[],
     clearSelection: () => void
   ) => React.ReactNode; // Função para renderizar ações em massa
+  /** Habilita adaptação a telas estreitas. */
   responsive?: boolean;
+  /** Número de colunas antes de ocultar extras em telas menores. */
   limitColumnsShow?: number; // Quantidade de colunas a mostrar antes de esconder em telas menores
 }
 

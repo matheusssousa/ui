@@ -38,10 +38,15 @@ const logAccordionVariants = cva(
 
 type PolymorphicProps = React.HTMLProps<HTMLDivElement> & React.AnchorHTMLAttributes<HTMLAnchorElement>;
 
+/** Painel expansível que exibe dados de log. */
 export interface LogAccordionProps extends Omit<PolymorphicProps, 'color' | 'size'>, VariantProps<typeof logAccordionVariants> {
+    /** Substitui o ícone por indicador de carregamento e desativa a expansão. */
     isLoading?: boolean;
+    /** Título do painel. */
     title: string;
+    /** Data ou descrição exibida abaixo do título. */
     description?: string;
+    /** Dados a exibir quando expandido. */
     log: unknown;
 }
 

@@ -93,15 +93,25 @@ const useTabs = () => {
     return context;
 };
 
+/** Grupo de abas controlado por `value` ou iniciado com `defaultValue`. */
 export interface TabsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
+    /** Valor da aba inicialmente ativa. */
     defaultValue: string;
+    /** Valor ativo quando o componente é controlado. */
     value?: string;
+    /** Recebe o valor da aba escolhida. */
     onValueChange?: (value: string) => void;
+    /** Aparência da lista e do indicador. */
     variant?: TabsVariant;
+    /** Tone dos estados ativos e interativos; padrão `primary`. */
     color?: UIColor;
+    /** Altura e espaçamento dos gatilhos. */
     size?: TabsSize;
+    /** Comportamento da lista em telas estreitas. */
     mobileBehavior?: TabsMobileBehavior;
+    /** Faz a lista ocupar toda a largura disponível. */
     fullWidth?: boolean;
+    /** Animação ao trocar o conteúdo. */
     contentAnimation?: TabsContentAnimation;
 }
 

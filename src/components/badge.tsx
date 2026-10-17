@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { getStatusMeta } from '../functions/getStatusBadge.js';
+import { toneClasses, type UIColor } from './theme.js';
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -50,9 +51,12 @@ const indicatorColors: Record<string, string> = {
   secondary: 'bg-secondary', tertiary: 'bg-tertiary',
 };
 
+/** Rótulo ou indicador de status; `color` aplica um tone suave ao badge. */
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLElement>,
   VariantProps<typeof badgeVariants> {
+  /** Cor do badge; quando informada, prevalece sobre a cor de `variant` e `status`. */
+  color?: UIColor;
   /** Ícone à esquerda do texto */
   leftIcon?: React.ReactNode;
   /** Ícone à direita do texto */
@@ -63,17 +67,24 @@ export interface BadgeProps
   onBadgeClick?: (e: React.MouseEvent<HTMLElement>) => void;
   /** Se true, adiciona um ponto indicador */
   dot?: boolean;
+  /** Usa bordas totalmente arredondadas. */
   pill?: boolean;
+  /** Anima a entrada e o hover do badge. */
   animated?: boolean;
+  /** Anima o ponto indicador. */
   pulse?: boolean;
+  /** Código de status resolvido por `getStatusMeta`. */
   status?: string | null;
+  /** Mostra o badge completo ou apenas o indicador. */
   display?: 'badge' | 'indicator';
+  /** Oculta o texto visível, preservando o rótulo acessível no indicador. */
   showLabel?: boolean;
 }
 
 function Badge({
   className,
   variant,
+  color,
   size,
   children,
   leftIcon,
@@ -95,8 +106,8 @@ function Badge({
   if (display === 'indicator') {
     return <span className={cn('inline-flex items-center gap-2 text-xs text-muted-foreground', className)} {...props}>
       <span className="relative flex size-2.5" aria-hidden="true">
-        {pulse && <span className={cn('absolute inline-flex size-full animate-ping rounded-full opacity-40', indicatorColors[resolvedVariant ?? 'default'])} />}
-        <span className={cn('relative inline-flex size-2.5 rounded-full', indicatorColors[resolvedVariant ?? 'default'])} />
+        {pulse && <span className={cn('absolute inline-flex size-full animate-ping rounded-full opacity-40', color ? toneClasses[color].fill : indicatorColors[resolvedVariant ?? 'default'])} />}
+        <span className={cn('relative inline-flex size-2.5 rounded-full', color ? toneClasses[color].fill : indicatorColors[resolvedVariant ?? 'default'])} />
       </span>
       {content && <span>{content}</span>}
       {!content && <span className="sr-only">{meta?.label ?? 'Status'}</span>}
@@ -107,7 +118,9 @@ function Badge({
   const badge = (
     <Component
       className={cn(
-        badgeVariants({ variant: resolvedVariant, size }),
+        badgeVariants({ variant: color ? 'outline' : resolvedVariant, size }),
+        color && toneClasses[color].soft,
+        color && toneClasses[color].outline,
         clickable && 'cursor-pointer hover:scale-105 active:scale-95',
         pill && 'rounded-full',
         className
@@ -122,15 +135,16 @@ function Badge({
         <span
           className={cn(
             'relative inline-flex h-2 w-2 rounded-full',
-            resolvedVariant === 'success' && 'bg-success',
-            resolvedVariant === 'warning' && 'bg-warning',
-            resolvedVariant === 'destructive' && 'bg-destructive',
-            resolvedVariant === 'info' && 'bg-info',
-            resolvedVariant === 'default' && 'bg-primary-text',
-            resolvedVariant === 'secondary' && 'bg-secondary-text',
-            resolvedVariant === 'outline' && 'bg-foreground',
-            resolvedVariant === 'tertiary' && 'bg-tertiary-text',
-            resolvedVariant === 'gradient' && 'bg-white'
+            color && toneClasses[color].fill,
+            !color && resolvedVariant === 'success' && 'bg-success',
+            !color && resolvedVariant === 'warning' && 'bg-warning',
+            !color && resolvedVariant === 'destructive' && 'bg-destructive',
+            !color && resolvedVariant === 'info' && 'bg-info',
+            !color && resolvedVariant === 'default' && 'bg-primary-text',
+            !color && resolvedVariant === 'secondary' && 'bg-secondary-text',
+            !color && resolvedVariant === 'outline' && 'bg-foreground',
+            !color && resolvedVariant === 'tertiary' && 'bg-tertiary-text',
+            !color && resolvedVariant === 'gradient' && 'bg-white'
           )}
         />
         </span>

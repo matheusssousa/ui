@@ -67,14 +67,21 @@ const valueVariants = cva(
     }
 );
 
+/** Campo de informação com opção de cópia e link. */
 export interface InfoProps
     extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof infoVariants> {
+    /** Nome da informação. */
     label: React.ReactNode;
+    /** Valor exibido; usa `children` quando omitido. */
     value?: React.ReactNode;
+    /** Ícone ao lado da informação. */
     icon?: React.ReactNode;
+    /** Exibe controle para copiar o valor. */
     copyable?: boolean;
+    /** Exibe estado de carregamento. */
     loading?: boolean;
+    /** Destino de navegação opcional. */
     link?: string;
 }
 

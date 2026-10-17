@@ -3,6 +3,7 @@ import { cn } from "../utils.js";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link.js";
+import { toneClasses, type UIColor } from './theme.js';
 
 export const tipVariants = cva(
     "rounded-lg border p-4 transition-all",
@@ -39,14 +40,24 @@ export const tipVariants = cva(
     }
 );
 
+/** Dica contextual com ícone e ação opcional; `color` substitui a cor da variante. */
 export interface TipProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof tipVariants> {
+    /** Tone aplicado ao fundo suave, borda e texto. */
+    color?: UIColor;
+    /** Ícone decorativo à esquerda. */
     icon?: React.ReactNode;
+    /** Conteúdo da dica. */
     children?: React.ReactNode;
+    /** Ação opcional como link ou botão. */
     action?: {
+        /** Texto exibido na ação. */
         label?: string;
+        /** Callback da ação quando `href` não é usado. */
         onClick?: () => void;
+        /** Destino da ação quando renderizada como link. */
         href?: string;
     };
+    /** Callback do botão de fechar. */
     onClose?: () => void;
 }
 
@@ -54,6 +65,7 @@ export function Tip({
     className,
     variant,
     size,
+    color,
     icon,
     children,
     action,
@@ -62,7 +74,7 @@ export function Tip({
 }: TipProps) {
     return (
         <div
-            className={cn(tipVariants({ variant, size }), className)}
+            className={cn(tipVariants({ variant: color ? null : variant, size }), color && toneClasses[color].soft, color && toneClasses[color].outline, className)}
             role="alert"
             {...props}
         >

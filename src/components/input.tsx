@@ -8,6 +8,7 @@ import { Skeleton } from './skeleton.js';
 import { useIMask } from 'react-imask';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { toneScopeStyle, type UIColor } from './theme.js';
 
 const CircleNotchIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CircleNotchIcon), { ssr: false });
 const CaretLeftIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretLeftIcon), { ssr: false });
@@ -65,27 +66,44 @@ const maskConfigs = {
     datetime: { mask: '00/00/0000 00:00' },
 };
 
+/** Campo de entrada com variantes de texto, máscara, data, hora e moeda. */
 export interface InputProps
     extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
     VariantProps<typeof inputVariants> {
+    /** Estado visual da validação, independente do tone de foco. */
     validation?: 'default' | 'error' | 'success';
+    /** Mostra o estado de carregamento. */
     isLoading?: boolean;
+    /** Mostra o estado pendente. */
     isPending?: boolean;
+    /** Ícone no início do campo. */
     leftIcon?: React.ReactNode;
+    /** Ícone no fim do campo. */
     rightIcon?: React.ReactNode;
+    /** Tipo nativo ou um dos modos especiais `currency` e `checkbox`. */
     type?: React.InputHTMLAttributes<HTMLInputElement>['type'] | 'currency' | 'checkbox';
+    /** Rótulo do campo. */
     label?: string;
+    /** Recebe o valor interpretado pelo modo do campo. */
     onValueChange?: (value: any) => void;
+    /** Mensagem de erro mostrada abaixo do campo. */
     error?: string;
+    /** Texto auxiliar à direita. */
     rightPlaceholder?: string;
+    /** Máscara predefinida ou padrão aceito pelo `react-imask`. */
     mask?: keyof typeof maskConfigs | string;
+    /** Cor do foco e das seleções internas; padrão `primary`. */
+    color?: UIColor;
+    /** Anima a entrada do campo. */
     animationEntrance?: boolean;
+    /** Anima a saída do campo. */
     animationOut?: boolean;
+    /** Ajusta a apresentação dentro de um card. */
     isInCard?: boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-    ({ className, variant, size, validation, isLoading, isPending, leftIcon, rightIcon, type = 'text', label, placeholder, onValueChange, error, rightPlaceholder, mask, animationEntrance = false, animationOut = false, isInCard = false, ...props }, ref) => {
+    ({ className, variant, size, validation, isLoading, isPending, leftIcon, rightIcon, type = 'text', label, placeholder, onValueChange, error, rightPlaceholder, mask, color = 'primary', animationEntrance = false, animationOut = false, isInCard = false, ...props }, ref) => {
         const [isFocused, setIsFocused] = React.useState(false);
         const [hasValue, setHasValue] = React.useState(false);
         const [displayValue, setDisplayValue] = React.useState<string>(typeof props.value === 'string' ? (props.value as string) : '');
@@ -632,7 +650,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     <button type="button" className="p-1 rounded hover:bg-accent" onClick={() => changeViewDate(-1)}>
                         <CaretLeftIcon className="w-4 h-4" />
                     </button>
-                    <button type="button" className="text-sm font-medium hover:text-primary" onClick={handleHeaderClick}>
+                    <button type="button" className="text-sm font-medium hover:text-primary-text" onClick={handleHeaderClick}>
                         {headerText}
                     </button>
                     <button type="button" className="p-1 rounded hover:bg-accent" onClick={() => changeViewDate(1)}>
@@ -848,6 +866,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 role="dialog"
                 aria-label="Selecionar data e hora"
                 style={{
+                    ...toneScopeStyle(color),
                     position: 'fixed',
                     top: `${dateTimePosition.top}px`,
                     left: `${dateTimePosition.left}px`,
@@ -951,7 +970,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         if (type === 'checkbox') {
             const id = props.id || React.useId(); // Garante um ID para o label funcionar
             return (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2" style={toneScopeStyle(color)}>
                     <div className="relative flex items-center justify-center">
                         <input
                             id={id}
@@ -988,7 +1007,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             const id = props.id || React.useId();
 
             return (
-                <div className='w-full'>
+                <div className='w-full' style={toneScopeStyle(color)}>
                     {label && (
                         <label htmlFor={id} className="block text-sm font-medium mb-2 text-foreground">
                             {label}
@@ -1117,7 +1136,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             const inputName = props.name;
             
             return (
-            <div className='w-full'>
+            <div className='w-full' style={toneScopeStyle(color)}>
                 <div className="relative w-full">
                     {leftIcon && <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10">{leftIcon}</span>}
                     {/* Campo hidden para enviar valor serializado em máscaras, datas e horas. */}
@@ -1182,7 +1201,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                                 event.stopPropagation();
                             }}
                             onClick={isDate || isDateTime ? openCalendar : openTimePicker}
-                            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary-text disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isTime ? <ClockIcon className="size-4" /> : <CalendarBlankIcon className="size-4" />}
                         </button>
@@ -1296,7 +1315,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             const inputName = props.name;
             
             return (
-            <div className='w-full'>
+            <div className='w-full' style={toneScopeStyle(color)}>
                 <div className="relative w-full">
                     {leftIcon && <span className="absolute left-3 top-1/2 -translate-y-1/2">{leftIcon}</span>}
                     {/* Campo hidden para enviar valor serializado em máscaras, datas e horas. */}
@@ -1344,7 +1363,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                                 event.stopPropagation();
                             }}
                             onClick={isDate || isDateTime ? openCalendar : openTimePicker}
-                            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary-text disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {isTime ? <ClockIcon className="size-4" /> : <CalendarBlankIcon className="size-4" />}
                         </button>

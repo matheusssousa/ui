@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import dynamic from 'next/dynamic.js';
+import { toneClasses, type UIColor } from './theme.js';
 
 const CaretLeftIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretLeftIcon), { ssr: false });
 const CaretRightIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretRightIcon), { ssr: false });
@@ -29,12 +30,21 @@ const paginationVariants = cva(
   }
 );
 
+/** Paginação numérica; `color` colore a página ativa. */
 export interface PaginationProps {
+  /** Página atual, começando em 1. */
   currentPage: number;
+  /** Número total de páginas. */
   totalPages: number;
+  /** Recebe o número da página escolhida. */
   onPageChange: (page: number) => void;
+  /** Exibe os botões anterior e próximo; padrão `true`. */
   showPreviousNext?: boolean;
+  /** Quantidade de páginas vizinhas à página atual; padrão 1. */
   siblingCount?: number;
+  /** Cor da página ativa; padrão `default`. */
+  color?: UIColor;
+  /** Classes adicionais no contêiner. */
   className?: string;
 }
 
@@ -45,6 +55,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
     onPageChange, 
     showPreviousNext = true,
     siblingCount = 1,
+    color = 'default',
     className,
     ...props 
   }, ref) => {
@@ -139,7 +150,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
                   paginationVariants({
                     variant: currentPage === page ? 'active' : 'default',
                     size: 'icon',
-                  }), 'cursor-pointer'
+                  }), currentPage === page && toneClasses[color].solid, 'cursor-pointer'
                 )}
               >
                 {page}

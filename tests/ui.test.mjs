@@ -14,6 +14,10 @@ import { SpeedDialTabs } from '../dist/components/speed-dial-tabs.js';
 import { Tabs, TabsList, TabsTrigger } from '../dist/components/tabs.js';
 import { toneClasses } from '../dist/components/theme.js';
 import { MonthYearPicker } from '../dist/components/month-year-picker.js';
+import { SpeedDial } from '../dist/components/speed-dial.js';
+import { Toast } from '../dist/components/toast.js';
+import { Textarea } from '../dist/components/textarea.js';
+import { Switch } from '../dist/components/switch.js';
 
 test('consolidated loading and status have accessible labels', () => {
   const spinner = renderToStaticMarkup(React.createElement(Spinner, { mode: 'block', label: 'Carregando dados' }));
@@ -61,6 +65,29 @@ test('speed dial tabs renders a labelled trigger at a center position', () => {
   }));
   assert.match(secondary, /bg-secondary/);
   assert.match(secondary, /text-secondary-foreground/);
+});
+
+test('speed dial trigger uses its color and keeps the action color off the DOM', () => {
+  const markup = renderToStaticMarkup(React.createElement(SpeedDial, {
+    actions: [{ icon: 'PlusIcon', label: 'Novo', color: 'warning' }],
+    color: 'secondary', actionColor: 'info',
+  }));
+  assert.match(markup, /bg-secondary/);
+  assert.match(markup, /text-secondary-foreground/);
+  assert.doesNotMatch(markup, /actionColor=/);
+});
+
+test('tone overrides semantic toast colors and scopes textarea focus', () => {
+  const toast = renderToStaticMarkup(React.createElement(Toast, { id: 'saved', variant: 'success', color: 'tertiary', title: 'Salvo' }));
+  assert.match(toast, /bg-tertiary\/10/);
+  assert.match(toast, /text-tertiary-text/);
+  assert.doesNotMatch(toast, /bg-success\/10/);
+  const textarea = renderToStaticMarkup(React.createElement(Textarea, { color: 'secondary', label: 'Nota' }));
+  assert.match(textarea, /--primary:var\(--secondary\)/);
+  assert.doesNotMatch(textarea, /color="secondary"/);
+  const toggle = renderToStaticMarkup(React.createElement(Switch, { checked: true, color: 'warning' }));
+  assert.match(toggle, /bg-warning/);
+  assert.match(toggle, /bg-warning-foreground/);
 });
 
 test('tabs use the selected tone in every variant', () => {
@@ -112,6 +139,13 @@ test('month and year picker shows the selected month and disables navigation at 
   assert.match(october, /aria-label="Mês anterior"/);
   assert.match(october, /aria-label="Próximo mês"/);
   assert.match(october, /aria-haspopup="dialog"/);
+
+  const customized = renderToStaticMarkup(React.createElement(MonthYearPicker, {
+    defaultValue: new Date(2026, 9, 1), variant: 'filled', size: 'lg', color: 'secondary',
+  }));
+  assert.match(customized, /w-96/);
+  assert.match(customized, /bg-secondary/);
+  assert.match(customized, /text-secondary-foreground/);
 
   const january = renderToStaticMarkup(React.createElement(MonthYearPicker, {
     value: new Date(2026, 0, 1), minYear: 2026,

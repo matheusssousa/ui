@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 export const uiSizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 export const uiColors = ['default', 'primary', 'secondary', 'success', 'warning', 'danger', 'info', 'neutral', 'tertiary', 'background'] as const;
 export const uiRadii = ['none', 'sm', 'md', 'lg', 'xl', 'full'] as const;
@@ -87,3 +89,27 @@ export const toneClasses: Record<UIColor, { solid: string; fill: string; onSolid
     text: 'text-foreground',
   },
 };
+const toneTokens: Record<UIColor, readonly [string, string, string]> = {
+  default: ['foreground', 'background', 'foreground'],
+  primary: ['primary', 'primary-foreground', 'primary-text'],
+  secondary: ['secondary', 'secondary-foreground', 'secondary-text'],
+  tertiary: ['tertiary', 'tertiary-foreground', 'tertiary-text'],
+  success: ['success', 'success-foreground', 'success'],
+  warning: ['warning', 'warning-foreground', 'warning'],
+  danger: ['destructive', 'destructive-foreground', 'destructive'],
+  info: ['info', 'info-foreground', 'info'],
+  neutral: ['neutral', 'neutral-foreground', 'neutral'],
+  background: ['background', 'foreground', 'foreground'],
+};
+
+/** Aplica um tone aos componentes legados que usam utilitários `primary` em elementos internos. */
+export function toneScopeStyle(color: UIColor, style?: CSSProperties): CSSProperties {
+  if (color === 'primary') return style ?? {};
+  const [base, foreground, text] = toneTokens[color];
+  return {
+    '--primary': `var(--${base})`,
+    '--primary-foreground': `var(--${foreground})`,
+    '--primary-text': `var(--${text})`,
+    ...style,
+  } as CSSProperties;
+}

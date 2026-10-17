@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { AnimatePresence, motion, useReducedMotion, type HTMLMotionProps } from "framer-motion"
 
 import { cn } from "../utils.js"
+import { toneScopeStyle, type UIColor } from './theme.js'
 
 type DropdownSide = "top" | "right" | "bottom" | "left"
 type DropdownAlign = "start" | "center" | "end"
@@ -375,7 +376,7 @@ const dropdownItemVariants = cva(
       variant: {
         default: "text-foreground hover:bg-accent focus:bg-accent focus:text-accent-foreground",
         muted: "text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground",
-        primary: "text-primary hover:bg-primary/10 focus:bg-primary/10",
+        primary: "text-primary-text hover:bg-primary/10 focus:bg-primary/10",
         destructive: "text-destructive hover:bg-destructive/10 focus:bg-destructive/10",
         success: "text-success hover:bg-success/10 focus:bg-success/10",
       },
@@ -385,21 +386,31 @@ const dropdownItemVariants = cva(
         lg: "min-h-12 px-3.5 py-2.5 text-sm",
       },
       inset: { true: "pl-9" },
-      selected: { true: "bg-primary/10 text-primary" },
+      selected: { true: "bg-primary/10 text-primary-text" },
     },
     defaultVariants: { variant: "default", size: "md" },
   },
 )
 
+/** Item de menu com ícone, descrição e seleção opcional. */
 export interface DropdownMenuItemProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "title">,
     VariantProps<typeof dropdownItemVariants> {
+  /** Cor do item e do estado selecionado; quando informada, prevalece sobre `variant`. */
+  color?: UIColor
+  /** Usa o elemento filho como item em vez de uma `div`. */
   asChild?: boolean
+  /** Impede a seleção do item. */
   disabled?: boolean
+  /** Fecha o menu após selecionar; padrão `true`. */
   closeOnSelect?: boolean
+  /** Ícone no início do item. */
   icon?: React.ReactNode
+  /** Título do item. */
   title?: React.ReactNode
+  /** Texto auxiliar abaixo do título. */
   description?: React.ReactNode
+  /** Atalho alinhado à direita. */
   shortcut?: React.ReactNode
 }
 
@@ -412,7 +423,9 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
     closeOnSelect = true,
     selected,
     variant,
+    color,
     size,
+    style,
     icon,
     title,
     description,
@@ -440,7 +453,7 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
     }
 
     const itemClassName = cn(
-      dropdownItemVariants({ variant, size, inset, selected }),
+      dropdownItemVariants({ variant: color ? 'primary' : variant, size, inset, selected }),
       disabled && "pointer-events-none opacity-45",
       className,
     )
@@ -454,6 +467,7 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
         tabIndex: -1,
         "aria-disabled": disabled || undefined,
         className: cn(itemClassName, child.props.className),
+        style: toneScopeStyle(color ?? 'primary', { ...style, ...child.props.style }),
         onClick: (event: React.MouseEvent<HTMLDivElement>) => {
           child.props.onClick?.(event)
           if (!event.defaultPrevented) handleClick(event)
@@ -474,6 +488,7 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
         tabIndex={-1}
         aria-disabled={disabled || undefined}
         className={cn(itemClassName, "cursor-pointer!")}
+        style={toneScopeStyle(color ?? 'primary', style)}
         onClick={handleClick}
         onKeyDown={handleItemKeyDown}
         {...props}

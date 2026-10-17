@@ -253,20 +253,33 @@ type PolymorphicProps = React.ButtonHTMLAttributes<HTMLButtonElement> & React.An
  * @property {boolean} [active=false] - Indica se o botão está em estado ativo, aplicando estilos visuais adicionais.
  */
 
+/** Botão ou link com variante, tamanho, tone e estados opcionais. */
 export interface ButtonProps
     extends Omit<PolymorphicProps, 'color'>,
     VariantProps<typeof buttonVariants> {
+    /** Renderiza como link usando `href`. */
     asLink?: boolean;
+    /** Destino quando `asLink` está ativo. */
     href?: string;
+    /** Mostra estado de carregamento e impede novos cliques. */
     loading?: boolean;
+    /** Ícone antes do texto. */
     leftIcon?: React.ReactNode;
+    /** Ícone depois do texto. */
     rightIcon?: React.ReactNode;
+    /** Habilita efeito visual de clique. */
     ripple?: boolean;
+    /** Valor copiado para a área de transferência ao clicar. */
     copyValue?: string | number;
+    /** Anima a entrada. */
     animationEntrance?: boolean;
+    /** Anima a saída. */
     animationOut?: boolean;
+    /** Marca o botão como ativo. */
     active?: boolean;
+    /** Faz o botão ocupar a largura disponível. */
     fullWidth?: boolean;
+    /** Habilita escala na interação. */
     motionScale?: boolean;
 };
 

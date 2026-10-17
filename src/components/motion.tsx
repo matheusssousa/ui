@@ -19,10 +19,15 @@ export const motionPresets: Record<Exclude<MotionPreset, 'none'>, Variants> = {
   pop: { hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.92 } },
 };
 
+/** Contêiner com animação de entrada e interação opcionais. */
 export interface MotionBoxProps extends Omit<HTMLMotionProps<'div'>, 'variants'> {
+  /** Animação pronta; `none` desativa a entrada. */
   preset?: MotionPreset;
+  /** Atraso da animação em segundos. */
   delay?: number;
+  /** Habilita movimentos sutis no hover e clique. */
   interactive?: boolean;
+  /** Estados de animação personalizados, com prioridade sobre `preset`. */
   variants?: Variants;
 }
 

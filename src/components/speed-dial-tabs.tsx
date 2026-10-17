@@ -48,19 +48,32 @@ export interface SpeedDialTab {
     disabled?: boolean;
 }
 
+/** Navegação flutuante que expande uma lista de abas. */
 export interface SpeedDialTabsProps
     extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof speedDialTabsVariants> {
+    /** Abas exibidas no menu. */
     tabs: SpeedDialTab[];
+    /** Nome acessível do botão principal. */
     triggerLabel: string;
+    /** Ícone do botão fechado. */
     icon?: SpeedDialIcon;
+    /** Ícone opcional para o botão aberto. */
     openIcon?: SpeedDialIcon;
+    /** Aba ativa em modo controlado. */
     value?: string;
+    /** Aba inicialmente ativa em modo não controlado. */
     defaultValue?: string;
+    /** Recebe o valor da aba selecionada. */
     onValueChange?: (value: string) => void;
+    /** Fecha o menu após selecionar uma aba. */
     closeOnSelect?: boolean;
+    /** Tone do botão e da aba ativa; padrão `primary`. */
     color?: UIColor;
+    /** Arredondamento do botão principal. */
     rounded?: "none" | "sm" | "md" | "lg" | "full";
+    /** Tamanho do botão principal. */
     size?: "xs" | "sm" | "md" | "lg";
+    /** Largura do menu expandido. */
     width?: "auto" | "full" | "fit";
 }
 

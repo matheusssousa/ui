@@ -3,6 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import dynamic from 'next/dynamic.js';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toneScopeStyle, type UIColor } from './theme.js';
 
 // Supondo que seu Button aceite uma prop `isLoading`
 const Button = dynamic(() => import('./button.js').then(mod => mod.Button), { ssr: false });
@@ -47,18 +48,30 @@ const modalContentVariants = cva(
 );
 
 // --- 1. PROPS ATUALIZADAS ---
-type ModalProps = React.PropsWithChildren<
+export type ModalProps = React.PropsWithChildren<
     VariantProps<typeof modalOverlayVariants> &
     VariantProps<typeof modalContentVariants> & {
+        /** Tone do destaque do cabeçalho e dos botões; padrão `primary`. */
+        color?: UIColor;
+        /** Título do diálogo. */
         title?: string;
+        /** Texto abaixo do título. */
         description?: string;
+        /** Controla a abertura do diálogo. */
         isOpen: boolean;
+        /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */
         onClose: () => void;
+        /** Chamado ao confirmar. */
         onConfirm?: () => void;
+        /** Chamado ao cancelar; usa `onClose` quando omitido. */
         onCancel?: () => void;
+        /** Texto do botão de confirmação. */
         confirmText?: string;
+        /** Texto do botão de cancelamento. */
         cancelText?: string;
+        /** Ícone do botão de confirmação. */
         confirmIcon?: React.ReactNode;
+        /** Ícone do botão de cancelamento. */
         cancelIcon?: React.ReactNode;
         confirmButtonVariant?: any; // Idealmente, importe o tipo de variante do seu botão
         isConfirming?: boolean; // Para o estado de carregamento
@@ -69,13 +82,18 @@ type ModalProps = React.PropsWithChildren<
         hideConfirm?: boolean; // Para esconder apenas o botão de confirmar
         hideCancel?: boolean; // Para esconder apenas o botão de cancelar
         hideCloseIcon?: boolean; // Para esconder o ícone de fechar no canto superior direito
+        /** Quando muda, volta o conteúdo rolável ao início. */
         resetScrollKey?: React.Key;
+        /** Classes adicionais para o conteúdo do diálogo. */
         className?: string;
+        /** Estilos adicionais para o fundo do diálogo. */
+        style?: React.CSSProperties;
     }>;
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     ({
         isOpen,
+        color = 'primary',
         onClose,
         size,
         variant,
@@ -100,6 +118,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         hideCloseIcon = false,
         resetScrollKey,
         className,
+        style,
         ...props
     }, ref) => {
         const contentRef = React.useRef<HTMLDivElement>(null);
@@ -130,6 +149,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                     <motion.div
                         ref={ref}
                         className={cn(modalOverlayVariants({ isOpen }))}
+                        style={toneScopeStyle(color, style)}
                         onClick={handleClose}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -156,6 +176,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                 {!hideCloseIcon && (
                                     <Button
                                         variant={'text'}
+                                        color={color}
                                         onClick={handleClose}
                                         leftIcon={<XIcon size={20} />}
                                         className='w-fit p-0 text-muted-foreground'
@@ -184,6 +205,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                         <Button
                                         type="button"
                                         variant="outlined"
+                                        color={color}
                                         onClick={handleCancel}
                                         disabled={isConfirming || loading}
                                         leftIcon={cancelIcon}
@@ -195,6 +217,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                         <Button
                                             type={submitButton ? 'submit' : 'button'}
                                             variant={confirmButtonVariant}
+                                            color={color}
                                             onClick={onConfirm}
                                             loading={isConfirming || loading}
                                             disabled={isConfirming || loading || disabled}

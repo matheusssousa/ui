@@ -220,11 +220,16 @@ import { MonthYearPicker } from '@matheusssousa/ui/components/month-year-picker'
   defaultValue={new Date(2026, 9, 1)}
   minYear={2020}
   maxYear={2030}
+  variant="soft"
+  size="md"
+  color="primary"
+  monthOptionClassName={({ selected }) => selected ? 'font-bold' : ''}
+  yearOptionClassName={({ selected }) => selected ? 'font-bold' : ''}
   onValueChange={(month) => console.log(month)}
 />
 ```
 
-O valor é um `Date` normalizado para o primeiro dia do mês. Use `value` com `onValueChange` para controlar a seleção, ou `defaultValue` para deixá-la no componente. As setas respeitam `minYear` e `maxYear`; ao clicar no mês exibido, o painel permite escolher o ano e um dos 12 meses.
+O valor é um `Date` normalizado para o primeiro dia do mês. Use `value` com `onValueChange` para controlar a seleção, ou `defaultValue` para deixá-la no componente. As setas respeitam `minYear` e `maxYear`. O painel tem abas para meses e anos: sem limites de ano, mostra um campo numérico; com `minYear` ou `maxYear`, mostra anos em páginas de 12. Escolher um ano abre a aba de meses; a seleção só é enviada ao escolher o mês. `variant` aceita `outlined`, `soft` e `filled`; `size` aceita `sm`, `md` e `lg`; `color` aceita os tones de `UIColor`. Para personalizar cada opção, use `monthOptionClassName`, `yearOptionClassName`, `renderMonth` ou `renderYear`; o mês passado aos callbacks vai de 0 a 11. `yearInputClassName` personaliza o campo sem limites.
 
 ### Referência rápida
 
@@ -252,11 +257,13 @@ import { SpeedDial } from "@matheusssousa/ui";
 
 <SpeedDial
   position="bottom-left"
+  color="primary"
+  actionColor="secondary"
   icon="PlusIcon"
   openIcon="XIcon"
   triggerLabel="Ações rápidas"
   actions={[
-    { id: "novo", label: "Novo", icon: "FilePlusIcon", active: true, onClick: criar },
+    { id: "novo", label: "Novo", icon: "FilePlusIcon", active: true, color: "success", onClick: criar },
     {
       id: "compartilhar",
       label: "Compartilhar",
@@ -270,6 +277,8 @@ import { SpeedDial } from "@matheusssousa/ui";
 ```
 
 `icon` e `openIcon` aceitam o nome exportado por `@phosphor-icons/react/dist/ssr` (por exemplo, `"PlusIcon"`) ou um elemento React. Cada ação aceita `id`, `label`, `icon`, `onClick`, `disabled`, `active` e `children` para subitens. `active: true` destaca a opção; o estado é definido por quem usa o componente. Uma ação com `children` expande seus subitens; uma ação sem filhos chama `onClick`. Use `actionSize` e `buttonSize` para os tamanhos, e `closeOnAction={false}` para manter o menu aberto depois de uma ação.
+
+O `SpeedDial` aceita `color` no botão principal, `actionColor` nas ações e `color` em cada ação para sobrescrever esse padrão. Esses valores usam os tones definidos em `UIColor` e nos tokens CSS do tema.
 
 ### SpeedDialTabs
 

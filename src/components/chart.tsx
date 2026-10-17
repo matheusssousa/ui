@@ -35,16 +35,25 @@ export type ChartDataPoint = {
     color?: string;
 };
 
+/** Configuração compartilhada pelos gráficos. */
 export interface BaseChartProps
     extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof chartVariants> {
+    /** Pontos exibidos no gráfico. */
     data: ChartDataPoint[];
+    /** Título acima do gráfico. */
     title?: string;
+    /** Texto auxiliar abaixo do título. */
     subtitle?: string;
+    /** Exibe a legenda. */
     showLegend?: boolean;
+    /** Exibe linhas de grade. */
     showGrid?: boolean;
+    /** Exibe valores dos pontos. */
     showValues?: boolean;
+    /** Anima a apresentação dos dados. */
     animate?: boolean;
+    /** Cores CSS usadas nas séries; padrão usa os tokens `--chart-*`. */
     colors?: string[];
 }
 
@@ -109,10 +118,15 @@ const ChartHeader: React.FC<{
 // ======================
 // LINE CHART
 // ======================
+/** Opções específicas do gráfico de linha. */
 export interface LineChartProps extends BaseChartProps {
+    /** Suaviza a curva. */
     smooth?: boolean;
+    /** Espessura da linha em pixels. */
     strokeWidth?: number;
+    /** Exibe marcadores dos pontos. */
     showDots?: boolean;
+    /** Preenche a área abaixo da linha. */
     fillArea?: boolean;
 }
 
@@ -301,8 +315,11 @@ LineChart.displayName = 'LineChart';
 // ======================
 // BAR CHART
 // ======================
+/** Opções específicas do gráfico de barras. */
 export interface BarChartProps extends BaseChartProps {
+    /** Desenha as barras na horizontal. */
     horizontal?: boolean;
+    /** Raio dos cantos das barras em pixels. */
     barRadius?: number;
 }
 
@@ -451,9 +468,13 @@ BarChart.displayName = 'BarChart';
 // ======================
 // PIE CHART
 // ======================
+/** Opções específicas do gráfico de setores. */
 export interface PieChartProps extends BaseChartProps {
+    /** Abre um espaço no centro do gráfico. */
     donut?: boolean;
+    /** Largura do anel quando `donut` está ativo. */
     donutWidth?: number;
+    /** Exibe a porcentagem por setor. */
     showPercentage?: boolean;
 }
 
@@ -613,9 +634,13 @@ PieChart.displayName = 'PieChart';
 // ======================
 // AREA CHART
 // ======================
+/** Opções específicas do gráfico de área. */
 export interface AreaChartProps extends BaseChartProps {
+    /** Suaviza a curva. */
     smooth?: boolean;
+    /** Espessura da borda da área em pixels. */
     strokeWidth?: number;
+    /** Opacidade do preenchimento, de 0 a 1. */
     fillOpacity?: number;
 }
 

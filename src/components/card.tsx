@@ -10,13 +10,21 @@ import { toneClasses } from './theme.js';
 import { Skeleton } from './skeleton.js';
 import { formatCurrency } from '../functions/formatCurrency.js';
 
+/** Dados apresentados quando `Card` recebe a prop `metric`. */
 export interface CardMetric {
+  /** Nome da métrica. */
   label: React.ReactNode;
+  /** Valor principal. */
   value: React.ReactNode;
+  /** Texto auxiliar da métrica. */
   description?: React.ReactNode;
+  /** Ícone ao lado do valor. */
   icon?: React.ReactNode;
+  /** Tone do destaque da métrica. */
   tone?: UIColor;
+  /** Formatação numérica aplicada ao valor. */
   format?: 'currency' | 'number';
+  /** Variação percentual em relação ao período anterior. */
   change?: number;
 }
 
@@ -101,23 +109,39 @@ const cardVariants = cva(
   },
 );
 
+/** Superfície com cabeçalho, conteúdo e métrica opcionais. */
 export interface CardProps
   extends Omit<HTMLMotionProps<'div'>, 'title' | 'children'>,
     VariantProps<typeof cardVariants> {
+  /** Título no cabeçalho. */
   title?: React.ReactNode;
+  /** Descrição no cabeçalho. */
   description?: React.ReactNode;
+  /** Ícone do cabeçalho. */
   icon?: React.ReactNode;
+  /** Ação no cabeçalho. */
   action?: React.ReactNode;
+  /** Conteúdo do rodapé. */
   footer?: React.ReactNode;
+  /** Raio dos cantos. */
   radius?: UIRadius;
+  /** Tone das superfícies coloridas e da métrica. */
   color?: UIColor;
+  /** Habilita aparência interativa. */
   interactive?: boolean;
+  /** Mostra estrutura provisória de carregamento. */
   loading?: boolean;
+  /** Anima a entrada. */
   animationEntrance?: boolean;
+  /** Anima a saída. */
   animationOut?: boolean;
+  /** Preset de animação. */
   motionPreset?: MotionPreset;
+  /** Atraso da animação em segundos. */
   animationDelay?: number;
+  /** Conteúdo principal. */
   children?: React.ReactNode;
+  /** Dados para apresentar um cartão de métrica. */
   metric?: CardMetric;
 }
 

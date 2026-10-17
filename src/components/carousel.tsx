@@ -5,6 +5,7 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import dynamic from 'next/dynamic.js';
+import { toneScopeStyle, type UIColor } from './theme.js';
 
 const CaretLeftIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretLeft));
 const CaretRightIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretRight));
@@ -63,17 +64,33 @@ export interface CarouselItem {
     alt?: string;
 }
 
-interface CarouselProps extends VariantProps<typeof carouselVariants> {
+/** Carrossel de conteúdo com navegação, indicadores e reprodução automática. */
+export interface CarouselProps extends VariantProps<typeof carouselVariants> {
+    /** Slides a exibir. */
     items: CarouselItem[];
+    /** Classes do contêiner. */
     className?: string;
+    /** Estilos do contêiner. */
+    style?: React.CSSProperties;
+    /** Cor do indicador ativo; padrão `primary`. */
+    color?: UIColor;
+    /** Exibe botões de navegação. */
     showArrows?: boolean;
+    /** Exibe os indicadores de slide. */
     showIndicators?: boolean;
+    /** Avança automaticamente. */
     autoPlay?: boolean;
+    /** Intervalo da reprodução automática em milissegundos. */
     autoPlayInterval?: number;
+    /** Pausa a reprodução automática ao passar o mouse. */
     pauseOnHover?: boolean;
+    /** Habilita navegação por gesto. */
     enableSwipe?: boolean;
+    /** Retorna ao primeiro slide após o último. */
     loop?: boolean;
+    /** Recebe o índice do slide exibido. */
     onSlideChange?: (index: number) => void;
+    /** Índice inicial do slide. */
     initialSlide?: number;
 }
 
@@ -85,6 +102,8 @@ const swipePower = (offset: number, velocity: number) => {
 export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
     items,
     className,
+    style,
+    color = 'primary',
     variant,
     size,
     showArrows = true,
@@ -195,7 +214,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
 
     if (items.length === 0) {
         return (
-            <div className={cn(carouselVariants({ variant, size }), className)}>
+            <div ref={ref} className={cn(carouselVariants({ variant, size }), className)} style={toneScopeStyle(color, style)}>
                 <div className="flex items-center justify-center h-full bg-muted">
                     <p className="text-muted-foreground">Nenhum item para exibir</p>
                 </div>
@@ -207,6 +226,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
         <div
             ref={ref}
             className={cn(carouselVariants({ variant, size }), className)}
+            style={toneScopeStyle(color, style)}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             {...props}
@@ -283,10 +303,15 @@ export interface ImageCarouselItem {
     description?: string;
 }
 
-interface ImageCarouselProps extends Omit<CarouselProps, 'items'> {
+/** Carrossel de imagens com efeito opcional de zoom. */
+export interface ImageCarouselProps extends Omit<CarouselProps, 'items'> {
+    /** Imagens a exibir. */
     images: ImageCarouselItem[];
+    /** Ativa o efeito de zoom durante a exibição. */
     enableZoomEffect?: boolean;
+    /** Duração do zoom em segundos. */
     zoomDuration?: number;
+    /** Estilo da animação de zoom. */
     zoomVariant?: 'subtle' | 'smooth' | 'dramatic' | 'pulse';
 }
 
@@ -426,9 +451,13 @@ export interface TabCarouselItem {
     icon?: React.ReactNode;
 }
 
-interface TabCarouselProps extends Omit<CarouselProps, 'items' | 'showArrows' | 'showIndicators'> {
+/** Carrossel controlado por abas. */
+export interface TabCarouselProps extends Omit<CarouselProps, 'items' | 'showArrows' | 'showIndicators'> {
+    /** Abas e conteúdos correspondentes. */
     tabs: TabCarouselItem[];
+    /** Posiciona as abas acima ou abaixo do conteúdo. */
     tabPosition?: 'top' | 'bottom';
+    /** Aparência das abas. */
     tabVariant?: 'pills' | 'underline';
 }
 
@@ -437,6 +466,8 @@ export const TabCarousel = React.forwardRef<HTMLDivElement, TabCarouselProps>(({
     tabPosition = 'top',
     tabVariant = 'pills',
     className,
+    style,
+    color = 'primary',
     onSlideChange,
     initialSlide = 0,
     ...props
@@ -459,7 +490,7 @@ export const TabCarousel = React.forwardRef<HTMLDivElement, TabCarouselProps>(({
 
     const activeTabClass = tabVariant === 'pills'
         ? 'bg-primary text-primary-foreground'
-        : 'border-primary text-primary';
+        : 'border-primary text-primary-text';
 
     const inactiveTabClass = tabVariant === 'pills'
         ? 'bg-muted hover:bg-muted/80 text-muted-foreground'
@@ -485,7 +516,7 @@ export const TabCarousel = React.forwardRef<HTMLDivElement, TabCarouselProps>(({
     );
 
     return (
-        <div className={cn('space-y-4', className)}>
+        <div className={cn('space-y-4', className)} style={toneScopeStyle(color, style)}>
             {tabPosition === 'top' && TabButtons}
             <Carousel
                 ref={ref}
@@ -495,6 +526,7 @@ export const TabCarousel = React.forwardRef<HTMLDivElement, TabCarouselProps>(({
                 onSlideChange={handleSlideChange}
                 initialSlide={initialSlide}
                 enableSwipe={true}
+                color={color}
                 {...props}
             />
             {tabPosition === 'bottom' && TabButtons}

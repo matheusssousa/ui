@@ -5,6 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic.js';
+import { toneScopeStyle, type UIColor } from './theme.js';
 
 const CaretLeftIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretLeft));
 const CaretRightIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretRight));
@@ -44,10 +45,10 @@ const dayButtonVariants = cva(
             state: {
                 default: '',
                 selected: 'bg-primary text-primary-foreground hover:bg-primary/90 font-bold',
-                today: 'border-2 border-primary text-primary font-semibold',
+                today: 'border-2 border-primary text-primary-text font-semibold',
                 disabled: ' text-muted-foreground opacity-40 cursor-not-allowed hover:bg-transparent pointer-events-none',
                 outside: 'text-muted-foreground opacity-50',
-                range: 'bg-primary/20 text-primary',
+                range: 'bg-primary/20 text-primary-text',
                 rangeStart: 'bg-primary text-primary-foreground rounded-r-none',
                 rangeEnd: 'bg-primary text-primary-foreground rounded-l-none',
             },
@@ -72,26 +73,51 @@ export interface CalendarEvent {
 export type CalendarMode = 'single' | 'multiple' | 'range';
 export type CalendarView = 'days' | 'months' | 'years' | 'week';
 
+/** Calendário de dias, meses e anos com seleção simples, múltipla ou por intervalo. */
 export interface CalendarProps extends VariantProps<typeof calendarVariants> {
+    /** Modo de seleção; padrão `single`. */
     mode?: CalendarMode;
+    /** Visualização inicial; padrão `days`. */
     view?: CalendarView;
+    /** Data ou datas selecionadas, conforme `mode`. */
     selected?: Date | Date[] | { from: Date; to?: Date };
+    /** Chamado quando a seleção muda. */
     onSelect?: (date: Date | Date[] | { from: Date; to?: Date } | undefined) => void;
+    /** Retorna `true` para bloquear uma data. */
     disabled?: (date: Date) => boolean;
+    /** Eventos exibidos nas datas correspondentes. */
     events?: CalendarEvent[];
+    /** Datas disponíveis no formato `YYYY-MM-DD`. */
     availableDays?: string[]; // Array de datas no formato 'YYYY-MM-DD' com disponibilidade
+    /** Exibe os números das semanas. */
     showWeekNumbers?: boolean;
+    /** Exibe dias dos meses vizinhos. */
     showOutsideDays?: boolean;
+    /** Limite inferior para seleção. */
     minDate?: Date;
+    /** Limite superior para seleção. */
     maxDate?: Date;
+    /** Localidade reservada para formatação futura; os nomes atuais são exibidos em português. */
     locale?: string;
+    /** Dia inicial da semana, de 0 (domingo) a 6 (sábado). */
     firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+    /** Tone dos estados de seleção e navegação; padrão `primary`. */
+    color?: UIColor;
+    /** Classes adicionais no contêiner. */
     className?: string;
+    /** Estilos adicionais no contêiner. */
+    style?: React.CSSProperties;
+    /** Quantidade de meses visíveis. */
     numberOfMonths?: number;
+    /** Anima as transições entre visualizações. */
     animateTransitions?: boolean;
+    /** Chamado quando o mês visível muda. */
     onMonthChange?: (month: Date) => void;
+    /** Chamado quando a visualização muda. */
     onViewChange?: (view: CalendarView) => void;
+    /** Exibe pontos de eventos nas células. */
     showEventIndicator?: boolean;
+    /** Permite alternar entre dias, meses e anos pelo título. */
     allowViewChange?: boolean;
 }
 
@@ -174,6 +200,8 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
         maxDate,
         firstDayOfWeek = 0,
         className,
+        style,
+        color = 'primary',
         variant,
         size,
         numberOfMonths = 1,
@@ -650,6 +678,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
             <div
                 ref={ref}
                 className={cn(calendarVariants({ variant, size }), className)}
+                style={toneScopeStyle(color, style)}
             >
                 {renderHeader()}
 

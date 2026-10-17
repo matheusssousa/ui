@@ -3,16 +3,38 @@
 import React from 'react';
 import { CheckCircleIcon, InfoIcon, WarningCircleIcon, XCircleIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
 import { cn } from '../utils.js';
+import { toneClasses, type UIColor } from './theme.js';
 
 
 
 
-export interface ToastProps { id: string; variant?: 'success' | 'error' | 'warning' | 'info' | 'default'; title?: string; description?: string; duration?: number; action?: React.ReactNode; onClose?: () => void; isVisible?: boolean; }
+/** Notificação com variante semântica e tone opcional. */
+export interface ToastProps {
+  /** Identificador da notificação. */
+  id: string;
+  /** Aparência e ícone semântico; padrão `default`. */
+  variant?: 'success' | 'error' | 'warning' | 'info' | 'default';
+  /** Sobrescreve o tone visual da variante sem alterar seu ícone. */
+  color?: UIColor;
+  /** Título da notificação. */
+  title?: string;
+  /** Detalhes exibidos abaixo do título. */
+  description?: string;
+  /** Tempo de exibição em milissegundos, gerenciado pelo provedor de toasts. */
+  duration?: number;
+  /** Ação personalizada exibida abaixo da descrição. */
+  action?: React.ReactNode;
+  /** Chamado ao fechar ou dispensar com gesto. */
+  onClose?: () => void;
+  /** Controla a animação de entrada e saída. */
+  isVisible?: boolean;
+}
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps & React.HTMLAttributes<HTMLDivElement>>(
   ({ 
     id, 
     variant = 'default', 
+    color,
     title, 
     description, 
     duration,
@@ -188,7 +210,7 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps & React.HTMLAttributes
           // Hover effects
           !isDragging && 'hover:shadow-xl hover:scale-[1.02]',
           // Variant styles
-          currentVariant.container,
+          color ? cn(toneClasses[color].soft, toneClasses[color].outline) : currentVariant.container,
           className
         )}
         role="alert"

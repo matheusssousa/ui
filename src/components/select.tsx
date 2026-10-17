@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { CaretDownIcon, CheckIcon, CircleNotchIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
+import { toneScopeStyle, type UIColor } from './theme.js';
 
 // --- Variantes de Estilo (CVA) ---
 
@@ -56,32 +57,59 @@ const selectContentVariants = cva(
 // --- Tipos e Interfaces ---
 
 export interface SelectOption {
+    /** Valor enviado em `onValueChange`. */
     value: string | number;
+    /** Texto principal da opção. */
     label: string;
+    /** Impede selecionar esta opção. */
     disabled?: boolean;
+    /** Texto auxiliar mostrado sob o rótulo. */
     description?: string;
 }
 
+/** Seletor simples ou múltiplo com busca, validação e variantes visuais. */
 export interface SelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect' | 'defaultValue'>, VariantProps<typeof selectVariants> {
+    /** Opções disponíveis. */
     options: SelectOption[];
+    /** Valor controlado, ou lista de valores em modo múltiplo. */
     value?: string | number | boolean | Array<string | number>;
+    /** Valor inicial quando o componente não é controlado. */
     defaultValue?: string | number | Array<string | number>;
+    /** Recebe a seleção atualizada. */
     onValueChange?: (value: string | number | Array<string | number> | undefined) => void;
+    /** Texto mostrado sem seleção. */
     placeholder?: string;
+    /** Rótulo do seletor. */
     label?: string;
+    /** Impede interação. */
     disabled?: boolean;
+    /** Marca o campo como obrigatório. */
     required?: boolean;
+    /** Mostra carregamento. */
     isLoading?: boolean;
+    /** Habilita busca entre opções. */
     searchable?: boolean;
+    /** Permite limpar a seleção. */
     clearable?: boolean;
+    /** Permite selecionar vários valores. */
     multiple?: boolean;
+    /** Exibe a ação de selecionar todos em modo múltiplo. */
     showSelectAll?: boolean;
+    /** Texto da ação de selecionar todos. */
     selectAllLabel?: string;
+    /** Estado visual da validação. */
     validation?: 'default' | 'error' | 'success';
+    /** Ícone no início do seletor. */
     leftIcon?: React.ReactNode;
+    /** Texto mostrado quando a busca não encontra opções. */
     emptyMessage?: string;
+    /** Nome usado na submissão de formulário. */
     name?: string;
+    /** Mensagem de erro abaixo do campo. */
     error?: string;
+    /** Cor do foco e das opções selecionadas; padrão `primary`. */
+    color?: UIColor;
+    /** Ajusta a apresentação dentro de um card. */
     isInCard?: boolean;
 }
 
@@ -110,6 +138,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         leftIcon,
         name,
         error,
+        color = 'primary',
         emptyMessage = 'Nenhuma opção encontrada',
         isInCard = false,
         ...props
@@ -317,7 +346,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
         if (variant === 'times') {
             return (
-                <div className="relative w-full" ref={selectContainerRef}>
+                <div className="relative w-full" ref={selectContainerRef} style={toneScopeStyle(color)}>
                     {multiple ? (
                         <select
                             ref={ref}
@@ -408,7 +437,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         // Render visible variant (all options always displayed with checkboxes)
         if (variant === 'visible') {
             return (
-                <div className="relative w-full space-y-2" ref={selectContainerRef}>
+                <div className="relative w-full space-y-2" ref={selectContainerRef} style={toneScopeStyle(color)}>
                     {multiple ? (
                         <select
                             ref={ref}
@@ -567,7 +596,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         }
 
         return (
-            <div className="relative w-full">
+            <div className="relative w-full" style={toneScopeStyle(color)}>
                 <div
                     className="relative"
                     ref={selectContainerRef}
@@ -653,7 +682,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                 if (!option) return null;
                                 return (
                                     <span key={option.value} className={cn(
-                                        "flex items-center gap-1.5 bg-tertiary/30 text-tertiary rounded-md px-2 py-0.5 text-xs font-medium",
+                                        "flex items-center gap-1.5 bg-primary/10 text-primary-text rounded-md px-2 py-0.5 text-xs font-medium",
                                         disabled && "opacity-60"
                                     )}>
                                         {option.label}

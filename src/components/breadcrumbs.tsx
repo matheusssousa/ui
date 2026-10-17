@@ -13,15 +13,25 @@ export interface BreadcrumbItem {
   icon?: React.ReactNode;
 }
 
+/** Trilha de navegação com início e separador configuráveis. */
 export interface BreadcrumbsProps {
+  /** Páginas em ordem de navegação. */
   items?: BreadcrumbItem[];
+  /** Elemento entre páginas. */
   separator?: React.ReactNode;
+  /** Exibe o link inicial. */
   showHome?: boolean;
+  /** Texto do link inicial. */
   homeLabel?: string;
+  /** Destino do link inicial. */
   homeHref?: string;
+  /** Classe da trilha. */
   className?: string;
+  /** Classe dos links. */
   itemClassName?: string;
+  /** Classe dos separadores. */
   separatorClassName?: string;
+  /** Máximo de itens exibidos sem abreviação. */
   maxItems?: number;
 }
 

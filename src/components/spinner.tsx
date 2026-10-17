@@ -13,7 +13,21 @@ const colorClasses: Record<UIColor, string> = {
   background: 'border-foreground/20 border-t-foreground',
 };
 
-export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> { size?: UISize; color?: UIColor; label?: string; mode?: 'inline' | 'block' | 'overlay'; visible?: boolean; compact?: boolean; }
+/** Indicador de carregamento com nome acessível. */
+export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> {
+  /** Tamanho do círculo; padrão depende de `mode`. */
+  size?: UISize;
+  /** Tone da borda animada; padrão `primary`. */
+  color?: UIColor;
+  /** Texto acessível e legenda nos modos block/overlay. */
+  label?: string;
+  /** Apresentação em linha, bloco ou sobreposição. */
+  mode?: 'inline' | 'block' | 'overlay';
+  /** Se falso, não renderiza o indicador. */
+  visible?: boolean;
+  /** Reduz o espaçamento do modo block. */
+  compact?: boolean;
+}
 
 export function Spinner({ size, color = 'primary', label = 'Carregando', mode = 'inline', visible = true, compact = false, className, ...props }: SpinnerProps) {
   if (!visible) return null;

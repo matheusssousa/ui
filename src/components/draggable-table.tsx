@@ -148,27 +148,46 @@ function SortableRow({
   );
 }
 
+/** Tabela com suporte opcional a reordenação de linhas. */
 export interface DraggableTableProps extends VariantProps<typeof tableVariants> {
+  /** Definição das colunas. */
   columns: Column[];
+  /** Linhas exibidas. */
   data: TableData[];
+  /** Exibe estado de carregamento. */
   loading?: boolean;
+  /** Texto quando não há linhas. */
   emptyMessage?: string;
+  /** Classe do contêiner. */
   className?: string;
+  /** Habilita ordenação pelos cabeçalhos. */
   sortable?: boolean;
+  /** Coluna e direção de ordenação atuais. */
   sortState?: SortState;
+  /** Recebe a coluna escolhida para ordenação. */
   onSort?: (column: string) => void;
+  /** Estado da paginação. */
   pagination?: PaginationState;
+  /** Recebe a página escolhida. */
   onPageChange?: (page: number) => void;
+  /** Permite selecionar linhas. */
   selectable?: boolean;
+  /** Recebe as chaves das linhas selecionadas. */
   onSelectionChange?: (selectedRows: (string | number)[]) => void;
+  /** Campo que identifica cada linha. */
   rowKey?: string;
+  /** Recebe a linha e o índice após clique. */
   onRowClick?: (row: TableData, index: number) => void;
+  /** Renderiza ações para a seleção atual. */
   renderBulkActions?: (
     selectedRows: (string | number)[],
     clearSelection: () => void
   ) => React.ReactNode;
+  /** Habilita adaptação a telas estreitas. */
   responsive?: boolean;
+  /** Permite arrastar linhas. */
   draggable?: boolean;
+  /** Recebe as linhas na nova ordem. */
   onReorder?: (reorderedData: TableData[]) => void;
 }
 

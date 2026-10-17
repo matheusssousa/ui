@@ -48,18 +48,29 @@ const progressFillVariants = cva(
 
 type ColorVariant = UIColor | 'gradient';
 
+/** Barra de progresso determinada por `value` e `max`. */
 export interface ProgressBarProps
     extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color'>,
     VariantProps<typeof progressBarVariants> {
+    /** Valor atual. */
     value: number;
+    /** Valor que representa 100%; padrão 100. */
     max?: number;
+    /** Exibe o rótulo. */
     showLabel?: boolean;
+    /** Exibe o percentual. */
     showPercentage?: boolean;
+    /** Texto descritivo da barra. */
     label?: string;
+    /** Formata o valor exibido. */
     formatValue?: (value: number, max: number) => string;
+    /** Anima a largura ao mudar. */
     animated?: boolean;
+    /** Aplica padrão de listras. */
     striped?: boolean;
+    /** Escolhe a cor conforme o percentual. */
     autoColor?: boolean;
+    /** Tone da barra quando `autoColor` está desativado. */
     color?: ColorVariant;
 }
 
@@ -134,13 +145,21 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
 ProgressBar.displayName = 'ProgressBar';
 
 // Stats Progress Card Component
+/** Resumo numérico com barra de progresso. */
 export interface StatsProgressProps {
+    /** Nome da métrica. */
     label: string;
+    /** Valor principal exibido. */
     value: string;
+    /** Valor de referência exibido abaixo. */
     subValue?: string;
+    /** Percentual exibido na barra. */
     percentage: number;
+    /** Ícone ao lado do rótulo. */
     icon?: React.ReactNode;
+    /** Tone da barra. */
     color?: ColorVariant;
+    /** Escolhe a cor conforme o percentual. */
     autoColor?: boolean;
 }
 

@@ -1,12 +1,19 @@
 import * as React from 'react';
 import { cn } from '../utils.js';
 
+/** Rótulo, ajuda e erro para um controle de formulário filho. */
 export interface FormFieldProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Rótulo acima do controle. */
   label?: React.ReactNode;
+  /** ID do controle associado ao rótulo. */
   htmlFor?: string;
+  /** Texto de ajuda quando não há erro. */
   description?: React.ReactNode;
+  /** Mensagem de erro com `role="alert"`. */
   error?: React.ReactNode;
+  /** Marca o campo como obrigatório. */
   required?: boolean;
+  /** Texto para campos não obrigatórios. */
   optionalLabel?: string;
 }
 

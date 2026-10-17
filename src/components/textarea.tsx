@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cn } from '../utils.js';
 import { cva, type VariantProps } from 'class-variance-authority';
 import dynamic from 'next/dynamic.js';
+import { toneScopeStyle, type UIColor } from './theme.js';
 
 const CircleNotchIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CircleNotchIcon), { ssr: false });
 
@@ -33,15 +34,27 @@ const textareaVariants = cva(
 export interface TextareaProps
     extends React.TextareaHTMLAttributes<HTMLTextAreaElement>,
     VariantProps<typeof textareaVariants> {
+    /** Tone usado no foco; padrão `primary`. */
+    color?: UIColor;
+    /** Estado visual de validação. */
     validation?: 'default' | 'error' | 'success' | 'warning';
+    /** Exibe o indicador de carregamento. */
     isLoading?: boolean;
+    /** Rótulo flutuante. */
     label?: string;
+    /** Mensagem de erro exibida abaixo do campo. */
     error?: string;
+    /** Ajuda exibida abaixo do campo quando não há erro. */
     helperText?: string;
+    /** Exibe a contagem de caracteres quando `maxLength` está definido. */
     showCharCount?: boolean;
+    /** Ícone antes do texto. */
     leftIcon?: React.ReactNode;
+    /** Ícone depois do texto. */
     rightIcon?: React.ReactNode;
+    /** Limite de caracteres. */
     maxLength?: number;
+    /** Usa o fundo de card. */
     isInCard?: boolean;
 }
 
@@ -49,6 +62,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     (
         {
             className,
+            color = 'primary',
             variant,
             validation,
             isLoading,
@@ -98,7 +112,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         const isNearLimit = maxLength && charCount > maxLength * 0.9;
 
         const renderTextareaWithLabel = () => (
-            <div className="w-full">
+            <div className="w-full" style={toneScopeStyle(color)}>
                 <div className="relative w-full">
                     {leftIcon && (
                         <span className="absolute left-3 top-3 z-10 text-muted-foreground">
@@ -171,7 +185,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         );
 
         const renderTextareaWithoutLabel = () => (
-            <div className="w-full">
+            <div className="w-full" style={toneScopeStyle(color)}>
                 <div className="relative w-full">
                     {leftIcon && (
                         <span className="absolute left-3 top-3 text-muted-foreground">

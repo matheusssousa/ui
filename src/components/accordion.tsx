@@ -94,29 +94,39 @@ const accordionContentVariants = cva('text-sm', {
 });
 
 // Props dos componentes
+/** Grupo de painéis expansíveis. */
 export interface AccordionProps
     extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof accordionVariants> {
+    /** Identificador ou identificadores inicialmente abertos. */
     defaultValue?: string | string[];
+    /** Permite manter vários painéis abertos. */
     multiple?: boolean;
 }
 
+/** Item identificado por `value` dentro de Accordion. */
 export interface AccordionItemProps
     extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof accordionItemVariants> {
+    /** Identificador único do painel. */
     value: string;
 }
 
+/** Botão que abre ou fecha um item. */
 export interface AccordionTriggerProps
     extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof accordionTriggerVariants> {
+    /** Conteúdo do botão. */
     children: React.ReactNode;
+    /** Conteúdo adicional à direita. */
     rightContent?: React.ReactNode;
 }
 
+/** Conteúdo visível quando o item está aberto. */
 export interface AccordionContentProps
     extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof accordionContentVariants> {
+    /** Elementos do painel. */
     children: React.ReactNode;
 }
 

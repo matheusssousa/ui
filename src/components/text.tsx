@@ -2,6 +2,7 @@ import { cn } from "../utils.js";
 import { VariantProps, cva } from "class-variance-authority";
 import React from "react";
 import { Separator } from "./separator.js";
+import { toneClasses, type UIColor } from './theme.js';
 
 const textVariants = cva("text-foreground", {
     variants: {
@@ -62,28 +63,35 @@ const textVariants = cva("text-foreground", {
 
 export type TextVariants = VariantProps<typeof textVariants>;
 
+/** Texto com estilos tipográficos e opção de ícone em `field`. */
 export interface TextProps extends React.HTMLAttributes<HTMLParagraphElement>, TextVariants {
+    /** Texto principal a ser exibido. */
     text: string;
+    /** Texto secundário usado na variante `field`. */
     description?: string;
+    /** Exibe um separador após o texto. */
     textForm?: boolean;
+    /** Ícone usado na variante `field`. */
     icon?: React.ReactNode;
+    /** Tone do texto ou do destaque em `field`; padrão da variante quando ausente. */
+    color?: UIColor;
 }
 
-const Text = React.forwardRef<HTMLParagraphElement, TextProps>(({ className, text, variant, align, weight, size, lineHeight, truncate, textForm, description, icon, ...props }, ref) => {
+const Text = React.forwardRef<HTMLParagraphElement, TextProps>(({ className, text, variant, align, weight, size, lineHeight, truncate, textForm, description, icon, color, ...props }, ref) => {
 
     if (variant === 'field') {
         return (
             <div
                 ref={ref}
-                className={cn(textVariants({ variant, align, weight, size, lineHeight, truncate }), className, "flex items-center gap-2")}
+                className={cn(textVariants({ variant, align, weight, size, lineHeight, truncate }), color && toneClasses[color].text, className, "flex items-center gap-2")}
                 {...props}
             >
                 {icon ? (
-                    <div className="flex-shrink-0 p-2 rounded-md bg-primary/10 text-primary">
+                    <div className={cn('flex-shrink-0 rounded-md p-2', toneClasses[color ?? 'primary'].soft)}>
                         {icon}
                     </div>
                 ) : (
-                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                    <div className={cn('h-2 w-2 shrink-0 rounded-full', toneClasses[color ?? 'primary'].fill)} />
                 )}
                 <span className="flex flex-col gap-0 font-medium">
                     {text}
@@ -97,7 +105,7 @@ const Text = React.forwardRef<HTMLParagraphElement, TextProps>(({ className, tex
         <>
             <p
                 ref={ref}
-                className={cn(textVariants({ variant, align, weight, size, lineHeight, truncate }), className)}
+                className={cn(textVariants({ variant, align, weight, size, lineHeight, truncate }), color && toneClasses[color].text, className)}
                 {...props}
             >
                 {variant === 'code' ? <code>{text}</code> : text}
