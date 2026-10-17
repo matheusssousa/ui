@@ -7,9 +7,9 @@ import type { UIColor, UISize } from './theme.js';
 
 const sizeClasses: Record<UISize, string> = { xs: 'size-3.5 border', sm: 'size-5 border-2', md: 'size-7 border-2', lg: 'size-10 border-[3px]', xl: 'size-14 border-4' };
 const colorClasses: Record<UIColor, string> = {
-  default: 'border-muted-foreground/25 border-t-foreground', primary: 'border-primary/20 border-t-primary', secondary: 'border-secondary/20 border-t-secondary',
+  default: 'border-muted-foreground/25 border-t-foreground', primary: 'border-primary/20 border-t-primary-text', secondary: 'border-secondary/20 border-t-secondary-text',
   success: 'border-success/20 border-t-success', warning: 'border-warning/20 border-t-warning', danger: 'border-destructive/20 border-t-destructive',
-  info: 'border-info/20 border-t-info', neutral: 'border-neutral/20 border-t-neutral', tertiary: 'border-tertiary/20 border-t-tertiary',
+  info: 'border-info/20 border-t-info', neutral: 'border-neutral/20 border-t-neutral', tertiary: 'border-tertiary/20 border-t-tertiary-text',
   background: 'border-foreground/20 border-t-foreground',
 };
 

@@ -476,8 +476,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                         ? "border-primary bg-primary"
                                         : "border-border"
                                 )}>
-                                    {areAllOptionsSelected && <CheckIcon className="h-3 w-3 text-background" weight="bold" />}
-                                    {areSomeOptionsSelected && <span className="h-0.5 w-2.5 rounded bg-background" />}
+                                    {areAllOptionsSelected && <CheckIcon className="h-3 w-3 text-primary-foreground" weight="bold" />}
+                                    {areSomeOptionsSelected && <span className="h-0.5 w-2.5 rounded bg-primary-foreground" />}
                                 </span>
                             </button>
                         )}
@@ -514,7 +514,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                                     : "border-border"
                                             )}>
                                                 {isSelected && (
-                                                    <CheckIcon className="w-3 h-3 text-background" weight="bold" />
+                                                    <CheckIcon className="w-3 h-3 text-primary-foreground" weight="bold" />
                                                 )}
                                             </div>
                                         ) : (

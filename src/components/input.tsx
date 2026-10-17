@@ -966,7 +966,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                             {...props}
                         />
                         {/* Adiciona o ícone de "check" por cima quando selecionado */}
-                        <div className="absolute text-background pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">
+                        <div className="absolute text-primary-foreground pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">
                             <CheckIcon className="h-3 w-3" weight="bold" />
                         </div>
                     </div>
@@ -1234,7 +1234,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                                                 onClick={() => handleTimeComponentChange(hour, timeMinute)}
                                                 className={cn(
                                                     'w-full px-3 py-2 text-sm hover:bg-accent transition-colors text-center',
-                                                    timeHour === hour && 'bg-primary text-white font-semibold'
+                                                    timeHour === hour && 'bg-primary text-primary-foreground font-semibold'
                                                 )}
                                             >
                                                 {hour}
@@ -1260,7 +1260,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                                                 onClick={() => handleTimeComponentChange(timeHour, minute)}
                                                 className={cn(
                                                     'w-full px-3 py-2 text-sm hover:bg-accent transition-colors text-center',
-                                                    timeMinute === minute && 'bg-primary text-white font-semibold'
+                                                    timeMinute === minute && 'bg-primary text-primary-foreground font-semibold'
                                                 )}
                                             >
                                                 {minute}

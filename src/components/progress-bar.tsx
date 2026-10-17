@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { motion } from 'framer-motion';
+import type { UIColor } from './theme.js';
 
 const progressBarVariants = cva(
     'relative w-full overflow-hidden rounded-full bg-muted',
@@ -27,10 +28,15 @@ const progressFillVariants = cva(
         variants: {
             color: {
                 default: 'bg-primary',
+                primary: 'bg-primary',
+                secondary: 'bg-secondary',
+                tertiary: 'bg-tertiary',
                 success: 'bg-success',
                 warning: 'bg-warning',
                 danger: 'bg-destructive',
                 info: 'bg-info',
+                neutral: 'bg-neutral',
+                background: 'bg-background',
                 gradient: 'bg-gradient-to-r from-primary to-secondary',
             },
         },
@@ -40,7 +46,7 @@ const progressFillVariants = cva(
     }
 );
 
-type ColorVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gradient';
+type ColorVariant = UIColor | 'gradient';
 
 export interface ProgressBarProps
     extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color'>,
@@ -134,7 +140,7 @@ export interface StatsProgressProps {
     subValue?: string;
     percentage: number;
     icon?: React.ReactNode;
-    color?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gradient';
+    color?: ColorVariant;
     autoColor?: boolean;
 }
 

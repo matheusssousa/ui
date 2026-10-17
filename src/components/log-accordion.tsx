@@ -20,6 +20,13 @@ const logAccordionVariants = cva(
                 default: 'bg-background text-foreground hover:bg-background/80',
                 primary: 'bg-primary text-primary-foreground hover:bg-primary/80',
                 secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+                tertiary: 'bg-tertiary text-tertiary-foreground hover:bg-tertiary/80',
+                success: 'bg-success text-success-foreground hover:bg-success/80',
+                warning: 'bg-warning text-warning-foreground hover:bg-warning/80',
+                danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/80',
+                info: 'bg-info text-info-foreground hover:bg-info/80',
+                neutral: 'bg-neutral text-neutral-foreground hover:bg-neutral/80',
+                background: 'bg-background text-foreground hover:bg-muted/80',
             },
         },
         defaultVariants: {
@@ -62,7 +69,7 @@ const LogAccordion = React.forwardRef<HTMLDivElement, LogAccordionProps>(
                     <div className="flex items-center justify-between w-full">
                         <div>
                             <h3 className="font-semibold capitalize">{title}</h3>
-                            {description && <p className="text-xs text-muted-foreground text-start">{formatDate(description).date} | {formatDate(description).time}</p>}
+                            {description && <p className="text-xs text-start">{formatDate(description).date} | {formatDate(description).time}</p>}
                         </div>
                         <span className="text-lg">{renderIcon()}</span>
                     </div>

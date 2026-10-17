@@ -40,8 +40,11 @@ Adicione suas variáveis **depois** dos imports no CSS global. A biblioteca já 
   --card-foreground: #172033;
   --primary: #175cd3;
   --primary-foreground: #ffffff;
+  --primary-text: #175cd3;
   --secondary: #7c3aed;
   --secondary-foreground: #ffffff;
+  --secondary-text: #6d28d9;
+  --tertiary-text: #0a6b82;
   --muted: #e9eef5;
   --muted-foreground: #566579;
   --border: #d6dfeb;
@@ -56,8 +59,11 @@ Adicione suas variáveis **depois** dos imports no CSS global. A biblioteca já 
   --card-foreground: #f1f5f9;
   --primary: #77a7ff;
   --primary-foreground: #101827;
+  --primary-text: #77a7ff;
   --secondary: #b399ff;
   --secondary-foreground: #101827;
+  --secondary-text: #b399ff;
+  --tertiary-text: #21c3fc;
   --muted: #26344a;
   --muted-foreground: #a9bad0;
   --border: #35445b;
@@ -77,7 +83,7 @@ Principais grupos de tokens:
 | Campos e foco | `--input`, `--input-foreground`, `--border`, `--ring` |
 | Gráficos | `--chart-1` até `--chart-8` |
 
-Esses tokens também aparecem como utilitários Tailwind, como `bg-primary`, `text-foreground`, `bg-card` e `border-border`. Alguns componentes combinam tokens de maneiras diferentes; confira o contraste de texto e fundo ao alterar cores fortes. O tema escuro usa a classe `dark` no elemento `<html>`.
+Esses tokens também aparecem como utilitários Tailwind, como `bg-primary`, `text-foreground`, `bg-card` e `border-border`. Os tokens `*-foreground` são usados sobre fundos sólidos da mesma cor. Para texto sobre fundos suaves, ajuste `--primary-text`, `--secondary-text` e `--tertiary-text` em cada tema. Mantenha contraste de pelo menos 4,5:1 para texto comum. O tema escuro usa a classe `dark` no elemento `<html>`.
 
 ## Provedores e hooks
 
@@ -195,7 +201,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
   Conteúdo do modal
 </Modal>
 
-<Tabs defaultValue="overview" variant="pills">
+<Tabs defaultValue="overview" variant="pills" color="primary">
   <TabsList aria-label="Seções">
     <TabsTrigger value="overview">Visão geral</TabsTrigger>
     <TabsTrigger value="history">Histórico</TabsTrigger>
@@ -204,6 +210,21 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
   <TabsContent value="history">Eventos anteriores</TabsContent>
 </Tabs>
 ```
+
+### Seletor de mês e ano
+
+```tsx
+import { MonthYearPicker } from '@matheusssousa/ui/components/month-year-picker';
+
+<MonthYearPicker
+  defaultValue={new Date(2026, 9, 1)}
+  minYear={2020}
+  maxYear={2030}
+  onValueChange={(month) => console.log(month)}
+/>
+```
+
+O valor é um `Date` normalizado para o primeiro dia do mês. Use `value` com `onValueChange` para controlar a seleção, ou `defaultValue` para deixá-la no componente. As setas respeitam `minYear` e `maxYear`; ao clicar no mês exibido, o painel permite escolher o ano e um dos 12 meses.
 
 ### Referência rápida
 
@@ -218,7 +239,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
 | `input`, `textarea`, `select`, `switch`, `form-field`, `search` | Campos, controles e busca. `Input` aceita `label`, `error`, `mask` e `validation`; `Select` recebe `options`. |
 | `modal`, `dropdown-menu` | Camadas acionadas pelo usuário. `Modal` recebe `isOpen` e `onClose`. |
 | `table`, `draggable-table` | Tabelas com `columns` e `data`; a segunda permite reordenar linhas. |
-| `calendar`, `carousel`, `gallery`, `image` | Datas e conteúdo visual. `Calendar` recebe `mode`, `selected` e `onSelect`. |
+| `calendar`, `month-year-picker`, `carousel`, `gallery`, `image` | Datas e conteúdo visual. `Calendar` recebe `mode`, `selected` e `onSelect`; `MonthYearPicker` seleciona apenas mês e ano. |
 | `chart`, `progress-bar` | Visualização de valores. Os gráficos usam `--chart-1` a `--chart-8`. |
 | `spinner`, `skeleton` | `Spinner` oferece os modos `inline`, `block` e `overlay`. |
 | `text`, `tip`, `separator`, `motion` | Texto, dica, divisor e animação. `Text` é export default e recebe `text`. |
@@ -259,6 +280,7 @@ import { SpeedDialTabs } from "@matheusssousa/ui";
 
 <SpeedDialTabs
   position="bottom-center"
+  color="primary"
   triggerLabel="Minhas áreas"
   icon="SquaresFourIcon"
   openIcon="XIcon"
@@ -272,7 +294,7 @@ import { SpeedDialTabs } from "@matheusssousa/ui";
 />
 ```
 
-Use `value` e `onValueChange` para controlar a seleção externamente, ou `defaultValue` para mantê-la no componente. `closeOnSelect={false}` mantém as opções abertas. A prop `size` aceita `small`, `medium` e `large`.
+Use `value` e `onValueChange` para controlar a seleção externamente, ou `defaultValue` para mantê-la no componente. `closeOnSelect={false}` mantém as opções abertas. `color` aceita os tones de `UIColor`; `size` aceita `xs`, `sm`, `md` e `lg`.
 
 Componentes que usam `next/link`, `next/navigation` ou `next/dynamic` exigem Next.js. O `Avatar` da biblioteca recebe `name` explicitamente; ele não acessa a autenticação do projeto.
 

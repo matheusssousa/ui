@@ -43,7 +43,7 @@ const dayButtonVariants = cva(
             },
             state: {
                 default: '',
-                selected: 'bg-primary text-white hover:bg-primary/90 font-bold',
+                selected: 'bg-primary text-primary-foreground hover:bg-primary/90 font-bold',
                 today: 'border-2 border-primary text-primary font-semibold',
                 disabled: ' text-muted-foreground opacity-40 cursor-not-allowed hover:bg-transparent pointer-events-none',
                 outside: 'text-muted-foreground opacity-50',

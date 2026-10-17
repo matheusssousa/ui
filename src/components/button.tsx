@@ -9,6 +9,7 @@ import { useToast } from '../hooks/useToast.js';
 import { handleCopy } from '../functions/handleCopy.js';
 import { CheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { motion } from 'framer-motion';
+import { toneClasses, type UIColor } from './theme.js';
 
 const CircleNotchIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CircleNotchIcon));
 const CopySimpleIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CopySimpleIcon));
@@ -18,11 +19,11 @@ const buttonVariants = cva(
     {
         variants: {
             variant: {
-                filled: 'bg-primary text-background dark:text-foreground hover:bg-primary/90',
-                outlined: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+                filled: 'bg-primary text-primary-foreground hover:brightness-95',
+                outlined: 'border border-input bg-background hover:bg-accent',
                 text: 'hover:drop-shadow-md',
-                ghost: 'bg-transparent hover:bg-accent hover:text-accent-foreground',
-                soft: 'border border-transparent bg-primary/10 text-primary hover:bg-primary/15',
+                ghost: 'bg-transparent hover:bg-accent',
+                soft: 'border border-transparent bg-primary/10 text-primary-text',
                 success: 'bg-success text-success-foreground hover:bg-success/90',
                 warning: 'bg-warning text-warning-foreground hover:bg-warning/90',
                 danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
@@ -36,7 +37,8 @@ const buttonVariants = cva(
             },
             color: {
                 default: '',
-                blue: 'bg-tertiary-foreground hover:bg-tertiary-foreground/80 text-white dark:bg-tertiary-foreground dark:hover:bg-tertiary-foreground/80',
+                primary: '', secondary: '', tertiary: '', success: '', warning: '', danger: '', info: '', neutral: '', background: '',
+                blue: 'bg-tertiary hover:bg-tertiary/80 text-tertiary-foreground',
                 red: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
                 green: 'bg-success hover:bg-success/90 text-success-foreground',
                 amber: 'bg-warning hover:bg-warning/90 text-warning-foreground',
@@ -61,7 +63,7 @@ const buttonVariants = cva(
             {
                 variant: 'outlined',
                 color: 'blue',
-                className: 'text-tertiary-foreground border-tertiary-foreground hover:bg-tertiary-foreground/10 dark:text-tertiary-foreground dark:border-tertiary-foreground dark:hover:bg-tertiary-foreground/10',
+                className: 'text-tertiary-text border-tertiary hover:bg-tertiary/10',
             },
             {
                 variant: 'outlined',
@@ -86,7 +88,7 @@ const buttonVariants = cva(
             {
                 variant: 'text',
                 color: 'blue',
-                className: 'text-tertiary-foreground hover:bg-tertiary-foreground/10 dark:text-tertiary-foreground dark:hover:bg-tertiary-foreground/10',
+                className: 'text-tertiary-text hover:bg-tertiary/10',
             },
             {
                 variant: 'text',
@@ -142,12 +144,12 @@ const buttonVariants = cva(
             {
                 variant: 'fastAction',
                 color: 'default',
-                className: 'bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90',
+                className: 'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90',
             },
             {
                 variant: 'fastAction',
                 color: 'blue',
-                className: 'bg-tertiary-foreground text-white hover:bg-tertiary-foreground/80 dark:bg-tertiary-foreground dark:hover:bg-tertiary-foreground/80',
+                className: 'bg-tertiary text-tertiary-foreground hover:bg-tertiary/80 dark:bg-tertiary dark:hover:bg-tertiary/80',
             },
             {
                 variant: 'fastAction',
@@ -182,12 +184,12 @@ const buttonVariants = cva(
             {
                 variant: 'soft',
                 color: 'default',
-                className: 'bg-primary/10 text-primary hover:bg-primary/15',
+                className: 'bg-primary/10 text-primary-text hover:bg-primary/15',
             },
             {
                 variant: 'soft',
                 color: 'blue',
-                className: 'bg-tertiary-foreground/10 text-tertiary-foreground hover:bg-tertiary-foreground/15 dark:bg-tertiary-foreground/10 dark:text-tertiary-foreground dark:hover:bg-tertiary-foreground/15',
+                className: 'bg-tertiary/10 text-tertiary-text hover:bg-tertiary/15',
             },
             {
                 variant: 'soft',
@@ -418,16 +420,24 @@ const Button = React.forwardRef<
 
         const getActiveClasses = () => {
             if (!active) return '';
+            if (color && color !== 'default' && color in toneClasses) {
+                const toneRings: Record<UIColor, string> = {
+                    default: 'ring-foreground', primary: 'ring-primary', secondary: 'ring-secondary',
+                    tertiary: 'ring-tertiary', success: 'ring-success', warning: 'ring-warning',
+                    danger: 'ring-destructive', info: 'ring-info', neutral: 'ring-neutral', background: 'ring-foreground',
+                };
+                return cn('ring-2 ring-offset-2 ring-offset-background', toneRings[color as UIColor]);
+            }
             
             const activeColorMap: Record<string, string> = {
-                default: 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/90 dark:bg-primary/80',
-                blue: 'ring-2 ring-tertiary-foreground ring-offset-2 ring-offset-background bg-tertiary-foreground/90 dark:bg-tertiary-foreground/80',
-                red: 'ring-2 ring-destructive ring-offset-2 ring-offset-background bg-destructive',
-                green: 'ring-2 ring-success ring-offset-2 ring-offset-background bg-success',
-                amber: 'ring-2 ring-warning ring-offset-2 ring-offset-background bg-warning',
-                purple: 'ring-2 ring-violet ring-offset-2 ring-offset-background bg-violet',
-                orange: 'ring-2 ring-orange ring-offset-2 ring-offset-background bg-orange',
-                card: 'ring-2 ring-border-foreground ring-offset-2 ring-offset-background bg-card/70',
+                default: 'ring-2 ring-primary ring-offset-2 ring-offset-background',
+                blue: 'ring-2 ring-tertiary ring-offset-2 ring-offset-background',
+                red: 'ring-2 ring-destructive ring-offset-2 ring-offset-background',
+                green: 'ring-2 ring-success ring-offset-2 ring-offset-background',
+                amber: 'ring-2 ring-warning ring-offset-2 ring-offset-background',
+                purple: 'ring-2 ring-violet ring-offset-2 ring-offset-background',
+                orange: 'ring-2 ring-orange ring-offset-2 ring-offset-background',
+                card: 'ring-2 ring-border-foreground ring-offset-2 ring-offset-background',
             };
             
             return activeColorMap[color || 'default'] || activeColorMap.default;
@@ -435,6 +445,14 @@ const Button = React.forwardRef<
 
         const buttonClasses = cn(
             buttonVariants({ variant, size, color }),
+            variant === 'outlined' && 'bg-background',
+            (variant === 'text' || variant === 'ghost') && 'bg-transparent',
+            color && color !== 'default' && color in toneClasses && (
+                variant === 'soft' ? cn(toneClasses[color as UIColor].soft, toneClasses[color as UIColor].hoverSoft)
+                    : variant === 'outlined' ? cn(toneClasses[color as UIColor].outline, toneClasses[color as UIColor].hoverSoft)
+                    : variant === 'text' || variant === 'ghost' || variant === 'icon' ? cn(toneClasses[color as UIColor].text, toneClasses[color as UIColor].hoverSoft)
+                    : variant === 'filled' || variant === 'fastAction' ? toneClasses[color as UIColor].solid : undefined
+            ),
             !fullWidth && 'w-auto',
             loading && 'cursor-wait',
             getActiveClasses(),

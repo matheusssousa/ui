@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cva } from 'class-variance-authority';
 import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '../utils.js';
+import { toneClasses, type UIColor } from './theme.js';
 
 export type TabsVariant = 'underline' | 'pills' | 'segmented' | 'cards' | 'sidebar';
 export type TabsSize = 'sm' | 'md' | 'lg';
@@ -41,11 +42,11 @@ const tabsTriggerVariants = cva(
     {
         variants: {
             variant: {
-                underline: '-mb-px rounded-t-lg hover:bg-muted/35 hover:text-foreground data-[state=active]:text-primary',
-                pills: 'rounded-lg hover:text-foreground data-[state=active]:text-foreground',
-                segmented: 'rounded-lg hover:bg-muted/50 hover:text-foreground data-[state=active]:text-background',
-                cards: 'rounded-xl border border-border/70 bg-card shadow-sm hover:border-primary/30 hover:text-foreground data-[state=active]:border-primary/40 data-[state=active]:text-primary',
-                sidebar: 'min-w-max justify-start rounded-xl text-left hover:bg-muted/50 hover:text-foreground data-[state=active]:border-primary/30 data-[state=active]:text-primary lg:min-w-0 lg:w-full lg:border-transparent lg:bg-transparent',
+                underline: '-mb-px rounded-t-lg',
+                pills: 'rounded-lg',
+                segmented: 'rounded-lg',
+                cards: 'rounded-xl border border-border/70 bg-card shadow-sm',
+                sidebar: 'min-w-max justify-start rounded-xl text-left lg:min-w-0 lg:w-full lg:border-transparent lg:bg-transparent',
             },
             size: {
                 sm: 'min-h-10 px-3 py-2 text-xs',
@@ -77,6 +78,7 @@ interface TabsContextProps {
     baseId: string;
     layoutId: string;
     variant: TabsVariant;
+    color: UIColor;
     size: TabsSize;
     mobileBehavior: TabsMobileBehavior;
     fullWidth: boolean;
@@ -96,6 +98,7 @@ export interface TabsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'd
     value?: string;
     onValueChange?: (value: string) => void;
     variant?: TabsVariant;
+    color?: UIColor;
     size?: TabsSize;
     mobileBehavior?: TabsMobileBehavior;
     fullWidth?: boolean;
@@ -108,6 +111,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(function Tabs(
         value,
         onValueChange,
         variant = 'underline',
+        color = 'primary',
         size = 'md',
         mobileBehavior = 'scroll',
         fullWidth = false,
@@ -133,11 +137,12 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(function Tabs(
         baseId: `tabs-${reactId}`,
         layoutId: `tabs-indicator-${reactId}`,
         variant,
+        color,
         size,
         mobileBehavior,
         fullWidth,
         contentAnimation,
-    }), [activeTab, contentAnimation, fullWidth, mobileBehavior, reactId, setActiveTab, size, variant]);
+    }), [activeTab, color, contentAnimation, fullWidth, mobileBehavior, reactId, setActiveTab, size, variant]);
 
     return (
         <TabsContext.Provider value={contextValue}>
@@ -185,7 +190,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(functi
     { value, children, className, disabled, onClick, onKeyDown, ...props },
     ref,
 ) {
-    const { activeTab, setActiveTab, baseId, layoutId, variant, size, mobileBehavior, fullWidth } = useTabs();
+    const { activeTab, setActiveTab, baseId, layoutId, variant, color, size, mobileBehavior, fullWidth } = useTabs();
     const reduceMotion = useReducedMotion();
     const isActive = activeTab === value;
     const safeValue = value.replace(/[^a-zA-Z0-9_-]/g, '-');
@@ -203,13 +208,15 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(functi
         }
     }, [isActive, mobileBehavior, reduceMotion]);
 
-    const indicatorClassName = {
-        underline: 'absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary',
-        pills: 'absolute inset-0 z-0 rounded-lg bg-card shadow-sm ring-1 ring-border/50',
-        segmented: 'absolute inset-0 z-0 rounded-lg bg-primary shadow-sm',
-        cards: 'absolute inset-0 z-0 rounded-xl bg-primary/5',
-        sidebar: 'absolute inset-0 z-0 rounded-xl bg-primary/10 ring-1 ring-inset ring-primary/20',
-    }[variant];
+    const tone = toneClasses[color];
+    const indicatorClassName = cn({
+        underline: 'absolute inset-x-2 -bottom-px h-0.5 rounded-full',
+        pills: 'absolute inset-0 z-0 rounded-lg shadow-sm',
+        segmented: 'absolute inset-0 z-0 rounded-lg shadow-sm',
+        cards: 'absolute inset-0 z-0 rounded-xl',
+        sidebar: 'absolute inset-0 z-0 rounded-xl ring-1 ring-inset',
+    }[variant], variant === 'underline' || variant === 'pills' || variant === 'segmented' ? tone.fill : tone.soft,
+    variant === 'sidebar' && tone.outline);
 
     return (
         <button
@@ -248,7 +255,14 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(functi
                 triggers[nextIndex]?.focus();
                 triggers[nextIndex]?.click();
             }}
-            className={cn(tabsTriggerVariants({ variant, size, mobileBehavior, fullWidth }), className)}
+            className={cn(
+                tabsTriggerVariants({ variant, size, mobileBehavior, fullWidth }),
+                isActive && (variant === 'pills' || variant === 'segmented' ? tone.onSolid : tone.text),
+                isActive && (variant === 'cards' || variant === 'sidebar') && tone.outline,
+                !isActive && cn('hover:text-foreground', tone.hoverSoft),
+                !isActive && (variant === 'cards' || variant === 'sidebar') && tone.hoverOutline,
+                className,
+            )}
             {...props}
         >
             <span className={cn('relative z-10 inline-flex items-center justify-center gap-2', variant === 'sidebar' && 'w-full justify-start')}>

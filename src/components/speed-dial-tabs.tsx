@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as PhosphorIcons from "@phosphor-icons/react/dist/ssr";
 import { cn } from "../utils.js";
 import type { SpeedDialIcon } from "./speed-dial.js";
+import { toneClasses, type UIColor } from './theme.js';
 
 const speedDialTabsVariants = cva("fixed z-50 flex flex-col gap-2", {
     variants: {
@@ -57,6 +58,7 @@ export interface SpeedDialTabsProps
     defaultValue?: string;
     onValueChange?: (value: string) => void;
     closeOnSelect?: boolean;
+    color?: UIColor;
     rounded?: "none" | "sm" | "md" | "lg" | "full";
     size?: "xs" | "sm" | "md" | "lg";
     width?: "auto" | "full" | "fit";
@@ -83,6 +85,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
             defaultValue,
             onValueChange,
             closeOnSelect = true,
+            color = 'primary',
             position = "bottom-right",
             size = "md",
             width = "auto",
@@ -106,6 +109,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
         const actionTextSize = size === "xs" ? "text-xs" : "text-sm";
         const iconSize = size === "xs" ? 16 : size === "sm" ? 18 : size === "lg" ? 24 : 20;
         const widthClass = width === "full" ? "w-[calc(100vw-2rem)] max-w-72" : width === "fit" ? "w-fit min-w-44" : "w-52";
+        const tone = toneClasses[color];
 
         useEffect(() => {
             if (!isOpen) return;
@@ -178,8 +182,8 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                                         "flex w-full items-center gap-3 border px-3 text-left font-medium shadow-sm transition-colors duration-150",
                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
                                         selectedValue === tab.value
-                                            ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15"
-                                            : "border-border/70 bg-card text-foreground hover:border-primary/30 hover:bg-muted/50",
+                                            ? cn(tone.soft, tone.outline, tone.hoverSoft)
+                                            : cn("border-border/70 bg-card text-foreground hover:bg-muted/50", tone.hoverOutline),
                                         actionHeight,
                                         actionTextSize,
                                         roundedClass
@@ -187,7 +191,6 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                                 >
                                     {tab.icon && <span className="flex w-5 shrink-0 items-center justify-center" aria-hidden="true">{renderIcon(tab.icon, iconSize)}</span>}
                                     <span className="min-w-0 flex-1 truncate">{tab.label}</span>
-                                    {selectedValue === tab.value && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
                                 </button>
                             ))}
                         </motion.div>
@@ -200,8 +203,9 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                     aria-expanded={isOpen}
                     aria-controls={listId}
                     className={cn(
-                        "flex w-full items-center gap-3 bg-primary px-3.5 font-semibold text-white shadow-lg transition-colors duration-150",
-                        "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "flex w-full items-center gap-3 px-3.5 font-semibold shadow-lg transition-colors duration-150",
+                        tone.solid,
+                        "hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         triggerHeight,
                         triggerTextSize,
                         roundedClass
@@ -222,9 +226,6 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                         </AnimatePresence>
                     )}
                     <span className="min-w-0 flex-1 truncate text-left">{triggerLabel}</span>
-                    <motion.span aria-hidden="true" animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.18 }} className="flex shrink-0 items-center">
-                        {renderIcon("CaretDownIcon", 16)}
-                    </motion.span>
                 </button>
             </div>
             </>

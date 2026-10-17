@@ -17,12 +17,12 @@ const speedDialVariants = cva("fixed z-50 flex flex-col gap-2", {
 });
 
 const buttonVariants = cva(
-    "flex items-center justify-center rounded-full shadow-lg text-white transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer",
+    "flex items-center justify-center rounded-full shadow-lg transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer",
     {
         variants: {
             variant: {
-                trigger: "bg-primary hover:bg-primary/90 focus:ring-primary/50 active:scale-95",
-                action: "bg-secondary hover:bg-secondary/90 focus:ring-secondary/50 active:scale-95",
+                trigger: "bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary/50 active:scale-95",
+                action: "bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary/50 active:scale-95",
             },
             size: { xsmall: "h-9 w-9", small: "h-11 w-11", medium: "h-14 w-14", large: "h-16 w-16" },
         },
@@ -142,7 +142,7 @@ const SpeedDial = React.forwardRef<HTMLDivElement, SpeedDialProps>(
                                         className={cn(
                                             buttonVariants({ variant: "action", size: resolvedActionSize }),
                                             "shrink-0 disabled:cursor-not-allowed disabled:opacity-50",
-                                            action.active && "bg-primary hover:bg-primary/90"
+                                            action.active && "bg-primary text-primary-foreground hover:bg-primary/90"
                                         )}
                                     >
                                         {renderIcon(action.icon, resolvedActionSize === "xsmall" ? 18 : resolvedActionSize === "small" ? 20 : resolvedActionSize === "large" ? 28 : 24)}

@@ -36,6 +36,7 @@ export * from './components/empty-state.js';
 export * from './components/select.js';
 export * from './components/bulk-actions.js';
 export * from './components/calendar.js';
+export * from './components/month-year-picker.js';
 export * from './components/carousel.js';
 export * from './components/chart.js';
 export * from './components/gallery.js';

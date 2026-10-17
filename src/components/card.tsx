@@ -87,14 +87,14 @@ const cardVariants = cva(
       { variant: 'glass', color: 'neutral', className: 'border-neutral/20 bg-card/75 shadow-lg backdrop-blur-xl' },
       { variant: 'glass', color: 'tertiary', className: 'border-tertiary/20 bg-card/75 shadow-lg backdrop-blur-xl' },
       { variant: 'filled', color: 'default', className: 'border-transparent bg-muted text-foreground' },
-      { variant: 'filled', color: 'primary', className: 'border-transparent bg-primary/10 text-primary' },
-      { variant: 'filled', color: 'secondary', className: 'border-transparent bg-secondary/15 text-secondary-foreground' },
+      { variant: 'filled', color: 'primary', className: 'border-transparent bg-primary/10 text-primary-text' },
+      { variant: 'filled', color: 'secondary', className: 'border-transparent bg-secondary/15 text-secondary-text' },
       { variant: 'filled', color: 'success', className: 'border-transparent bg-success/10 text-success' },
       { variant: 'filled', color: 'warning', className: 'border-transparent bg-warning/10 text-warning' },
       { variant: 'filled', color: 'danger', className: 'border-transparent bg-destructive/10 text-destructive' },
       { variant: 'filled', color: 'info', className: 'border-transparent bg-info/10 text-info' },
       { variant: 'filled', color: 'neutral', className: 'border-transparent bg-neutral/10 text-neutral' },
-      { variant: 'filled', color: 'tertiary', className: 'border-transparent bg-tertiary/10 text-tertiary' },
+      { variant: 'filled', color: 'tertiary', className: 'border-transparent bg-tertiary/10 text-tertiary-text' },
       { variant: 'filled', color: 'background', className: 'border-transparent bg-background text-foreground' },
       { variant: 'outlined', color: 'background', className: 'border-border text-foreground' },
     ],
@@ -166,7 +166,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
       {!metric && (title || description || icon || action) && (
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-2">
-            {icon && <span className="flex-shrink-0 p-2 rounded-md bg-primary/10 text-primary">{icon}</span>}
+            {icon && <span className={cn('flex-shrink-0 p-2 rounded-md', toneClasses[color && color !== 'default' ? color : 'primary'].soft)}>{icon}</span>}
             <div className="min-w-0 ">
               {title && <h3 className="font-semibold text-foreground">{title}</h3>}
               {description && <p className="text-sm text-muted-foreground">{description}</p>}

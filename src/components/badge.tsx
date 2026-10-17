@@ -11,9 +11,9 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:'border-transparent bg-primary/30 text-primary hover:bg-primary/50',
-        secondary:'border-transparent bg-secondary/30 text-secondary hover:bg-secondary/50',
-        tertiary:'border-transparent bg-tertiary/30 text-tertiary hover:bg-tertiary/50',
+        default:'border-transparent bg-primary/30 text-primary-text hover:bg-primary/50',
+        secondary:'border-transparent bg-secondary/30 text-secondary-text hover:bg-secondary/50',
+        tertiary:'border-transparent bg-tertiary/30 text-tertiary-text hover:bg-tertiary/50',
         destructive:'border-transparent bg-destructive/30 text-destructive hover:bg-destructive/50',
         success:'border-transparent bg-success/10 text-success hover:bg-success/15',
         warning:'border-transparent bg-warning/10 text-warning hover:bg-warning/15',
@@ -126,10 +126,10 @@ function Badge({
             resolvedVariant === 'warning' && 'bg-warning',
             resolvedVariant === 'destructive' && 'bg-destructive',
             resolvedVariant === 'info' && 'bg-info',
-            resolvedVariant === 'default' && 'bg-primary-foreground',
-            resolvedVariant === 'secondary' && 'bg-secondary-foreground',
+            resolvedVariant === 'default' && 'bg-primary-text',
+            resolvedVariant === 'secondary' && 'bg-secondary-text',
             resolvedVariant === 'outline' && 'bg-foreground',
-            resolvedVariant === 'tertiary' && 'bg-tertiary',
+            resolvedVariant === 'tertiary' && 'bg-tertiary-text',
             resolvedVariant === 'gradient' && 'bg-white'
           )}
         />
