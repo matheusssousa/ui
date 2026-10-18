@@ -363,6 +363,13 @@ const Button = React.forwardRef<
                 const diameter = Math.max(button.clientWidth, button.clientHeight);
                 const radius = diameter / 2;
 
+                // The effect must never participate in flex layout, even without the theme CSS.
+                circle.style.position = 'absolute';
+                circle.style.pointerEvents = 'none';
+                circle.style.borderRadius = '50%';
+                circle.style.backgroundColor = 'currentColor';
+                circle.style.opacity = '0';
+                circle.setAttribute('aria-hidden', 'true');
                 circle.style.width = circle.style.height = `${diameter}px`;
                 circle.style.left = `${event.clientX - rect.left - radius}px`;
                 circle.style.top = `${event.clientY - rect.top - radius}px`;
@@ -373,6 +380,15 @@ const Button = React.forwardRef<
                     rippleEffect.remove();
                 }
                 button.appendChild(circle);
+                if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches && circle.animate) {
+                    const animation = circle.animate(
+                        [{ transform: 'scale(0)', opacity: 0.25 }, { transform: 'scale(4)', opacity: 0 }],
+                        { duration: 600, easing: 'linear' }
+                    );
+                    animation.onfinish = () => circle.remove();
+                } else {
+                    circle.remove();
+                }
             }
             // NOTA: onClick é chamado pelo handleRippleAndCopy, não aqui
         };

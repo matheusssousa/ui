@@ -11,6 +11,7 @@ import { ImageInput, validateImageFile } from '../dist/components/image-input.js
 import { SwitchField } from '../dist/components/switch-field.js';
 import { ViewModal } from '../dist/components/view-modal.js';
 import { ToastProvider } from '../dist/providers/ToastProvider.js';
+import { Button } from '../dist/components/button.js';
 import { openDownloadUrl } from '../dist/functions/openDownloadUrl.js';
 import { getFieldError } from '../dist/functions/getFieldError.js';
 import { handleInputChange } from '../dist/functions/handleInputChange.js';
@@ -31,6 +32,36 @@ async function mount(render) {
 }
 async function tick(ms = 20) { await act(async () => { await new Promise(resolve => setTimeout(resolve, ms)); }); }
 const page = (data = [{ id: 1 }]) => ({ data, current_page: 1, last_page: 2, total: 2, per_page: 1, from: 1, to: 1 });
+
+test('button ripple stays outside layout without theme CSS and is removed after animation', async () => {
+  const previousAnimate = dom.window.HTMLElement.prototype.animate;
+  let animation;
+  let clicks = 0;
+  dom.window.HTMLElement.prototype.animate = function () { return animation = {}; };
+  const ui = await mount(() => React.createElement(ToastProvider, null,
+    React.createElement(Button, { motionScale: false, onClick: () => clicks++ }, 'Entrar')));
+  try {
+    const button = ui.container.querySelector('button');
+    for (let index = 0; index < 2; index++) {
+      await act(async () => button.click());
+      const ripple = button.querySelector('.ripple');
+      assert.equal(dom.window.getComputedStyle(ripple).position, 'absolute');
+      assert.equal(ripple.style.pointerEvents, 'none');
+      assert.equal(ripple.getAttribute('aria-hidden'), 'true');
+      assert.equal(button.querySelectorAll('.ripple').length, 1);
+      assert.equal(button.textContent, 'Entrar');
+    }
+    animation.onfinish();
+    assert.equal(button.querySelector('.ripple'), null);
+    assert.equal(clicks, 2);
+    dom.window.HTMLElement.prototype.animate = undefined;
+    await act(async () => button.click());
+    assert.equal(button.querySelector('.ripple'), null);
+  } finally {
+    dom.window.HTMLElement.prototype.animate = previousAnimate;
+    await ui.dispose();
+  }
+});
 
 for (const transport of ['fetch', 'axios']) test(`table works with ${transport}, filters, sorting and pagination`, async () => {
   const requests = [];
