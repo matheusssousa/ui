@@ -19,21 +19,35 @@ export class HttpError extends Error {
 }
 
 export function resolveHttpError(error: unknown, fallback = 'Não foi possível concluir a solicitação.'): string {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const response = (error as { response?: { status?: number; data?: unknown } }).response;
-    if (response?.status) return resolveHttpError(new HttpError(response.status, response.data), fallback);
-  }
-  if (error instanceof HttpError) {
-    const body = error.data;
-    if (body && typeof body === 'object') {
-      const record = body as Record<string, unknown>;
-      if (typeof record.message === 'string' && record.message.trim()) return record.message;
-      if (typeof record.error === 'string' && record.error.trim()) return record.error;
-      if (record.errors && typeof record.errors === 'object') {
-        const first = Object.values(record.errors)[0];
-        if (Array.isArray(first) && typeof first[0] === 'string') return first[0];
+  const record = error && typeof error === 'object' ? error as Record<string, unknown> : {};
+  const response = record.response && typeof record.response === 'object'
+    ? record.response as { status?: number; data?: unknown } : undefined;
+  const status = error instanceof HttpError ? error.status : response?.status;
+  const data = error instanceof HttpError ? error.data : response?.data;
+  if (data && typeof data === 'object') {
+    const body = data as Record<string, unknown>;
+    for (const key of ['message', 'error']) {
+      if (typeof body[key] === 'string' && body[key].trim()) return body[key].trim();
+    }
+    if (body.errors && typeof body.errors === 'object') {
+      for (const value of Object.values(body.errors)) {
+        const message = (Array.isArray(value) ? value : [value]).find(v => typeof v === 'string' && v.trim());
+        if (typeof message === 'string') return message.trim();
       }
     }
+  }
+  const messages: Record<number, string> = {
+    401: 'Sua sessão expirou. Faça login novamente para continuar.',
+    403: 'Você não tem permissão para executar esta ação.',
+    404: 'Não encontramos o recurso solicitado.',
+    422: 'Revise os dados informados e tente novamente.',
+    429: 'Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente.',
+  };
+  if (status && messages[status]) return messages[status];
+  if (status && status >= 500) return 'Estamos com instabilidade no momento. Tente novamente em instantes.';
+  if (record.code === 'ECONNABORTED' || record.code === 'ETIMEDOUT') return 'A solicitação demorou demais. Tente novamente.';
+  if (record.code === 'ERR_NETWORK' || (typeof record.message === 'string' && /failed to fetch|network error|fetch failed/i.test(record.message))) {
+    return 'Não foi possível conectar ao servidor. Verifique sua conexão.';
   }
   return error instanceof Error && error.message ? error.message : fallback;
 }
@@ -103,7 +117,8 @@ export function createAxiosClient(instance: AxiosLike): HttpClient {
     async request<T>(method: string, url: string, data?: unknown, options: HttpRequestOptions = {}): Promise<T> {
       const response = await instance.request<T>({
         method, url, data, params: options.params, signal: options.signal,
-        headers: options.headers, withCredentials: options.credentials === 'include' ? true : undefined,
+        headers: options.headers === undefined ? undefined : Object.fromEntries(new Headers(options.headers).entries()),
+        withCredentials: options.credentials === undefined ? undefined : options.credentials === 'include',
       });
       return response.data;
     },

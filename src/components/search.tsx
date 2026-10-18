@@ -1,5 +1,6 @@
-import type { SearchProps, Filter } from './data-types.js';
 'use client';
+
+import type { SearchProps, Filter } from './data-types.js';
 
 import * as React from 'react';
 import { cn } from '../utils.js';
