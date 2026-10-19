@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react';
 
-export const TableStyleContext = createContext<{ size: 'sm' | 'default' | 'lg'; borderless: boolean } | null>(null);
+export const TableStyleContext = createContext<{ size: 'sm' | 'default' | 'lg'; borderless: boolean; spreadsheet?: boolean } | null>(null);
 export const useTableStyle = () => useContext(TableStyleContext);
 
 // Applied last so validation and disabled states cannot restore field borders.

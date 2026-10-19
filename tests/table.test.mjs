@@ -227,3 +227,116 @@ test('row mode requires its own callback; reverting a draft does not save', asyn
     await focus(input); await focus(ui.outside); assert.equal(calls, 2); assert.doesNotMatch(ui.container.textContent, /Retry by blur/);
   } finally { await ui.dispose(); }
 });
+
+
+test('spreadsheet selects cells, edits by typing or F2, restores the edit session and navigates rows', async () => {
+  const calls = [];
+  const ui = await mount({ variant: 'spreadsheet', saveMode: 'row', columns: [column, { ...column, key: 'note', label: 'Note' }], data: [{ id: 1, name: 'A', note: 'One' }, { id: 2, name: 'B', note: 'Two' }], onRowSave: async event => calls.push(event) });
+  try {
+    let cells = ui.container.querySelectorAll('[role="gridcell"]');
+    assert.equal(ui.container.querySelector('input'), null);
+    await focus(cells[0]); await key(cells[0], 'x');
+    let input = cells[0].querySelector('input'); assert.equal(input.value, 'x');
+    await change(input, 'New A'); await key(input, 'Tab');
+    assert.equal(document.activeElement, cells[1]); assert.equal(calls.length, 0);
+    await key(cells[1], 'F2'); input = cells[1].querySelector('input'); assert.equal(input.value, 'One');
+    await change(input, 'Do not keep'); await key(input, 'Escape'); assert.match(cells[1].textContent, /One/); assert.match(cells[0].textContent, /New A/);
+    await key(cells[1], 'ArrowLeft'); assert.equal(document.activeElement, cells[0]);
+    await key(cells[0], 'Enter'); assert.equal(document.activeElement, cells[2]); assert.equal(calls.length, 1);
+    assert.deepEqual(calls[0].changes, { name: 'New A' });
+    await act(async () => cells[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true })));
+    assert.equal(document.activeElement, cells[0]);
+    await act(async () => cells[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true })));
+  } finally { await ui.dispose(); }
+});
+
+test('spreadsheet text arrows stay in the editor and select keys stay in the open list', async () => {
+  const ui = await mount({ appearance: 'spreadsheet', variant: 'grid', columns: [column, { key: 'status', label: 'Status', editor: { type: 'select', options: [{ value: 0, label: 'A' }, { value: 1, label: 'B' }] } }], data: [{ id: 1, name: 'Text', status: 0 }], saveMode: 'row', onRowSave: async () => {} });
+  try {
+    const cells = ui.container.querySelectorAll('[role="gridcell"]');
+    await focus(cells[0]); await key(cells[0], 'F2'); const input = cells[0].querySelector('input');
+    await key(input, 'ArrowRight'); assert.equal(document.activeElement, input);
+    await key(input, 'Tab'); await key(cells[1], 'F2');
+    const trigger = cells[1].querySelector('[role="combobox"]');
+    await key(trigger, 'ArrowDown'); await key(trigger, 'ArrowDown'); await key(trigger, 'Enter');
+    assert.equal(document.activeElement, trigger); assert.match(trigger.textContent, /B/);
+    await key(trigger, 'Escape'); assert.match(cells[1].textContent, /A/);
+  } finally { await ui.dispose(); }
+});
+
+test('draft-dependent editors and patches update immediately; full row validation includes untouched required fields', async () => {
+  const editingRef = React.createRef(), htmlRef = React.createRef(), states = [], calls = [];
+  const columns = [
+    { key: 'kind', label: 'Kind', editor: { type: 'select', options: [{ value: 'expense', label: 'Expense' }, { value: 'transfer', label: 'Transfer' }], onChange: value => value === 'transfer' ? { category: undefined } : { destination: undefined } } },
+    { key: 'category', label: 'Category', editor: row => ({ type: 'input', disabled: row.kind === 'transfer', required: row.kind !== 'transfer' }) },
+    { key: 'destination', label: 'Destination', editor: row => ({ type: 'input', disabled: row.kind !== 'transfer', required: row.kind === 'transfer' }) },
+  ];
+  const ui = await mount({ ref: htmlRef, editingRef, onEditingStateChange: state => states.push(state), columns, data: [{ id: 1, kind: 'expense', category: 'Food', destination: '' }], saveMode: 'row', onRowSave: async event => calls.push(event) });
+  try {
+    assert.equal(htmlRef.current.tagName, 'TABLE');
+    const trigger = ui.container.querySelector('[role="combobox"]'); await focus(trigger); await click(trigger); await click(ui.container.querySelectorAll('[role="option"]')[1]);
+    const category = ui.container.querySelector('[aria-label="Category, linha 1"]'), destination = ui.container.querySelector('[aria-label="Destination, linha 1"]');
+    assert.equal(category.disabled, true); assert.equal(destination.disabled, false); assert.equal(category.value, '');
+    assert.deepEqual(editingRef.current.getDraftRow(1), { id: 1, kind: 'transfer', category: undefined, destination: '' });
+    let result; await act(async () => { result = await editingRef.current.saveRow(1); });
+    assert.equal(result.status, 'invalid'); assert.ok(result.errors.destination); assert.equal(calls.length, 0);
+    await act(async () => { assert.equal(editingRef.current.focusCell(1, 'destination'), true); }); assert.equal(document.activeElement, destination);
+    await change(destination, 'Savings'); await focus(ui.outside); assert.equal(calls.length, 1); assert.equal(calls[0].changes.category, undefined);
+    assert.ok(states.some(state => state.dirtyRows.includes(1))); assert.deepEqual(editingRef.current.getEditingState().dirtyRows, []);
+    await act(async () => { editingRef.current.patchDraft(1, { destination: 'Other' }); });
+    await act(async () => { assert.equal(editingRef.current.discardRow(1), true); }); assert.equal(destination.value, 'Savings');
+  } finally { await ui.dispose(); }
+});
+
+test('saveAll waits in-flight requests, reports failures, preserves off-page drafts and permits discard', async () => {
+  const editingRef = React.createRef(), request = deferred(), calls = [];
+  const ui = await mount({ editingRef, columns: [column], data: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }], saveMode: 'row', onRowSave: event => { calls.push(event); return event.rowKey === 1 ? request.promise : Promise.reject(Error('Offline')); } });
+  try {
+    await act(async () => { editingRef.current.setDraftValue(1, 'name', 'New A'); editingRef.current.setDraftValue(2, 'name', 'New B'); });
+    let saving; await act(async () => { saving = editingRef.current.saveRow(1); });
+    assert.equal(calls.length, 1); assert.equal(editingRef.current.discardRow(1), false);
+    await ui.render({ data: [{ id: 1, name: 'A' }] });
+    let all, finished = false;
+    await act(async () => { all = editingRef.current.saveAll().then(result => { finished = true; return result; }); });
+    assert.equal(finished, false); assert.equal(calls.length, 2);
+    await act(async () => request.resolve()); const result = await all;
+    assert.equal((await saving).ok, true); assert.equal(result.ok, false); assert.equal(result.results.find(row => row.rowKey === 2).status, 'error');
+    assert.deepEqual(editingRef.current.getEditingState().dirtyRows, [2]);
+    await act(async () => { editingRef.current.discardRow(2); }); assert.deepEqual(editingRef.current.getEditingState().dirtyRows, []);
+    assert.equal((await editingRef.current.saveRow('missing')).status, 'not-found');
+  } finally { await ui.dispose(); }
+});
+
+test('money and date editors send exact decimal and ISO strings and format editable cells when idle', async () => {
+  const calls = [];
+  const ui = await mount({ variant: 'spreadsheet', saveMode: 'row', columns: [
+    { key: 'amount', label: 'Amount', editor: { type: 'money' } },
+    { key: 'date', label: 'Date', editor: { type: 'date', required: true } },
+    { key: 'note', label: 'Note', editor: { type: 'input' }, render: value => 'Formatted ' + value },
+  ], data: [{ id: 1, amount: '9007199254740993.01', date: '2026-10-19', note: 'note' }], onRowSave: async event => calls.push(event) });
+  try {
+    const cells = ui.container.querySelectorAll('[role="gridcell"]');
+    assert.match(cells[0].textContent, /9\.007\.199\.254\.740\.993,01/); assert.match(cells[0].className, /tabular-nums/);
+    assert.match(cells[1].textContent, /19\/10\/2026/); assert.match(cells[2].textContent, /Formatted note/);
+    await focus(cells[0]); await key(cells[0], 'F2'); let input = cells[0].querySelector('input');
+    await change(input, '145,50'); await key(input, 'Tab');
+    await key(cells[1], 'F2'); input = cells[1].querySelector('input'); assert.equal(input.type, 'date');
+    await change(input, '2026-11-02'); await focus(ui.outside);
+    assert.equal(calls.length, 1); assert.deepEqual(calls[0].changes, { amount: '145.50', date: '2026-11-02' });
+  } finally { await ui.dispose(); }
+});
+
+test('spreadsheet copy is single-cell text; range paste is not interpreted; stacked layout exposes every label', async () => {
+  const ui = await mount({ appearance: 'spreadsheet', mobileLayout: 'stacked', columns: ['a', 'b', 'c', 'd'].map(key => ({ key, label: key, editor: { type: 'input' } })), data: [{ id: 1, a: 'Copy me', b: 'B', c: 'C', d: 'D' }], onCellSave: async () => {} });
+  try {
+    const cells = ui.container.querySelectorAll('[role="gridcell"]');
+    assert.equal(cells.length, 4); assert.equal(ui.container.querySelectorAll('.ui-table-mobile-label').length, 4);
+    for (const cell of cells) assert.doesNotMatch(cell.className, /hidden/);
+    await focus(cells[0]); let copied;
+    const copy = new Event('copy', { bubbles: true, cancelable: true }); Object.defineProperty(copy, 'clipboardData', { value: { setData: (type, text) => { copied = text; } } });
+    await act(async () => cells[0].dispatchEvent(copy)); assert.equal(copied, 'Copy me');
+    const paste = new Event('paste', { bubbles: true, cancelable: true }); Object.defineProperty(paste, 'clipboardData', { value: { getData: () => 'A\tB\nC\tD' } });
+    await act(async () => cells[0].dispatchEvent(paste)); assert.equal(ui.container.querySelector('input'), null);
+    assert.match(ui.container.querySelector('table').className, /ui-table-sticky/);
+  } finally { await ui.dispose(); }
+});

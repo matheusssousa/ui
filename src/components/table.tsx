@@ -1,6 +1,6 @@
 'use client';
 
-import type { TableData, Column, SortState, PaginationState, CellSaveEvent, RowSaveEvent } from './data-types.js';
+import type { TableData, Column, SortState, PaginationState, CellSaveEvent, RowSaveEvent, TableEditingController, TableEditingState, TableFieldErrors } from './data-types.js';
 
 import * as React from 'react';
 import { cn } from '../utils.js';
@@ -11,6 +11,9 @@ import dynamic from 'next/dynamic.js';
 import { Input } from './input.js';
 import { EditableRow } from '../internal/editable-row.js';
 import { EditableCell } from '../internal/editable-cell.js';
+import { TableEditingStore } from '../internal/table-editing.js';
+import { useTableNavigation } from '../internal/table-navigation.js';
+import { TableRuntimeContext } from '../internal/table-runtime.js';
 import { TableStyleContext } from '../internal/table-style.js';
 
 const CaretUpDownIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretUpDownIcon), { ssr: false });
@@ -29,6 +32,7 @@ const tableVariants = cva(
         outline: '[&_thead]:bg-muted/30 [&_tbody_tr:not(:last-child)]:border-b [&_tbody_tr]:border-border/60',
         grid: '[&_th]:border [&_td]:border [&_th]:border-border/60 [&_td]:border-border/60 [&_thead]:bg-muted/30',
         fixed: 'table-fixed',
+        spreadsheet: '[&_th]:border [&_td]:border [&_th]:border-border/60 [&_td]:border-border/60 [&_thead]:bg-muted/30',
       },
       size: {
         sm: 'text-xs [&_th]:px-2 [&_th]:py-2 [&_td]:px-2 [&_td]:py-1',
@@ -49,6 +53,18 @@ export interface TableProps extends VariantProps<typeof tableVariants> {
   columns: Column[];
   /** Layout independente da aparência; variant=fixed permanece compatível. */
   layout?: 'auto' | 'fixed';
+  /** Interacao de planilha independente da variante visual. */
+  appearance?: 'default' | 'spreadsheet';
+  /** Mantem todos os campos acessiveis no celular. */
+  mobileLayout?: 'responsive' | 'scroll' | 'stacked';
+  stickyHeader?: boolean;
+  maxHeight?: number | string;
+  /** Nome acessivel da tabela ou grade. */
+  'aria-label'?: string;
+  /** Controle de edicao separado do ref HTML existente. */
+  editingRef?: React.Ref<TableEditingController>;
+  onEditingStateChange?: (state: TableEditingState) => void;
+  validateRow?: (draftRow: TableData) => TableFieldErrors;
   /** Rejeite a Promise para manter o rascunho e mostrar erro. */
   onCellSave?: (event: CellSaveEvent) => Promise<void>;
   /** Padrao cell; row salva ao sair da linha inteira. */
@@ -104,6 +120,13 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     variant,
     size,
     layout,
+    appearance,
+    mobileLayout,
+    stickyHeader,
+    maxHeight,
+    editingRef,
+    onEditingStateChange,
+    validateRow: rowValidator,
     onCellSave,
     saveMode = 'cell',
     onRowSave,
@@ -122,6 +145,25 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     limitColumnsShow = 3,
     ...props
   }, ref) => {
+    const spreadsheet = appearance === 'spreadsheet' || variant === 'spreadsheet';
+    const effectiveMobileLayout = mobileLayout ?? (spreadsheet ? 'scroll' : 'responsive');
+    const tableId = React.useId();
+    const store = React.useMemo(() => new TableEditingStore({ columns, rowKey, saveMode, onCellSave, onRowSave, validateRow: rowValidator }, data), [rowKey]);
+    store.options = { columns, rowKey, saveMode, onCellSave, onRowSave, validateRow: rowValidator };
+    const revision = React.useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
+    React.useEffect(() => { store.sync(data); }, [store, data]);
+    const navigation = useTableNavigation(data.map((row, index) => row[rowKey] ?? index), columns.map(column => column.key), spreadsheet);
+    React.useImperativeHandle(editingRef, () => ({
+      saveRow: store.saveRow, saveAll: store.saveAll, discardRow: store.discardRow, resetRow: store.discardRow,
+      getEditingState: store.getEditingState, focusCell: navigation.focusCell,
+      getDraftRow: store.getDraftRow, setDraftValue: store.setDraftValue, patchDraft: store.patchDraft, validateRow: store.validateRow,
+    }));
+    const stateCallback = React.useRef(onEditingStateChange); stateCallback.current = onEditingStateChange;
+    const lastEditingState = React.useRef('');
+    React.useEffect(() => {
+      const state = store.getEditingState(), serialized = JSON.stringify(state);
+      if (serialized !== lastEditingState.current) { lastEditingState.current = serialized; stateCallback.current?.(state); }
+    }, [store, revision]);
     const [selectedRows, setSelectedRows] = React.useState<(string | number)[]>([]);
     const [isMobile, setIsMobile] = React.useState(false);
 
@@ -199,15 +241,6 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     };
 
     const canEdit = saveMode === 'row' ? Boolean(onRowSave) : Boolean(onCellSave);
-    const renderCell = (column: Column, row: TableData, rowIndex: number) => {
-      const value = row[column.key];
-      const editor = typeof column.editor === 'function' ? column.editor(row, rowIndex) : column.editor;
-      if (editor && canEdit) return <EditableCell row={row} rowId={row[rowKey]} columnKey={column.key}
-        label={column.label} editor={editor} onSave={onCellSave} />;
-      if (column.render) return column.render(value, row, rowIndex);
-
-      return value;
-    };
 
     if (canEdit && columns.some(column => column.editor)) {
       const ids = new Set<string | number>();
@@ -225,23 +258,25 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     }
 
     return (
-      <TableStyleContext.Provider value={{ size: size ?? 'default', borderless: variant !== 'outline' && variant !== 'grid' }}>
+      <TableRuntimeContext.Provider value={{ store, navigation, spreadsheet, canEdit, tableId, stacked: effectiveMobileLayout === 'stacked', columnOffset: selectable ? 1 : 0 }}>
+      <TableStyleContext.Provider value={{ size: size ?? 'default', borderless: variant !== 'outline' && variant !== 'grid' && variant !== 'spreadsheet', spreadsheet }}>
       <div className="w-full space-y-4">
         {renderBulkActions && selectedRows.length > 0 && (
           renderBulkActions(selectedRows, handleClearSelection)
         )}
-        <div className={cn('rounded-lg', (variant === 'outline' || variant === 'grid') && 'border border-border/60', responsive && 'overflow-x-auto')}>
-          <table ref={ref} className={cn(tableVariants({ variant, size }), (layout ?? (variant === 'fixed' ? 'fixed' : 'auto')) === 'fixed' ? 'table-fixed' : 'table-auto', className)} {...props}>
-            <thead>
+        <div style={{ maxHeight: maxHeight ?? (spreadsheet ? 480 : undefined) }} className={cn('rounded-lg', (variant === 'outline' || variant === 'grid' || variant === 'spreadsheet') && 'border border-border/60', (responsive || spreadsheet || maxHeight !== undefined) && 'overflow-auto')}>
+          <table ref={ref} data-variant={variant ?? 'default'} role={spreadsheet ? 'grid' : undefined} aria-label={spreadsheet ? 'Tabela editavel' : undefined} aria-rowcount={spreadsheet ? data.length + 1 : undefined} aria-colcount={spreadsheet ? columns.length + (selectable ? 1 : 0) : undefined} className={cn(tableVariants({ variant, size }), spreadsheet && 'ui-spreadsheet', (stickyHeader ?? spreadsheet) && 'ui-table-sticky', effectiveMobileLayout === 'stacked' && 'ui-table-stacked', (layout ?? (variant === 'fixed' ? 'fixed' : 'auto')) === 'fixed' ? 'table-fixed' : 'table-auto', className)} {...props}>
+            <thead role={spreadsheet ? 'rowgroup' : undefined}>
               <tr>
                 {selectable && (
-                  <th className={cn(
+                  <th scope="col" role={spreadsheet ? 'columnheader' : undefined} aria-colindex={spreadsheet ? 1 : undefined} className={cn(
                     "h-10 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
                     "hidden md:table-cell",
                     selectedRows.length > 0 && "!table-cell"
                   )}>
                     <Input
                       type='checkbox'
+                      aria-label="Selecionar todas as linhas"
                       checked={isAllSelected}
                       ref={(el) => {
                         if (el) el.indeterminate = isIndeterminate;
@@ -255,6 +290,9 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                 {columns.map((column, index) => (
                   <th
                     key={column.key}
+                    aria-colindex={spreadsheet ? index + 1 + (selectable ? 1 : 0) : undefined}
+                    id={tableId + '-column-' + index} scope="col" role={spreadsheet ? 'columnheader' : undefined}
+                    aria-sort={sortable && column.sortable ? (sortState?.column === column.key ? (sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}
                     className={cn(
                       'align-middle font-medium text-muted-foreground whitespace-nowrap',
                       column.align === 'center' && 'text-center',
@@ -262,7 +300,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                       column.align === 'left' && 'text-left',
                       !column.align && 'text-left',
                       sortable && column.sortable && 'cursor-pointer select-none hover:text-foreground',
-                      responsive && index >= limitColumnsShow && 'hidden md:table-cell'
+                      responsive && effectiveMobileLayout === 'responsive' && index >= limitColumnsShow && 'hidden md:table-cell'
                     )}
                     style={{ width: column.width }}
                     onClick={() => column.sortable && handleSort(column.key)}
@@ -275,7 +313,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody role={spreadsheet ? 'rowgroup' : undefined}>
               {data.length === 0 ? (
                 <tr>
                   <td
@@ -289,8 +327,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                 data.map((row, rowIndex) => {
                   const isSelected = selectedRows.includes(row[rowKey]);
                   return (
-                    <EditableRow row={row} rowId={row[rowKey]} colSpan={columns.length + (selectable ? 1 : 0)}
-                      onSave={saveMode === 'row' ? onRowSave : undefined}
+                    <EditableRow rowId={row[rowKey] ?? rowIndex} aria-rowindex={spreadsheet ? rowIndex + 2 : undefined} colSpan={columns.length + (selectable ? 1 : 0)}
                       key={row[rowKey] == null ? rowIndex : `${typeof row[rowKey]}:${row[rowKey]}`}
                       className={cn(
                         'transition-colors',
@@ -309,13 +346,14 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                       onTouchMove={handleTouchMove}
                     >
                       {selectable && (
-                        <td className={cn(
+                        <td role={spreadsheet ? 'gridcell' : undefined} aria-colindex={spreadsheet ? 1 : undefined} className={cn(
                           "px-3 py-2 align-middle",
                           "hidden md:table-cell",
                           selectedRows.length > 0 && "!table-cell"
                         )}>
                           <Input
                             type='checkbox'
+                            aria-label={'Selecionar linha ' + row[rowKey]}
                             checked={isSelected}
                             disabled={isRowSelectable ? !isRowSelectable(row) : false}
                             onChange={(e) => handleSelectRow(row[rowKey], e.target.checked)}
@@ -324,19 +362,11 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                         </td>
                       )}
                       {columns.map((column, index) => (
-                        <td
-                          key={column.key}
-                          className={cn(
-                            'align-middle',
-                            column.className,
-                            column.align === 'center' && 'text-center',
-                            column.align === 'right' && 'text-right',
-                            column.align === 'left' && 'text-left',
-                            responsive && index >= limitColumnsShow && 'hidden md:table-cell'
-                          )}
-                        >
-                          {renderCell(column, row, rowIndex)}
-                        </td>
+                        <EditableCell key={column.key} rowId={row[rowKey] ?? rowIndex} column={column} rowIndex={rowIndex} columnIndex={index}
+                          className={cn(column.className,
+                            column.align === 'center' && 'text-center', column.align === 'right' && 'text-right', column.align === 'left' && 'text-left',
+                            responsive && effectiveMobileLayout === 'responsive' && index >= limitColumnsShow && 'hidden md:table-cell')}
+                        />
                       ))}
                     </EditableRow>
                   );
@@ -363,6 +393,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
         )}
       </div>
       </TableStyleContext.Provider>
+      </TableRuntimeContext.Provider>
     );
   }
 );

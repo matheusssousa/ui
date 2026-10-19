@@ -575,6 +575,121 @@ Use `saveMode="row"` e `onRowSave` para enviar todas as alterações de uma linh
 
 Qualquer erro de validação impede o envio da linha inteira. Durante o salvamento, todos os editores dessa linha ficam bloqueados; outras linhas continuam disponíveis. Em falha, os rascunhos são preservados e aparece uma ação “Tentar novamente” abaixo da linha. Sair novamente da linha também repete a tentativa. Valores revertidos ao último confirmado não geram salvamento, e desmontar a tabela não envia novas alterações. A persistência atômica dos campos é responsabilidade da API consumidora.
 
+#### Modo planilha
+
+Use `variant="spreadsheet"` para grade compacta com interação de planilha, ou `appearance="spreadsheet"` com qualquer outra variante para escolher a aparência separadamente. `grid` mantém o comportamento anterior. O modo de salvamento continua independente; a combinação recomendada é `variant="spreadsheet" saveMode="row"`.
+
+As células têm aproximadamente 36 px no desktop, contorno de foco de 2 px, apresentação discreta para campos somente leitura e indicadores internos de pendência/erro, sem inserir linhas durante o salvamento. `column.render(value, draftRow, index)` formata uma célula editável enquanto ela não estiver em edição. O cabeçalho fica fixo por padrão no modo planilha; use `stickyHeader={false}` para desativar. `maxHeight` controla a área de rolagem (padrão 480 px no modo planilha).
+
+| Interação | Resultado |
+| --- | --- |
+| Clique | Seleciona a célula. |
+| Digitação | Inicia edição substituindo o conteúdo. |
+| Duplo clique ou F2 | Edita preservando o conteúdo. |
+| Setas com célula selecionada | Movem a seleção. Durante edição de texto, movem o cursor. |
+| Tab / Shift+Tab | Confirmam o rascunho e avançam/recuam; nas extremidades, saem da tabela. |
+| Enter / Shift+Enter | Confirmam o rascunho e descem/sobem na mesma coluna. |
+| Escape durante edição | Restaura a sessão de edição, incluindo seus campos dependentes, preservando alterações anteriores da linha. |
+| Select aberto | Setas, Enter e Escape pertencem ao seletor; Tab confirma e avança. |
+| Copiar | Copia o valor da célula selecionada; dentro do editor, mantém o comportamento nativo. |
+
+Confirmar uma célula atualiza o rascunho; em `saveMode="row"`, apenas sair da linha envia a requisição. O foco usa células identificadas por `rowKey` e `column.key`, com cabeçalhos associados e estados acessíveis. Forneça `aria-label` para identificar cada tabela.
+
+#### Rascunhos dependentes, datas e dinheiro
+
+`column.editor(draftRow, index)` recebe todos os valores locais atuais. `required` valida campos obrigatórios, inclusive os ainda não tocados. `validateRow(draftRow)` na tabela pode retornar `{ campo: 'Mensagem' }` para validar relações entre campos. Qualquer erro bloqueia o salvamento da linha.
+
+`editor.onChange(value, draftRow)` pode retornar um patch de campos dependentes. Os valores novos são aplicados antes de recalcular os editores:
+
+```tsx
+const transactionColumns: Column[] = [
+  {
+    key: 'kind', label: 'Tipo',
+    editor: {
+      type: 'select',
+      options: [
+        { value: 'expense', label: 'Despesa' },
+        { value: 'transfer', label: 'Transferência' },
+      ],
+      onChange: value => value === 'transfer'
+        ? { category: null } : { destination: null },
+    },
+  },
+  { key: 'date', label: 'Data', editor: { type: 'date', required: true } },
+  { key: 'amount', label: 'Valor', editor: { type: 'money', required: true } },
+  {
+    key: 'category', label: 'Categoria',
+    editor: row => ({ type: 'input', disabled: row.kind === 'transfer', required: row.kind !== 'transfer' }),
+  },
+  {
+    key: 'destination', label: 'Destino',
+    editor: row => ({ type: 'input', disabled: row.kind !== 'transfer', required: row.kind === 'transfer' }),
+  },
+];
+```
+
+- `type: 'date'` usa o editor de data/calendário nativo, salva `YYYY-MM-DD` sem conversão de fuso e apresenta `dd/MM/aaaa` fora da edição. Aceita `min` e `max` em ISO; a apresentação do editor nativo segue o navegador.
+- `type: 'money'` aceita `145,50` e `1.234,50`, retorna a string decimal exata `"145.50"` e formata em BRL fora da edição. Aceita `currency` para alterar o identificador monetário. Use strings decimais também nos dados recebidos; números JavaScript que já perderam precisão não podem ser recuperados. Mais de duas casas decimais são rejeitadas, sem arredondamento silencioso.
+- Os helpers `parseTableMoney`, `formatTableMoney`, `parseTableDate` e `formatTableDate` são exportados pela raiz e por `functions/table-values`.
+
+#### Controlador público e pendências
+
+O `ref` da `Table` continua apontando para `HTMLTableElement`. Use `editingRef` separadamente:
+
+```tsx
+import { useRef } from 'react';
+import { Table, type TableEditingController } from '@matheusssousa/ui';
+
+const editing = useRef<TableEditingController>(null);
+
+async function saveBeforeLeaving() {
+  const result = await editing.current!.saveAll();
+  if (!result.ok) {
+    const failed = result.results.find(row => !row.ok)!;
+    const field = Object.keys(failed.errors ?? {})[0];
+    if (field) editing.current!.focusCell(failed.rowKey, field);
+    return false;
+  }
+  return true;
+}
+
+<Table
+  data={data}
+  columns={transactionColumns}
+  variant="spreadsheet"
+  saveMode="row"
+  onRowSave={saveTransaction}
+  editingRef={editing}
+  onEditingStateChange={state => setHasPendingChanges(state.dirtyRows.length > 0 || state.savingRows.length > 0)}
+  mobileLayout="stacked"
+  aria-label="Transações"
+/>
+```
+
+| Operação | Contrato |
+| --- | --- |
+| `saveRow(rowKey)` | Valida e salva; aguarda uma requisição já em andamento sem duplicá-la. |
+| `saveAll()` | Salva linhas alteradas e aguarda requisições pendentes; retorna `{ ok, results }`. |
+| `discardRow(rowKey)` / `resetRow(rowKey)` | Descarta rascunhos; retorna `false` se a linha estiver salvando ou não existir. |
+| `getEditingState()` | Retorna `dirtyRows`, `savingRows` e `errorRows` com mensagens por campo/linha. |
+| `focusCell(rowKey, columnKey)` | Foca uma célula renderizada; retorna `false` se ela não estiver disponível. Não troca de página automaticamente. |
+| `getDraftRow(rowKey)` | Retorna a linha com alterações locais; valores incompletos continuam disponíveis para correção. |
+| `setDraftValue(rowKey, columnKey, value)` | Atualiza um campo e aplica seu `onChange`. |
+| `patchDraft(rowKey, changes)` | Atualiza vários campos diretamente, sem encadear callbacks. |
+| `validateRow(rowKey)` | Valida o conjunto completo e retorna erros por campo. |
+
+`saveRow` retorna `{ rowKey, ok, status, errors?, error? }`. Os estados são `saved`, `unchanged`, `invalid`, `error`, `not-found` e `readonly`. `saveAll` considera apenas linhas alteradas ou salvando; para validar uma linha intacta, use `validateRow` ou `saveRow`. Em modo por célula, `saveRow`/`saveAll` usam `onCellSave` para os campos alterados. `onEditingStateChange` informa mudanças das pendências sem polling.
+
+Rascunhos e requisições de linhas que saíram da página continuam no controlador enquanto a tabela estiver montada. Atualize `data` após persistir; desmontar a tabela não salva automaticamente nem preserva os rascunhos para uma nova instância.
+
+#### Celular e limites desta entrega
+
+`mobileLayout="stacked"` exibe todos os campos com seus rótulos, mantendo a mesma linha lógica e rascunho. As áreas de toque têm pelo menos 44 px; no celular, tocar na célula inicia a edição. `mobileLayout="scroll"` mantém todas as colunas com rolagem horizontal. O modo planilha usa `scroll` por padrão, evitando esconder campos obrigatórios. `mobileLayout="responsive"` conserva o comportamento legado de `limitColumnsShow`.
+
+Para telas de orçamento com várias tabelas, a aplicação pode usar o componente `Tabs` existente e uma `Table` por aba. A biblioteca não introduz regras de orçamento ou transações.
+
+Copiar/colar texto dentro do editor e copiar uma célula selecionada são suportados. Colar uma matriz com tabulações/quebras de linha na célula selecionada não importa intervalos. Fórmulas, seleção múltipla de células e arrastar para preencher não fazem parte desta versão.
+
 ### useApiTable
 
 ```tsx

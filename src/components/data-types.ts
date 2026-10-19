@@ -6,6 +6,9 @@ export type CellEditorValue = string | number | undefined;
 export interface CellEditorBase<T = TableData> {
   placeholder?: string;
   disabled?: boolean;
+  required?: boolean;
+  /** Retorne campos dependentes a atualizar junto com este valor. */
+  onChange?: (value: unknown, draftRow: T) => Record<string, unknown> | void;
   /** Converte o rascunho antes de comparar, validar e salvar. */
   parse?: (value: CellEditorValue, row: T) => unknown;
   /** Retorne uma mensagem para impedir o salvamento. */
@@ -13,6 +16,8 @@ export interface CellEditorBase<T = TableData> {
 }
 export type CellEditor<T = TableData> = CellEditorBase<T> & (
   | { type: 'input'; inputType?: 'text' | 'number' | 'email' | 'url' | 'tel' | 'password' | 'search' }
+  | { type: 'date'; min?: string; max?: string }
+  | { type: 'money'; currency?: string }
   | { type: 'select'; options: SelectOption[]; searchable?: boolean; clearable?: boolean; display?: 'text' | 'badge' }
 );
 export interface CellSaveEvent<T = TableData> {
@@ -32,6 +37,34 @@ export interface RowSaveEvent<T = TableData> {
   previousValues: Record<string, unknown>;
   /** Snapshot completo com as alteracoes aplicadas. */
   updatedRow: T;
+}
+
+export type TableRowKey = string | number;
+export type TableFieldErrors = Record<string, string>;
+export interface TableEditingState {
+  dirtyRows: TableRowKey[];
+  savingRows: TableRowKey[];
+  errorRows: Array<{ rowKey: TableRowKey; errors: TableFieldErrors; error?: string }>;
+}
+export interface TableSaveResult {
+  rowKey: TableRowKey;
+  ok: boolean;
+  status: 'saved' | 'unchanged' | 'invalid' | 'error' | 'not-found' | 'readonly';
+  errors?: TableFieldErrors;
+  error?: string;
+}
+export interface TableEditingController {
+  saveRow(rowKey: TableRowKey): Promise<TableSaveResult>;
+  saveAll(): Promise<{ ok: boolean; results: TableSaveResult[] }>;
+  /** Retorna false se a linha estiver salvando ou nao existir. */
+  discardRow(rowKey: TableRowKey): boolean;
+  resetRow(rowKey: TableRowKey): boolean;
+  getEditingState(): TableEditingState;
+  focusCell(rowKey: TableRowKey, columnKey: string): boolean;
+  getDraftRow(rowKey: TableRowKey): TableData | undefined;
+  setDraftValue(rowKey: TableRowKey, columnKey: string, value: unknown): boolean;
+  patchDraft(rowKey: TableRowKey, changes: Record<string, unknown>): boolean;
+  validateRow(rowKey: TableRowKey): TableFieldErrors;
 }
 
 export interface TableData { [key: string]: any }

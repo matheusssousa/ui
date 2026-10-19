@@ -79,3 +79,5 @@ export * from './components/switch-field.js';
 export * from './components/view-modal.js';
 export * from './functions/handleCopy.js';
 export * from './functions/openDownloadUrl.js';
+
+export * from './functions/table-values.js';

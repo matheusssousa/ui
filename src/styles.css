@@ -220,3 +220,40 @@
 .minte-disable-transitions, .minte-disable-transitions * { transition: none !important; }
 
 
+
+
+/* Spreadsheet cells own the focus indicator; editors never draw a second box. */
+.ui-spreadsheet { border-collapse: separate; border-spacing: 0; }
+.ui-spreadsheet th { height: 36px; padding: 6px 8px !important; font-size: 0.75rem; background: var(--card); }
+.ui-spreadsheet td.ui-sheet-cell { position: relative; height: 36px; padding: 0 !important; font-size: 0.875rem; }
+.ui-spreadsheet .ui-sheet-value { min-height: 36px; display: flex; align-items: center; padding: 6px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-spreadsheet .text-right .ui-sheet-value { justify-content: flex-end; }
+.ui-spreadsheet .text-center .ui-sheet-value { justify-content: center; }
+.ui-spreadsheet .ui-sheet-cell[data-readonly] { background: color-mix(in srgb, var(--muted) 35%, transparent); }
+.ui-spreadsheet .ui-sheet-cell:focus,
+.ui-spreadsheet .ui-sheet-cell:focus-within,
+.ui-spreadsheet .ui-sheet-cell[aria-selected="true"] { outline: 2px solid var(--primary); outline-offset: -2px; z-index: 1; }
+.ui-spreadsheet .ui-sheet-cell[data-error] { background: color-mix(in srgb, var(--destructive) 8%, var(--card)); }
+.ui-spreadsheet .ui-sheet-cell input,
+.ui-spreadsheet .ui-sheet-cell [role="combobox"] { border-radius: 0 !important; height: 36px !important; min-height: 36px !important; padding-top: 6px !important; padding-bottom: 6px !important; box-shadow: none !important; }
+.ui-spreadsheet .text-right input { text-align: right; font-variant-numeric: tabular-nums; }
+.ui-spreadsheet .ui-sheet-cell [role="combobox"] > div:last-child { opacity: 0; }
+.ui-spreadsheet .ui-sheet-cell:hover [role="combobox"] > div:last-child,
+.ui-spreadsheet .ui-sheet-cell:focus-within [role="combobox"] > div:last-child { opacity: 1; }
+.ui-sheet-status { position: absolute; right: 2px; top: 0; line-height: 12px; font-size: 12px; color: var(--primary); z-index: 2; }
+[data-error] .ui-sheet-status { color: var(--destructive); }
+.ui-sheet-status button { min-width: 14px; font-weight: bold; }
+.ui-table-sticky thead th { position: sticky; top: 0; z-index: 3; background: var(--card); }
+.ui-table-date { width: 100%; min-height: 36px; border: 0; border-radius: 0; background: transparent; color: inherit; padding: 6px 8px; }
+.ui-table-date:focus { outline: none; background: color-mix(in srgb, var(--muted) 60%, transparent); }
+.ui-table-mobile-label { display: none; }
+@media (max-width: 767px) {
+  .ui-table-stacked, .ui-table-stacked tbody { display: block; width: 100%; }
+  .ui-table-stacked thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ui-table-stacked .ui-table-stacked-row { display: block; margin-bottom: 12px; border: 1px solid var(--border); }
+  .ui-table-stacked td.ui-table-stacked-cell { display: grid !important; grid-template-columns: minmax(90px, 30%) minmax(0, 1fr); align-items: center; min-height: 48px; height: auto; }
+  .ui-table-stacked .ui-table-mobile-label { display: block; padding: 8px; color: var(--muted-foreground); font-size: 0.75rem; text-align: left; }
+  .ui-table-stacked .ui-table-stacked-cell input,
+  .ui-table-stacked .ui-table-stacked-cell [role="combobox"],
+  .ui-table-stacked .ui-sheet-value { min-height: 44px !important; height: auto !important; }
+}
