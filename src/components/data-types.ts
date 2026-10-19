@@ -23,6 +23,17 @@ export interface CellSaveEvent<T = TableData> {
   previousValue: unknown;
 }
 
+export interface RowSaveEvent<T = TableData> {
+  /** Snapshot confirmado antes das alteracoes. */
+  row: T;
+  rowKey: string | number;
+  /** Apenas os campos alterados, apos conversao e validacao. */
+  changes: Record<string, unknown>;
+  previousValues: Record<string, unknown>;
+  /** Snapshot completo com as alteracoes aplicadas. */
+  updatedRow: T;
+}
+
 export interface TableData { [key: string]: any }
 export interface Column<T = any> {
   key: string; label: string; sortable?: boolean;

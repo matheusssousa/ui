@@ -161,3 +161,69 @@ test('readonly table retains sorting, pagination, selection and responsive colum
     await ui.render({ responsive: false }); assert.doesNotMatch(ui.container.querySelector('tbody td:last-child').className, /hidden/);
   } finally { await ui.dispose(); }
 });
+
+
+test('row mode batches cells on row exit, locks the whole row, and does not call cell saving', async () => {
+  const calls = [], request = deferred(); let cellCalls = 0;
+  const columns = [column, { key: 'amount', label: 'Amount', editor: { type: 'input', parse: value => Number(value) } }];
+  const ui = await mount({ columns, data: [{ id: 0, name: 'Before', amount: 1 }, { id: 2, name: 'Other', amount: 2 }], saveMode: 'row', onRowSave: event => { calls.push(event); return request.promise; }, onCellSave: async () => cellCalls++ });
+  try {
+    const [name, amount, other] = ui.container.querySelectorAll('input');
+    await focus(name); await focus(other); assert.equal(calls.length, 0);
+    await focus(name); await change(name, 'After'); await focus(amount); assert.equal(calls.length, 0);
+    await change(amount, '3'); await focus(other); assert.equal(calls.length, 1); assert.equal(cellCalls, 0);
+    assert.deepEqual(calls[0], { row: { id: 0, name: 'Before', amount: 1 }, rowKey: 0, changes: { name: 'After', amount: 3 }, previousValues: { name: 'Before', amount: 1 }, updatedRow: { id: 0, name: 'After', amount: 3 } });
+    assert.equal(name.disabled, true); assert.equal(amount.disabled, true); assert.equal(other.disabled, false);
+    await act(async () => name.dispatchEvent(new dom.window.FocusEvent('focusout', { bubbles: true }))); assert.equal(calls.length, 1);
+    await act(async () => request.resolve());
+    await focus(name); await focus(ui.outside); assert.equal(calls.length, 1);
+    await focus(amount); await change(amount, '4'); await focus(ui.outside); assert.equal(calls.length, 2);
+    assert.deepEqual(calls[1].changes, { amount: 4 }); assert.equal(calls[1].updatedRow.name, 'After');
+  } finally { await ui.dispose(); }
+});
+
+test('row validation prevents partial saves and failure retains all drafts for retry', async () => {
+  const calls = [];
+  const ui = await mount({ columns: [column, { key: 'amount', label: 'Amount', editor: { type: 'input', parse: value => Number(value), validate: value => value < 0 ? 'Positive only' : undefined } }], data: [{ id: 1, name: 'Before', amount: 1 }], saveMode: 'row', onRowSave: async event => { calls.push(event); if (calls.length === 1) throw Error('Offline row'); } });
+  try {
+    const [name, amount] = ui.container.querySelectorAll('input');
+    await focus(name); await change(name, 'After'); await focus(amount); await change(amount, '-1'); await focus(ui.outside);
+    assert.equal(calls.length, 0); assert.match(ui.container.textContent, /Positive only/);
+    await focus(amount); await change(amount, '2'); await focus(ui.outside);
+    assert.equal(calls.length, 1); assert.match(ui.container.textContent, /Offline row/); assert.equal(name.value, 'After'); assert.equal(amount.value, '2');
+    await click(ui.container.querySelector('button')); assert.equal(calls.length, 2); assert.deepEqual(calls[0].changes, calls[1].changes);
+    assert.doesNotMatch(ui.container.textContent, /Offline row/);
+    await focus(name); await change(name, 'Before'); await focus(ui.outside); assert.equal(calls.length, 3); assert.equal(calls[2].previousValues.name, 'After');
+  } finally { await ui.dispose(); }
+});
+
+test('row mode keeps select/search focus internal and allows independent concurrent rows', async () => {
+  const calls = [], requests = [deferred(), deferred()];
+  const ui = await mount({ columns: [column, { key: 'status', label: 'Status', editor: { type: 'select', searchable: true, display: 'badge', options: [{ value: 0, label: 'Pending' }, { value: 1, label: 'Done', color: 'success' }] } }], data: [{ id: 1, name: 'A', status: 0 }, { id: 2, name: 'B', status: 0 }], saveMode: 'row', onRowSave: event => { calls.push(event); return requests[calls.length - 1].promise; } });
+  try {
+    const names = ui.container.querySelectorAll('input:not([type="hidden"])');
+    const trigger = ui.container.querySelector('[role="combobox"]');
+    await focus(names[0]); await change(names[0], 'New A'); await focus(trigger); await click(trigger);
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 10)); });
+    assert.equal(calls.length, 0);
+    await click(ui.container.querySelectorAll('[role="option"]')[1]); assert.equal(calls.length, 0);
+    await focus(names[1]); assert.equal(calls.length, 1); assert.deepEqual(calls[0].changes, { name: 'New A', status: 1 });
+    await change(names[1], 'New B'); await focus(ui.outside); assert.equal(calls.length, 2);
+    await ui.render({ data: [{ id: 2, name: 'B', status: 0 }, { id: 1, name: 'Server A', status: 1 }] });
+    await act(async () => requests[0].resolve()); assert.equal(ui.container.querySelector('[aria-label="Name, linha 1"]').value, 'Server A');
+    await ui.render({ data: [] }); await act(async () => requests[1].resolve()); assert.equal(calls.length, 2);
+  } finally { await ui.dispose(); }
+});
+
+test('row mode requires its own callback; reverting a draft does not save', async () => {
+  const markup = renderToStaticMarkup(h(Table, { columns: [column], data: [{ id: 1, name: 'A' }], saveMode: 'row', onCellSave: async () => {} }));
+  assert.doesNotMatch(markup, /<input/);
+  let calls = 0;
+  const ui = await mount({ columns: [column], data: [{ id: 1, name: 'A' }], saveMode: 'row', onRowSave: async () => { if (++calls === 1) throw Error('Retry by blur'); } });
+  try {
+    const input = ui.container.querySelector('input');
+    await focus(input); await change(input, 'B'); await change(input, 'A'); await focus(ui.outside); assert.equal(calls, 0);
+    await focus(input); await change(input, 'B'); await focus(ui.outside); assert.equal(calls, 1);
+    await focus(input); await focus(ui.outside); assert.equal(calls, 2); assert.doesNotMatch(ui.container.textContent, /Retry by blur/);
+  } finally { await ui.dispose(); }
+});

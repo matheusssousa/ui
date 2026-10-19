@@ -532,16 +532,48 @@ export function EditableItems({ initialItems }: { initialItems: Item[] }) {
 }
 ```
 
-- `editor` aceita configuração fixa ou `(row, index) => configuração | false`. Sem `onCellSave`, a tabela continua somente leitura e respeita `render`. Com edição, o editor tem precedência sobre `render`.
+- `editor` aceita configuração fixa ou `(row, index) => configuração | false`. Sem o callback do modo escolhido (`onCellSave` ou `onRowSave`), a tabela continua somente leitura e respeita `render`. Com edição, o editor tem precedência sobre `render`.
 - `inputType` aceita `text`, `number`, `email`, `url`, `tel`, `password` e `search`. Inputs retornam texto; use `parse` para converter números. Selects preservam `string`/`number` das opções; `clearable` retorna `undefined` ao limpar. Converta para `null` com `parse` se a API precisar receber explicitamente um campo vazio em JSON.
 - `parse(value, row)` é aplicado antes da comparação e validação; `validate(value, row)` retorna uma mensagem para impedir o salvamento. `disabled` bloqueia a célula. A seleção nesta versão é única.
 - `onCellSave({ row, rowKey, columnKey, value, previousValue })` deve retornar `Promise<void>` e rejeitar em caso de falha. `rowKey` no evento é o identificador da linha, enquanto a prop `rowKey` indica o campo identificador (padrão `id`). Todas as linhas precisam de identificadores únicos e estáveis; `0` é válido.
-- Só valores alterados são salvos, ao sair da célula inteira. Buscar ou selecionar dentro do select não salva imediatamente. A célula em processamento fica bloqueada; outras continuam editáveis.
+- No modo por célula, só valores alterados são salvos, ao sair da célula inteira. Buscar ou selecionar dentro do select não salva imediatamente. A célula em processamento fica bloqueada; outras continuam editáveis.
 - Falhas mantêm o rascunho e mostram “Tentar novamente”. Sair novamente da célula também tenta salvar. Não há novas tentativas automáticas nem salvamento por desmontagem.
 - Atualizações de `data` sincronizam células sem edição pendente. Rascunhos são preservados; uma resposta normalizada recebida durante o salvamento é aplicada após o sucesso. Atualize `data` na aplicação para manter os valores após trocar de página ou remontar a tabela.
 - O `Select` também aceita `display="badge"` fora da tabela. Cada opção pode ter `color: UIColor`; sem cor, usa `neutral`. Sem seleção, exibe o placeholder. `display="text"` continua sendo o padrão.
 
 O novo comportamento pertence à `Table`; `DraggableTable` não recebe edição nesta versão.
+
+#### Salvamento por linha
+
+Use `saveMode="row"` e `onRowSave` para enviar todas as alterações de uma linha em uma única chamada ao sair dela. Tab entre campos, busca e seleção dentro do select mantêm o rascunho sem salvar. O padrão continua sendo `saveMode="cell"`, com `onCellSave`; somente o callback do modo ativo é chamado.
+
+```tsx
+<Table
+  data={data}
+  columns={columns}
+  saveMode="row"
+  onRowSave={async ({ rowKey, changes }) => {
+    const response = await fetch(`/api/items/${encodeURIComponent(rowKey)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(changes),
+    });
+    if (!response.ok) throw new Error('Não foi possível salvar a linha');
+    setData(current => current.map(row => row.id === rowKey
+      ? { ...row, ...changes } : row));
+  }}
+/>
+```
+
+`onRowSave(event)` retorna `Promise<void>` e recebe `RowSaveEvent`, exportado pela biblioteca:
+
+- `rowKey`: identificador estável da linha.
+- `row`: snapshot confirmado antes das alterações.
+- `changes`: somente campos alterados, convertidos e validados.
+- `previousValues`: valores confirmados anteriores desses campos.
+- `updatedRow`: linha completa com as alterações aplicadas.
+
+Qualquer erro de validação impede o envio da linha inteira. Durante o salvamento, todos os editores dessa linha ficam bloqueados; outras linhas continuam disponíveis. Em falha, os rascunhos são preservados e aparece uma ação “Tentar novamente” abaixo da linha. Sair novamente da linha também repete a tentativa. Valores revertidos ao último confirmado não geram salvamento, e desmontar a tabela não envia novas alterações. A persistência atômica dos campos é responsabilidade da API consumidora.
 
 ### useApiTable
 
@@ -1553,6 +1585,16 @@ export interface CellSaveEvent<T = TableData> {
     columnKey: string;
     value: unknown;
     previousValue: unknown;
+}
+export interface RowSaveEvent<T = TableData> {
+    /** Snapshot confirmado antes das alteracoes. */
+    row: T;
+    rowKey: string | number;
+    /** Apenas os campos alterados, apos conversao e validacao. */
+    changes: Record<string, unknown>;
+    previousValues: Record<string, unknown>;
+    /** Snapshot completo com as alteracoes aplicadas. */
+    updatedRow: T;
 }
 export interface TableData {
     [key: string]: any;
@@ -2789,7 +2831,7 @@ export { Switch };
 Fonte: [components/table](src/components/table.tsx).
 
 ```ts
-import type { TableData, Column, SortState, PaginationState, CellSaveEvent } from './data-types.js';
+import type { TableData, Column, SortState, PaginationState, CellSaveEvent, RowSaveEvent } from './data-types.js';
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const tableVariants: (props?: ({
@@ -2804,6 +2846,10 @@ export interface TableProps extends VariantProps<typeof tableVariants> {
     layout?: 'auto' | 'fixed';
     /** Rejeite a Promise para manter o rascunho e mostrar erro. */
     onCellSave?: (event: CellSaveEvent) => Promise<void>;
+    /** Padrao cell; row salva ao sair da linha inteira. */
+    saveMode?: 'cell' | 'row';
+    /** Persiste todos os campos alterados da linha em uma chamada. */
+    onRowSave?: (event: RowSaveEvent) => Promise<void>;
     /** Linhas exibidas. */
     data: TableData[];
     /** Exibe estado de carregamento. */

@@ -1,6 +1,6 @@
 'use client';
 
-import type { TableData, Column, SortState, PaginationState, CellSaveEvent } from './data-types.js';
+import type { TableData, Column, SortState, PaginationState, CellSaveEvent, RowSaveEvent } from './data-types.js';
 
 import * as React from 'react';
 import { cn } from '../utils.js';
@@ -9,6 +9,7 @@ import { Pagination } from './pagination.js';
 import { SkeletonTable } from './skeleton.js';
 import dynamic from 'next/dynamic.js';
 import { Input } from './input.js';
+import { EditableRow } from '../internal/editable-row.js';
 import { EditableCell } from '../internal/editable-cell.js';
 import { TableStyleContext } from '../internal/table-style.js';
 
@@ -50,6 +51,10 @@ export interface TableProps extends VariantProps<typeof tableVariants> {
   layout?: 'auto' | 'fixed';
   /** Rejeite a Promise para manter o rascunho e mostrar erro. */
   onCellSave?: (event: CellSaveEvent) => Promise<void>;
+  /** Padrao cell; row salva ao sair da linha inteira. */
+  saveMode?: 'cell' | 'row';
+  /** Persiste todos os campos alterados da linha em uma chamada. */
+  onRowSave?: (event: RowSaveEvent) => Promise<void>;
   /** Linhas exibidas. */
   data: TableData[];
   /** Exibe estado de carregamento. */
@@ -100,6 +105,8 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     size,
     layout,
     onCellSave,
+    saveMode = 'cell',
+    onRowSave,
     sortState,
     onSort,
     sortable = !!onSort,
@@ -191,17 +198,18 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
       return sortState.direction === 'asc' ? <CaretUpIcon className="h-4 w-4" /> : <CaretDownIcon className="h-4 w-4" />;
     };
 
+    const canEdit = saveMode === 'row' ? Boolean(onRowSave) : Boolean(onCellSave);
     const renderCell = (column: Column, row: TableData, rowIndex: number) => {
       const value = row[column.key];
       const editor = typeof column.editor === 'function' ? column.editor(row, rowIndex) : column.editor;
-      if (editor && onCellSave) return <EditableCell row={row} rowId={row[rowKey]} columnKey={column.key}
+      if (editor && canEdit) return <EditableCell row={row} rowId={row[rowKey]} columnKey={column.key}
         label={column.label} editor={editor} onSave={onCellSave} />;
       if (column.render) return column.render(value, row, rowIndex);
 
       return value;
     };
 
-    if (onCellSave && columns.some(column => column.editor)) {
+    if (canEdit && columns.some(column => column.editor)) {
       const ids = new Set<string | number>();
       for (const row of data) {
         const id = row[rowKey];
@@ -281,7 +289,8 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                 data.map((row, rowIndex) => {
                   const isSelected = selectedRows.includes(row[rowKey]);
                   return (
-                    <tr
+                    <EditableRow row={row} rowId={row[rowKey]} colSpan={columns.length + (selectable ? 1 : 0)}
+                      onSave={saveMode === 'row' ? onRowSave : undefined}
                       key={row[rowKey] == null ? rowIndex : `${typeof row[rowKey]}:${row[rowKey]}`}
                       className={cn(
                         'transition-colors',
@@ -329,7 +338,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                           {renderCell(column, row, rowIndex)}
                         </td>
                       ))}
-                    </tr>
+                    </EditableRow>
                   );
                 })
               )}
