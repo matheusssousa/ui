@@ -220,7 +220,7 @@ Para um modal e abas, controle o estado no componente cliente:
 import { Modal } from '@matheusssousa/ui/components/modal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/components/tabs';
 
-<Modal isOpen={open} onClose={() => setOpen(false)} title="Detalhes" size="md">
+<Modal isOpen={open} onClose={() => setOpen(false)} title="Detalhes" size="md" headerBackgroundImage="/images/capa.jpg">
   Conteúdo do modal
 </Modal>
 
@@ -233,6 +233,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
   <TabsContent value="history">Eventos anteriores</TabsContent>
 </Tabs>
 ```
+
+No `Modal`, `headerBackgroundImage` define uma imagem decorativa de fundo para o cabeçalho nas variantes `default` e `customer`. A faixa ocupa toda a largura, tem altura mínima de 120 px e recorte central (`cover`), com camada escura para manter o texto legível. Textos longos podem aumentar a altura. Sem imagem ou com string vazia, o cabeçalho mantém o visual padrão.
 
 ### Seletor de mês e ano
 
@@ -2043,6 +2045,8 @@ export type ModalProps = React.PropsWithChildren<VariantProps<typeof modalOverla
     title?: string;
     /** Texto abaixo do título. */
     description?: string;
+    /** URL da imagem de fundo do cabeçalho; usa recorte central e altura mínima de 120 px. */
+    headerBackgroundImage?: string;
     /** Controla a abertura do diálogo. */
     isOpen: boolean;
     /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */
@@ -2087,6 +2091,8 @@ declare const Modal: React.ForwardRefExoticComponent<VariantProps<(props?: ({
     title?: string;
     /** Texto abaixo do título. */
     description?: string;
+    /** URL da imagem de fundo do cabeçalho; usa recorte central e altura mínima de 120 px. */
+    headerBackgroundImage?: string;
     /** Controla a abertura do diálogo. */
     isOpen: boolean;
     /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */

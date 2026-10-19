@@ -59,6 +59,8 @@ export type ModalProps = React.PropsWithChildren<
         title?: string;
         /** Texto abaixo do título. */
         description?: string;
+        /** URL da imagem de fundo do cabeçalho; usa recorte central e altura mínima de 120 px. */
+        headerBackgroundImage?: string;
         /** Controla a abertura do diálogo. */
         isOpen: boolean;
         /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */
@@ -101,6 +103,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         variant,
         title,
         description,
+        headerBackgroundImage,
         children,
         onConfirm,
         onCancel,
@@ -124,6 +127,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         ...props
     }, ref) => {
         const contentRef = React.useRef<HTMLDivElement>(null);
+        const hasHeaderImage = Boolean(headerBackgroundImage?.trim());
 
         // Impede que o modal seja fechado enquanto uma ação está em andamento
         const handleClose = () => !isConfirming && onClose();
@@ -169,11 +173,15 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                         >
                             <div className={cn(
                                 'flex items-start justify-between gap-3',
-                                variant === 'customer' && '-mx-4 -mt-4 border-b border-border/70 bg-gradient-to-r from-primary/10 via-card to-card px-4 py-4 md:-mx-6 md:-mt-6 md:px-6',
-                            )}>
-                                <div className='w-full'>
-                                    <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-                                    {description && <p className="text-xs text-muted-foreground">{description}</p>}
+                                hasHeaderImage
+                                    ? '-mx-4 -mt-4 min-h-[120px] shrink-0 bg-black bg-cover bg-center bg-no-repeat px-4 py-4 md:-mx-6 md:-mt-6 md:px-6'
+                                    : variant === 'customer' && '-mx-4 -mt-4 border-b border-border/70 bg-gradient-to-r from-primary/10 via-card to-card px-4 py-4 md:-mx-6 md:-mt-6 md:px-6',
+                            )} style={hasHeaderImage ? {
+                                backgroundImage: `linear-gradient(rgb(0 0 0 / 60%), rgb(0 0 0 / 60%)), url(${JSON.stringify(headerBackgroundImage)})`,
+                            } : undefined}>
+                                <div className={cn('w-full', hasHeaderImage && 'min-w-0 break-words')}>
+                                    <h2 className={cn('text-lg font-semibold', hasHeaderImage ? 'text-white' : 'text-foreground')}>{title}</h2>
+                                    {description && <p className={cn('text-xs', hasHeaderImage ? 'text-white/80' : 'text-muted-foreground')}>{description}</p>}
                                 </div>
                                 {!hideCloseIcon && (
                                     <Button
@@ -181,7 +189,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                         color={color}
                                         onClick={handleClose}
                                         leftIcon={<XIcon size={20} />}
-                                        className='w-fit p-0 text-muted-foreground'
+                                        className={cn('w-fit p-0', hasHeaderImage ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
                                         disabled={isConfirming}
                                         fullWidth={false}
                                     />
