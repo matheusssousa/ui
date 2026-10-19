@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '../utils.js';
+import { ImageIcon, UploadSimpleIcon, TrashIcon, CircleNotchIcon } from '@phosphor-icons/react/dist/ssr';
 
 export interface ImageInputProps {
   value?: string | null;
@@ -40,6 +41,7 @@ export const ImageInput = React.forwardRef<HTMLInputElement, ImageInputProps>(fu
   const [preview, setPreview] = React.useState(value !== undefined ? value : currentImageUrl ?? null);
   const [localError, setLocalError] = React.useState<string | null>(null);
   const [reading, setReading] = React.useState(false);
+  const [dragging, setDragging] = React.useState(false);
   const blocked = disabled || isLoading;
   React.useImperativeHandle(forwardedRef, () => input.current!);
   React.useEffect(() => {
@@ -78,16 +80,37 @@ export const ImageInput = React.forwardRef<HTMLInputElement, ImageInputProps>(fu
   const displayError = error || localError;
   return <div className={cn('space-y-2', className)} aria-busy={isLoading || reading}>
     <label htmlFor={inputId} className="block text-sm font-medium">{label}{required && ' *'}</label>
-    <div onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); select(event.dataTransfer.files[0]); }}
-      className={cn('overflow-hidden border border-border bg-muted/30 p-3', variant === 'circle' ? 'rounded-full' : 'rounded-xl',
-        size === 'sm' ? 'max-w-40' : size === 'lg' ? 'max-w-xl' : 'max-w-sm', variant !== 'rectangle' && 'aspect-square')}>
-      {preview && <img src={preview} alt={`Prévia: ${label}`} className="h-full max-h-64 w-full object-contain" />}
+    <div onDragOver={event => { event.preventDefault(); if (!blocked) setDragging(true); }}
+      onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
+      onDrop={event => { event.preventDefault(); setDragging(false); select(event.dataTransfer.files[0]); }}
+      className={cn('group relative w-full overflow-hidden border bg-muted/30 transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
+        variant === 'circle' ? 'rounded-full' : 'rounded-xl',
+        size === 'sm' ? 'max-w-40' : size === 'lg' ? 'max-w-xl' : 'max-w-sm',
+        variant === 'rectangle' ? 'aspect-video' : 'aspect-square',
+        blocked ? 'cursor-not-allowed opacity-60' : 'hover:border-primary/60 hover:bg-muted/50',
+        dragging && !blocked ? 'border-primary bg-primary/10' : displayError ? 'border-destructive' : 'border-border',
+        !preview && 'border-dashed')}>
       <input ref={input} id={inputId} type="file" name={name} accept={accept} disabled={blocked}
         required={required && !preview} aria-invalid={Boolean(displayError)} aria-describedby={`${inputId}-description${displayError ? ` ${inputId}-error` : ''}`}
-        onChange={event => select(event.target.files?.[0])} className="block w-full text-sm" />
+        onChange={event => select(event.target.files?.[0])} className="sr-only" />
+      <label htmlFor={inputId} className={cn('absolute inset-0 flex flex-col items-center justify-center gap-2 text-center', blocked ? 'cursor-not-allowed' : 'cursor-pointer')}>
+        {preview ? <>
+          <img src={preview} alt={`Prévia: ${label}`} className="absolute inset-0 h-full w-full object-contain" />
+          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/65 px-3 py-3 text-xs font-medium text-white">
+            <UploadSimpleIcon size={18} aria-hidden="true" /> Trocar imagem
+          </span>
+        </> : <span className="flex flex-col items-center gap-2 px-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><ImageIcon size={24} aria-hidden="true" /></span>
+          <span className="text-sm font-medium text-foreground">Selecionar imagem</span>
+          {size !== 'sm' && <span className="text-xs text-muted-foreground">ou arraste e solte aqui</span>}
+        </span>}
+        {(isLoading || reading) && <span role="status" className="absolute inset-0 flex items-center justify-center gap-2 bg-background/80 text-sm text-foreground">
+          <CircleNotchIcon size={20} className="animate-spin" aria-hidden="true" /> Carregando...
+        </span>}
+      </label>
     </div>
     <p id={`${inputId}-description`} className="text-xs text-muted-foreground">{description}</p>
-    {preview && <button type="button" onClick={remove} disabled={blocked} className="text-sm text-destructive disabled:opacity-50">Remover imagem</button>}
+    {preview && <button type="button" onClick={remove} disabled={blocked} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"><TrashIcon size={16} aria-hidden="true" />Remover imagem</button>}
     {displayError && <p id={`${inputId}-error`} role="alert" className="text-sm text-destructive">{displayError}</p>}
   </div>;
 });

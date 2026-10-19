@@ -412,15 +412,17 @@ const Button = React.forwardRef<
             ? isCopied ? <CheckIcon size={iconSizeClass} /> : <CopySimpleIcon size={iconSizeClass} />
             : leftIcon;
 
+        const hasLabel = React.Children.toArray(children).some(child => child !== '');
+        const iconOnly = variant === 'icon' || (!hasLabel && Boolean(finalLeftIcon || rightIcon));
+
         const content = (
             <>
-                {variant === 'icon' ? (
-                    // For icon variant, show only the left icon
-                    finalLeftIcon ? (
-                        <span className={cn("flex items-center")}>
-                            {finalLeftIcon}
+                {iconOnly ? (
+                    loading ? <CircleNotchIcon className="animate-spin" size={iconSizeClass} aria-hidden="true" /> : (
+                        <span className="flex shrink-0 items-center justify-center">
+                            {finalLeftIcon || rightIcon}
                         </span>
-                    ) : null
+                    )
                 ) : (
                     // For other variants, show normal layout
                     <>
@@ -483,6 +485,7 @@ const Button = React.forwardRef<
                     : variant === 'filled' || variant === 'fastAction' ? toneClasses[color as UIColor].solid : undefined
             ),
             !fullWidth && 'w-auto',
+            size === 'icon' && 'h-10 w-10 shrink-0 p-0',
             loading && 'cursor-wait',
             getActiveClasses(),
             className

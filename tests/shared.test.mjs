@@ -22,6 +22,7 @@ for (const key of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'Fil
   globalThis[key] = key === 'window' ? dom.window : dom.window[key];
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+globalThis.self = dom.window;
 dom.window.HTMLElement.prototype.scrollTo = function () {};
 async function mount(render) {
   const container = document.createElement('div'); document.body.append(container);
@@ -149,6 +150,27 @@ test('switch field associates label and serializes controlled and uncontrolled v
   } finally { await ui.dispose(); }
 });
 
+test('icon-only buttons and links keep a square size and no label spacing', async () => {
+  for (const asLink of [false, true]) {
+    const ui = await mount(() => React.createElement(ToastProvider, null,
+      React.createElement(Button, {
+        asLink, href: asLink ? '/back' : undefined, variant: 'soft', color: 'tertiary',
+        size: 'icon', fullWidth: false, 'aria-label': 'Voltar',
+        leftIcon: React.createElement('svg', { 'aria-hidden': true }),
+      })));
+    try {
+      const control = ui.container.querySelector(asLink ? 'a' : 'button');
+      assert.equal(control.getAttribute('aria-label'), 'Voltar');
+      assert.ok(control.classList.contains('w-10'));
+      assert.ok(control.classList.contains('h-10'));
+      assert.ok(!control.classList.contains('w-auto'));
+      assert.equal(control.children.length, 1, 'no empty text container');
+      assert.ok(!control.firstElementChild.classList.contains('mr-2'));
+      assert.ok(control.querySelector('svg'));
+    } finally { await ui.dispose(); }
+  }
+});
+
 test('image input validates, previews, removes and blocks selection while loading', async () => {
   assert.equal(validateImageFile({ name: 'photo.JPG', type: 'image/jpeg', size: 100 }, '.jpg', 1), null);
   assert.ok(validateImageFile({ name: 'a.png', type: 'image/png', size: 2e6 }, 'image/*', 1));
@@ -158,9 +180,13 @@ test('image input validates, previews, removes and blocks selection while loadin
   const ui = await mount(() => React.createElement(ImageInput, { label: 'Foto', isLoading: loading, onChange: (...args) => changes.push(args) }));
   try {
     const input = ui.container.querySelector('input');
+    assert.ok(input.classList.contains('sr-only'));
+    const picker = [...ui.container.querySelectorAll('label')].find(label => label.textContent.includes('Selecionar imagem'));
+    assert.equal(picker.htmlFor, input.id);
     Object.defineProperty(input, 'files', { configurable: true, value: [new File(['image'], 'a.png', { type: 'image/png' })] });
     await act(async () => input.dispatchEvent(new Event('change', { bubbles: true }))); await tick();
     assert.match(ui.container.querySelector('img').src, /^data:image\/png/);
+    assert.match(ui.container.textContent, /Trocar imagem/);
     await act(async () => ui.container.querySelector('button').click());
     assert.deepEqual(changes.at(-1), [null, null]);
     assert.equal(ui.container.querySelector('img'), null);
