@@ -174,7 +174,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                             <div className={cn(
                                 'flex items-start justify-between gap-3',
                                 hasHeaderImage
-                                    ? '-mx-4 -mt-4 min-h-[120px] shrink-0 bg-black bg-cover bg-center bg-no-repeat px-4 py-4 md:-mx-6 md:-mt-6 md:px-6'
+                                    ? '-mx-4 -mt-4 min-h-[160px] shrink-0 bg-black bg-cover bg-center bg-no-repeat px-4 py-4 md:-mx-6 md:-mt-6 md:px-6'
                                     : variant === 'customer' && '-mx-4 -mt-4 border-b border-border/70 bg-gradient-to-r from-primary/10 via-card to-card px-4 py-4 md:-mx-6 md:-mt-6 md:px-6',
                             )} style={hasHeaderImage ? {
                                 backgroundImage: `linear-gradient(rgb(0 0 0 / 60%), rgb(0 0 0 / 60%)), url(${JSON.stringify(headerBackgroundImage)})`,
