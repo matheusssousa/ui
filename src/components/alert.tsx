@@ -39,7 +39,7 @@ export function Alert({ title, description, color = 'info', icon, action, onDism
     <MotionBox
       role={color === 'danger' ? 'alert' : 'status'}
       preset={motionPreset}
-      className={cn('flex items-start gap-3 rounded-xl border p-4', toneClasses[color].soft, toneClasses[color].outline, className)}
+      className={cn('flex flex-col items-start gap-3 rounded-xl border p-4', toneClasses[color].soft, toneClasses[color].outline, className)}
       {...props}
     >
       {renderedIcon && <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-lg">{renderedIcon}</span>}

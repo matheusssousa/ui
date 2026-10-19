@@ -1,5 +1,6 @@
-import type { TableData, Column, SortState, PaginationState } from './data-types.js';
 'use client';
+
+import type { TableData, Column, SortState, PaginationState, CellSaveEvent } from './data-types.js';
 
 import * as React from 'react';
 import { cn } from '../utils.js';
@@ -8,6 +9,8 @@ import { Pagination } from './pagination.js';
 import { SkeletonTable } from './skeleton.js';
 import dynamic from 'next/dynamic.js';
 import { Input } from './input.js';
+import { EditableCell } from '../internal/editable-cell.js';
+import { TableStyleContext } from '../internal/table-style.js';
 
 const CaretUpDownIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretUpDownIcon), { ssr: false });
 const CaretUpIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretUpIcon), { ssr: false });
@@ -15,19 +18,21 @@ const CaretDownIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').the
 
 // Variantes do Table
 const tableVariants = cva(
-  'w-full bg-card',
+  'w-full border-collapse bg-card text-foreground [&_th]:font-medium [&_th]:text-muted-foreground [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/30',
   {
     variants: {
       variant: {
-        default: 'table-auto',
-        ghost: 'border-none',
-        striped: '[&_tbody_tr:nth-child(even)]:bg-muted/10',
+        default: '',
+        ghost: 'bg-transparent',
+        striped: '[&_tbody_tr:nth-child(even)]:bg-muted/20',
+        outline: '[&_thead]:bg-muted/30 [&_tbody_tr:not(:last-child)]:border-b [&_tbody_tr]:border-border/60',
+        grid: '[&_th]:border [&_td]:border [&_th]:border-border/60 [&_td]:border-border/60 [&_thead]:bg-muted/30',
         fixed: 'table-fixed',
       },
       size: {
-        sm: 'text-sm',
-        default: 'text-base',
-        lg: 'text-lg',
+        sm: 'text-xs [&_th]:px-2 [&_th]:py-2 [&_td]:px-2 [&_td]:py-1',
+        default: 'text-sm [&_th]:px-3 [&_th]:py-3 [&_td]:px-3 [&_td]:py-2',
+        lg: 'text-base [&_th]:px-4 [&_th]:py-4 [&_td]:px-4 [&_td]:py-3',
       },
     },
     defaultVariants: {
@@ -41,6 +46,10 @@ const tableVariants = cva(
 export interface TableProps extends VariantProps<typeof tableVariants> {
   /** Definição das colunas. */
   columns: Column[];
+  /** Layout independente da aparência; variant=fixed permanece compatível. */
+  layout?: 'auto' | 'fixed';
+  /** Rejeite a Promise para manter o rascunho e mostrar erro. */
+  onCellSave?: (event: CellSaveEvent) => Promise<void>;
   /** Linhas exibidas. */
   data: TableData[];
   /** Exibe estado de carregamento. */
@@ -89,6 +98,8 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     className,
     variant,
     size,
+    layout,
+    onCellSave,
     sortState,
     onSort,
     sortable = !!onSort,
@@ -182,24 +193,39 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
 
     const renderCell = (column: Column, row: TableData, rowIndex: number) => {
       const value = row[column.key];
+      const editor = typeof column.editor === 'function' ? column.editor(row, rowIndex) : column.editor;
+      if (editor && onCellSave) return <EditableCell row={row} rowId={row[rowKey]} columnKey={column.key}
+        label={column.label} editor={editor} onSave={onCellSave} />;
       if (column.render) return column.render(value, row, rowIndex);
 
       return value;
     };
+
+    if (onCellSave && columns.some(column => column.editor)) {
+      const ids = new Set<string | number>();
+      for (const row of data) {
+        const id = row[rowKey];
+        if ((typeof id !== 'string' && typeof id !== 'number') || (typeof id === 'number' && !Number.isFinite(id)) || ids.has(id)) {
+          throw new Error('Table editável exige rowKey único e estável em todas as linhas.');
+        }
+        ids.add(id);
+      }
+    }
 
     if (loading) {
       return <SkeletonTable rows={5} columns={4} className="w-full" />;
     }
 
     return (
+      <TableStyleContext.Provider value={{ size: size ?? 'default', borderless: variant !== 'outline' && variant !== 'grid' }}>
       <div className="w-full space-y-4">
         {renderBulkActions && selectedRows.length > 0 && (
           renderBulkActions(selectedRows, handleClearSelection)
         )}
-        <div className={cn('rounded-md', responsive && 'overflow-x-auto')}>
-          <table ref={ref} className={cn(tableVariants({ variant, size }), className)} {...props}>
+        <div className={cn('rounded-lg', (variant === 'outline' || variant === 'grid') && 'border border-border/60', responsive && 'overflow-x-auto')}>
+          <table ref={ref} className={cn(tableVariants({ variant, size }), (layout ?? (variant === 'fixed' ? 'fixed' : 'auto')) === 'fixed' ? 'table-fixed' : 'table-auto', className)} {...props}>
             <thead>
-              <tr className="bg-card">
+              <tr>
                 {selectable && (
                   <th className={cn(
                     "h-10 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
@@ -222,18 +248,18 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                   <th
                     key={column.key}
                     className={cn(
-                      'h-10 px-3 align-middle font-medium text-sm text-muted-foreground whitespace-nowrap',
+                      'align-middle font-medium text-muted-foreground whitespace-nowrap',
                       column.align === 'center' && 'text-center',
                       column.align === 'right' && 'text-right',
                       column.align === 'left' && 'text-left',
                       !column.align && 'text-left',
                       sortable && column.sortable && 'cursor-pointer select-none hover:text-foreground',
-                      index >= limitColumnsShow && 'hidden md:table-cell'
+                      responsive && index >= limitColumnsShow && 'hidden md:table-cell'
                     )}
                     style={{ width: column.width }}
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
-                    <div className="flex items-center gap-1 whitespace-nowrap">
+                    <div className={cn('flex items-center gap-1 whitespace-nowrap', column.align === 'right' && 'justify-end', column.align === 'center' && 'justify-center')}>
                       <span>{column.label}</span>
                       {column.sortable && getSortIcon(column.key)}
                     </div>
@@ -256,7 +282,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                   const isSelected = selectedRows.includes(row[rowKey]);
                   return (
                     <tr
-                      key={row[rowKey] || rowIndex}
+                      key={row[rowKey] == null ? rowIndex : `${typeof row[rowKey]}:${row[rowKey]}`}
                       className={cn(
                         'transition-colors',
                         isSelected && 'bg-card-foreground/10',
@@ -269,7 +295,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                            onRowClick(row, rowIndex);
                          }
                       }}
-                      onTouchStart={() => handleTouchStart(row, row[rowKey] || rowIndex)}
+                      onTouchStart={() => handleTouchStart(row, row[rowKey] ?? rowIndex)}
                       onTouchEnd={handleTouchEnd}
                       onTouchMove={handleTouchMove}
                     >
@@ -292,12 +318,12 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                         <td
                           key={column.key}
                           className={cn(
-                            'px-3 py-2 align-middle text-sm',
+                            'align-middle',
                             column.className,
                             column.align === 'center' && 'text-center',
                             column.align === 'right' && 'text-right',
                             column.align === 'left' && 'text-left',
-                            index >= limitColumnsShow && 'hidden md:table-cell'
+                            responsive && index >= limitColumnsShow && 'hidden md:table-cell'
                           )}
                         >
                           {renderCell(column, row, rowIndex)}
@@ -327,6 +353,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
           </div>
         )}
       </div>
+      </TableStyleContext.Provider>
     );
   }
 );

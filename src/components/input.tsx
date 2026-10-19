@@ -9,6 +9,7 @@ import { useIMask } from 'react-imask';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { toneScopeStyle, type UIColor } from './theme.js';
+import { useTableStyle, tableFieldClass, tableFieldSizes } from '../internal/table-style.js';
 
 const CircleNotchIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CircleNotchIcon), { ssr: false });
 const CaretLeftIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CaretLeftIcon), { ssr: false });
@@ -104,6 +105,8 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ({ className, variant, size, validation, isLoading, isPending, leftIcon, rightIcon, type = 'text', label, placeholder, onValueChange, error, rightPlaceholder, mask, color = 'primary', animationEntrance = false, animationOut = false, isInCard = false, ...props }, ref) => {
+        const tableStyle = useTableStyle();
+        if (tableStyle && type !== 'checkbox') className = cn(className, tableFieldClass, tableFieldSizes[tableStyle.size]);
         const [isFocused, setIsFocused] = React.useState(false);
         const [hasValue, setHasValue] = React.useState(false);
         const [displayValue, setDisplayValue] = React.useState<string>(typeof props.value === 'string' ? (props.value as string) : '');

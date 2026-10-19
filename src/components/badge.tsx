@@ -6,6 +6,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { getStatusMeta } from '../functions/getStatusBadge.js';
 import { toneClasses, type UIColor } from './theme.js';
+import { useTableStyle, tableBadgeClass } from '../internal/table-style.js';
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -100,6 +101,12 @@ function Badge({
   showLabel = true,
   ...props
 }: BadgeProps) {
+  const tableStyle = useTableStyle();
+  if (tableStyle) {
+    size = tableStyle.size === 'sm' ? 'xs' : tableStyle.size === 'lg' ? 'default' : 'sm';
+    className = cn(className, tableBadgeClass);
+    animated = false;
+  }
   const meta = status === undefined ? null : getStatusMeta(status);
   const resolvedVariant = meta?.variant ?? variant;
   const content = children ?? (showLabel ? meta?.label : undefined);

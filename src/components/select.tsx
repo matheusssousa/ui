@@ -5,6 +5,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { CaretDownIcon, CheckIcon, CircleNotchIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
 import { toneScopeStyle, type UIColor } from './theme.js';
+import { Badge } from './badge.js';
+import { useTableStyle, tableFieldClass, tableFieldSizes } from '../internal/table-style.js';
 
 // --- Variantes de Estilo (CVA) ---
 
@@ -57,6 +59,8 @@ const selectContentVariants = cva(
 // --- Tipos e Interfaces ---
 
 export interface SelectOption {
+    /** Cor usada na apresentação como badge. */
+    color?: UIColor;
     /** Valor enviado em `onValueChange`. */
     value: string | number;
     /** Texto principal da opção. */
@@ -72,7 +76,9 @@ export interface SelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
     /** Opções disponíveis. */
     options: SelectOption[];
     /** Valor controlado, ou lista de valores em modo múltiplo. */
-    value?: string | number | boolean | Array<string | number>;
+    value?: string | number | boolean | Array<string | number> | null;
+    /** Apresentação da seleção e das opções; padrão texto. */
+    display?: 'text' | 'badge';
     /** Valor inicial quando o componente não é controlado. */
     defaultValue?: string | number | Array<string | number>;
     /** Recebe a seleção atualizada. */
@@ -118,6 +124,7 @@ export interface SelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     ({
         options = [],
+        display = 'text',
         value,
         defaultValue,
         onValueChange,
@@ -143,14 +150,22 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         isInCard = false,
         ...props
     }, ref) => {
+        const tableStyle = useTableStyle();
+        if (tableStyle) className = cn(className, tableFieldClass, tableFieldSizes[tableStyle.size], clearable ? 'pr-14!' : 'pr-8!');
+        const renderOptionLabel = (option: SelectOption) => display === 'badge'
+            ? <Badge color={option.color ?? 'neutral'} animated={false}>{option.label}</Badge>
+            : option.label;
+        const triggerRef = React.useRef<HTMLDivElement>(null);
+        const listId = React.useId();
+        const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>();
         const [isOpen, setIsOpen] = React.useState(false);
         const [searchQuery, setSearchQuery] = React.useState('');
 
         const [selectedValues, setSelectedValues] = React.useState<(string | number)[]>(() => {
-            const initial = defaultValue;
-            if (initial === undefined) return [];
+            const initial = value !== undefined ? value : defaultValue;
+            if (initial === undefined || initial === null) return [];
             if (multiple) {
-                return Array.isArray(initial) ? initial : [initial];
+                return Array.isArray(initial) ? initial : [initial as string | number];
             }
             return [initial as string | number];
         });
@@ -186,10 +201,27 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
 
         React.useEffect(() => {
-            if (isOpen && searchable) {
-                setTimeout(() => searchInputRef.current?.focus(), 50);
-            }
+            if (!isOpen || !searchable) return;
+            const timer = setTimeout(() => searchInputRef.current?.focus(), 0);
+            return () => clearTimeout(timer);
         }, [isOpen, searchable]);
+
+        React.useEffect(() => {
+            if (!isOpen || !tableStyle) return;
+            const place = () => {
+                const rect = triggerRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const below = window.innerHeight - rect.bottom - 8;
+                const above = below < 200 && rect.top > below;
+                setMenuStyle({ position: 'fixed', left: Math.max(8, Math.min(rect.left, window.innerWidth - rect.width - 8)),
+                    top: above ? 'auto' : rect.bottom + 4, bottom: above ? window.innerHeight - rect.top + 4 : 'auto',
+                    width: rect.width, maxHeight: Math.max(80, above ? rect.top - 8 : below), overflowY: 'auto' });
+            };
+            place();
+            window.addEventListener('resize', place);
+            window.addEventListener('scroll', place, true);
+            return () => { window.removeEventListener('resize', place); window.removeEventListener('scroll', place, true); };
+        }, [isOpen, Boolean(tableStyle)]);
 
         React.useEffect(() => {
             if (isOpen && highlightedIndex > -1 && optionRefs.current[highlightedIndex]) {
@@ -214,7 +246,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         };
 
         const moveHighlight = (direction: number) => {
-            if (filteredOptions.length === 0) return;
+            if (!filteredOptions.some(option => !option.disabled)) return;
             let newIndex = highlightedIndex;
             do {
                 newIndex = (newIndex + direction + filteredOptions.length) % filteredOptions.length;
@@ -226,6 +258,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
         const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
             if (disabled || isLoading) return;
+            if (event.target instanceof HTMLInputElement && !['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) return;
 
             if (!isOpen && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
                 event.preventDefault();
@@ -246,6 +279,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
             switch (event.key) {
                 case 'Escape':
+                    triggerRef.current?.focus();
                     setIsOpen(false);
                     break;
                 case 'ArrowDown':
@@ -316,6 +350,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     : [...selectedValues, option.value];
             } else {
                 newValues = [option.value];
+                triggerRef.current?.focus();
                 setIsOpen(false);
                 setSearchQuery('');
             }
@@ -328,6 +363,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
         const handleClear = (event: React.MouseEvent) => {
             event.stopPropagation();
+            triggerRef.current?.focus();
             const newValues: (string | number)[] = [];
             if (value === undefined) {
                 setSelectedValues(newValues);
@@ -601,9 +637,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                     className="relative"
                     ref={selectContainerRef}
                     onKeyDown={handleKeyDown}
-                    tabIndex={disabled ? -1 : 0} // 1. Torna o componente focável
                     onFocus={() => setIsFocused(true)} // 2. Gerencia o estado de foco
-                    onBlur={() => setIsFocused(false)} // 2. Gerencia o estado de foco
+                    onBlur={() => { setIsFocused(false); queueMicrotask(() => { if (!selectContainerRef.current?.contains(document.activeElement)) setIsOpen(false); }); }} // 2. Gerencia o estado de foco
                 >
                 {multiple ? (
                     <select
@@ -664,11 +699,15 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                         className
                     )}
                     onClick={() => !disabled && !isLoading && setIsOpen(!isOpen)}
+                    ref={triggerRef}
                     onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
+                    onBlur={() => { setIsFocused(false); queueMicrotask(() => { if (!selectContainerRef.current?.contains(document.activeElement)) setIsOpen(false); }); }}
                     tabIndex={disabled ? -1 : 0}
                     role="combobox"
                     aria-expanded={isOpen}
+                    aria-controls={isOpen ? listId : undefined}
+                    aria-haspopup="listbox"
+                    aria-activedescendant={isOpen && highlightedIndex >= 0 ? `${listId}-${highlightedIndex}` : undefined}
                     aria-disabled={disabled}
                     {...props}
                 >
@@ -703,15 +742,17 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                 );
                             })
                         ) : (
-                            <span className={cn(
+                            <div className={cn(
                                 'block truncate',
                                 selectedValues.length === 0 && 'text-muted-foreground/60',
                                 disabled && 'text-muted-foreground/60',
                                 label && !shouldFloatLabel && 'opacity-0',
                                 label && shouldFloatLabel && 'opacity-100 transition-opacity duration-300 delay-150'
                             )}>
-                                {getDisplayValue()}
-                            </span>
+                                {display === 'badge' && selectedValues.length > 0 && options.find(option => option.value === selectedValues[0])
+                                    ? renderOptionLabel(options.find(option => option.value === selectedValues[0])!)
+                                    : getDisplayValue()}
+                            </div>
                         )}
                     </div>
 
@@ -722,6 +763,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                         {clearable && selectedValues.length > 0 && !disabled && !isLoading && (
                             <button
                                 type="button"
+                                aria-label="Limpar seleção"
                                 onClick={handleClear}
                                 className="flex items-center justify-center w-4 h-4 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                             >
@@ -741,20 +783,21 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                 </div>
 
                 {isOpen && (
-                    <div className={cn(selectContentVariants({ position: 'bottom' }), 'w-full')}>
+                    <div style={tableStyle ? menuStyle : undefined} className={cn(selectContentVariants({ position: 'bottom' }), 'w-full', tableStyle && 'mt-0', tableStyle?.borderless && 'border-0 ring-0')}>
                         {searchable && (
-                            <div className="p-1 border-b border-border/60">
+                            <div className={cn('p-1 border-b border-border/60', tableStyle?.borderless && 'border-0')}>
                                 <input
                                     ref={searchInputRef}
                                     type="text"
                                     placeholder="Buscar..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full px-2 py-1 text-sm bg-transparent border-0 rounded-md outline-none placeholder:text-muted-foreground"
+                                    aria-label="Buscar opções"
+                                    className={cn('w-full px-2 py-1 text-sm bg-transparent border-0 rounded-md outline-none placeholder:text-muted-foreground', tableStyle && 'ring-0 focus:bg-muted/60')}
                                 />
                             </div>
                         )}
-                        <div className="max-h-60 overflow-auto p-1">
+                        <div id={listId} role="listbox" aria-multiselectable={multiple || undefined} className="max-h-60 overflow-auto p-1">
                             {multiple && showSelectAll && enabledOptionValues.length > 0 && (
                                 <button
                                     type="button"
@@ -785,6 +828,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                     <div
                                         key={option.value}
                                         ref={el => { optionRefs.current[index] = el; }}
+                                        id={`${listId}-${index}`} role="option" aria-selected={selectedValues.includes(option.value)} aria-disabled={option.disabled || undefined}
+                                        onMouseDown={event => event.preventDefault()}
                                         className={cn(
                                             'relative flex items-center rounded-sm px-2 py-1.5 text-sm select-none transition-colors capitalize',
                                             option.disabled
@@ -796,7 +841,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                         onClick={() => handleOptionSelect(option)}
                                     >
                                         <div className="flex-1 truncate">
-                                            <div className="font-medium">{option.label}</div>
+                                            <div className="font-medium">{renderOptionLabel(option)}</div>
                                             {option.description && <div className="text-xs text-muted-foreground truncate">{option.description}</div>}
                                         </div>
                                         {selectedValues.includes(option.value) && <CheckIcon className="w-4 h-4 ml-2" />}

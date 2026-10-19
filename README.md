@@ -483,6 +483,66 @@ Referências: [fetch do Next](https://nextjs.org/docs/app/api-reference/function
 
 ## Tabelas remotas e busca unificada
 
+### Table editável e variantes
+
+A `Table` agora usa um visual minimalista por padrão. Essa mudança visual é intencional: `default`, `ghost` e `striped` não têm bordas ou rings; `outline` adiciona contorno e divisórias horizontais, e `grid` adiciona divisórias entre células. `size="sm" | "default" | "lg"` ajusta espaçamento, campos e badges. `layout="auto" | "fixed"` controla a distribuição das colunas; o antigo `variant="fixed"` continua aceito como layout fixo com aparência padrão.
+
+Inputs e selects dentro da tabela ficam integrados ao fundo da célula, sem caixas ou rings adicionais. O foco usa destaque de fundo, e erros usam texto e ícone. Os controles fora da tabela mantêm seu estilo. O menu do select mantém fundo e sombra e acompanha a rolagem da tabela.
+
+```tsx
+import { useState } from 'react';
+import { Table, type Column, type CellSaveEvent } from '@matheusssousa/ui';
+
+type Item = { id: number; name: string; status: string; locked?: boolean };
+
+const columns: Column<Item>[] = [
+  {
+    key: 'name', label: 'Nome',
+    editor: row => row.locked ? false : {
+      type: 'input', inputType: 'text', placeholder: 'Nome',
+      parse: value => String(value ?? '').trim(),
+      validate: value => value ? undefined : 'Informe um nome',
+    },
+  },
+  {
+    key: 'status', label: 'Status',
+    editor: {
+      type: 'select', display: 'badge', searchable: true,
+      options: [
+        { value: 'pending', label: 'Pendente', color: 'warning' },
+        { value: 'done', label: 'Concluído', color: 'success' },
+      ],
+    },
+  },
+];
+
+export function EditableItems({ initialItems }: { initialItems: Item[] }) {
+  const [data, setData] = useState(initialItems);
+  async function saveCell({ rowKey, columnKey, value }: CellSaveEvent) {
+    const response = await fetch(`/api/items/${encodeURIComponent(rowKey)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [columnKey]: value }),
+    });
+    if (!response.ok) throw new Error('Não foi possível salvar');
+    setData(current => current.map(row => row.id === rowKey
+      ? { ...row, [columnKey]: value } : row));
+  }
+  return <Table data={data} columns={columns} onCellSave={saveCell} variant="default" />;
+}
+```
+
+- `editor` aceita configuração fixa ou `(row, index) => configuração | false`. Sem `onCellSave`, a tabela continua somente leitura e respeita `render`. Com edição, o editor tem precedência sobre `render`.
+- `inputType` aceita `text`, `number`, `email`, `url`, `tel`, `password` e `search`. Inputs retornam texto; use `parse` para converter números. Selects preservam `string`/`number` das opções; `clearable` retorna `undefined` ao limpar. Converta para `null` com `parse` se a API precisar receber explicitamente um campo vazio em JSON.
+- `parse(value, row)` é aplicado antes da comparação e validação; `validate(value, row)` retorna uma mensagem para impedir o salvamento. `disabled` bloqueia a célula. A seleção nesta versão é única.
+- `onCellSave({ row, rowKey, columnKey, value, previousValue })` deve retornar `Promise<void>` e rejeitar em caso de falha. `rowKey` no evento é o identificador da linha, enquanto a prop `rowKey` indica o campo identificador (padrão `id`). Todas as linhas precisam de identificadores únicos e estáveis; `0` é válido.
+- Só valores alterados são salvos, ao sair da célula inteira. Buscar ou selecionar dentro do select não salva imediatamente. A célula em processamento fica bloqueada; outras continuam editáveis.
+- Falhas mantêm o rascunho e mostram “Tentar novamente”. Sair novamente da célula também tenta salvar. Não há novas tentativas automáticas nem salvamento por desmontagem.
+- Atualizações de `data` sincronizam células sem edição pendente. Rascunhos são preservados; uma resposta normalizada recebida durante o salvamento é aplicada após o sucesso. Atualize `data` na aplicação para manter os valores após trocar de página ou remontar a tabela.
+- O `Select` também aceita `display="badge"` fora da tabela. Cada opção pode ter `color: UIColor`; sem cor, usa `neutral`. Sem seleção, exibe o placeholder. `display="text"` continua sendo o padrão.
+
+O novo comportamento pertence à `Table`; `DraggableTable` não recebe edição nesta versão.
+
 ### useApiTable
 
 ```tsx
@@ -1467,6 +1527,33 @@ Fonte: [components/data-types](src/components/data-types.ts).
 ```ts
 import type * as React from 'react';
 import type { UIColor } from './theme.js';
+import type { SelectOption } from './select.js';
+export type CellEditorValue = string | number | undefined;
+export interface CellEditorBase<T = TableData> {
+    placeholder?: string;
+    disabled?: boolean;
+    /** Converte o rascunho antes de comparar, validar e salvar. */
+    parse?: (value: CellEditorValue, row: T) => unknown;
+    /** Retorne uma mensagem para impedir o salvamento. */
+    validate?: (value: unknown, row: T) => string | undefined;
+}
+export type CellEditor<T = TableData> = CellEditorBase<T> & ({
+    type: 'input';
+    inputType?: 'text' | 'number' | 'email' | 'url' | 'tel' | 'password' | 'search';
+} | {
+    type: 'select';
+    options: SelectOption[];
+    searchable?: boolean;
+    clearable?: boolean;
+    display?: 'text' | 'badge';
+});
+export interface CellSaveEvent<T = TableData> {
+    row: T;
+    rowKey: string | number;
+    columnKey: string;
+    value: unknown;
+    previousValue: unknown;
+}
 export interface TableData {
     [key: string]: any;
 }
@@ -1475,6 +1562,8 @@ export interface Column<T = any> {
     label: string;
     sortable?: boolean;
     render?: (value: any, row: T, index: number) => React.ReactNode;
+    /** Editor fixo ou definido individualmente por linha. */
+    editor?: CellEditor<T> | ((row: T, index: number) => CellEditor<T> | false);
     className?: string;
     width?: string | number;
     align?: 'left' | 'center' | 'right';
@@ -2370,6 +2459,8 @@ declare const selectVariants: (props?: ({
     validation?: "default" | "success" | "error" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export interface SelectOption {
+    /** Cor usada na apresentação como badge. */
+    color?: UIColor;
     /** Valor enviado em `onValueChange`. */
     value: string | number;
     /** Texto principal da opção. */
@@ -2384,7 +2475,9 @@ export interface SelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
     /** Opções disponíveis. */
     options: SelectOption[];
     /** Valor controlado, ou lista de valores em modo múltiplo. */
-    value?: string | number | boolean | Array<string | number>;
+    value?: string | number | boolean | Array<string | number> | null;
+    /** Apresentação da seleção e das opções; padrão texto. */
+    display?: 'text' | 'badge';
     /** Valor inicial quando o componente não é controlado. */
     defaultValue?: string | number | Array<string | number>;
     /** Recebe a seleção atualizada. */
@@ -2696,17 +2789,21 @@ export { Switch };
 Fonte: [components/table](src/components/table.tsx).
 
 ```ts
-import type { TableData, Column, SortState, PaginationState } from './data-types.js';
+import type { TableData, Column, SortState, PaginationState, CellSaveEvent } from './data-types.js';
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const tableVariants: (props?: ({
-    variant?: "default" | "fixed" | "ghost" | "striped" | null | undefined;
+    variant?: "default" | "fixed" | "grid" | "outline" | "ghost" | "striped" | null | undefined;
     size?: "default" | "sm" | "lg" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 /** Tabela com ordenação, seleção e paginação opcionais. */
 export interface TableProps extends VariantProps<typeof tableVariants> {
     /** Definição das colunas. */
     columns: Column[];
+    /** Layout independente da aparência; variant=fixed permanece compatível. */
+    layout?: 'auto' | 'fixed';
+    /** Rejeite a Promise para manter o rascunho e mostrar erro. */
+    onCellSave?: (event: CellSaveEvent) => Promise<void>;
     /** Linhas exibidas. */
     data: TableData[];
     /** Exibe estado de carregamento. */

@@ -1,10 +1,34 @@
 import type * as React from 'react';
 import type { UIColor } from './theme.js';
+import type { SelectOption } from './select.js';
+
+export type CellEditorValue = string | number | undefined;
+export interface CellEditorBase<T = TableData> {
+  placeholder?: string;
+  disabled?: boolean;
+  /** Converte o rascunho antes de comparar, validar e salvar. */
+  parse?: (value: CellEditorValue, row: T) => unknown;
+  /** Retorne uma mensagem para impedir o salvamento. */
+  validate?: (value: unknown, row: T) => string | undefined;
+}
+export type CellEditor<T = TableData> = CellEditorBase<T> & (
+  | { type: 'input'; inputType?: 'text' | 'number' | 'email' | 'url' | 'tel' | 'password' | 'search' }
+  | { type: 'select'; options: SelectOption[]; searchable?: boolean; clearable?: boolean; display?: 'text' | 'badge' }
+);
+export interface CellSaveEvent<T = TableData> {
+  row: T;
+  rowKey: string | number;
+  columnKey: string;
+  value: unknown;
+  previousValue: unknown;
+}
 
 export interface TableData { [key: string]: any }
 export interface Column<T = any> {
   key: string; label: string; sortable?: boolean;
   render?: (value: any, row: T, index: number) => React.ReactNode;
+  /** Editor fixo ou definido individualmente por linha. */
+  editor?: CellEditor<T> | ((row: T, index: number) => CellEditor<T> | false);
   className?: string; width?: string | number; align?: 'left' | 'center' | 'right';
 }
 export interface SortState { column: string | null; direction: 'asc' | 'desc' | null }
