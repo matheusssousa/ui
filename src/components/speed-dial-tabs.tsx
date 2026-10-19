@@ -192,11 +192,11 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                                         if (closeOnSelect) setIsOpen(false);
                                     }}
                                     className={cn(
-                                        "flex w-full items-center gap-3 border px-3 text-left font-medium shadow-sm transition-colors duration-150",
+                                        "flex w-full shrink-0 items-center gap-3 border border-transparent px-3 text-left font-medium shadow-md transition-colors duration-150 enabled:hover:brightness-95",
                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
                                         selectedValue === tab.value
-                                            ? cn(tone.soft, tone.outline, tone.hoverSoft)
-                                            : cn("border-border/70 bg-card text-foreground hover:bg-muted/50", tone.hoverOutline),
+                                            ? tone.solid
+                                            : toneClasses.tertiary.solid,
                                         actionHeight,
                                         actionTextSize,
                                         roundedClass
@@ -204,6 +204,7 @@ const SpeedDialTabs = React.forwardRef<HTMLDivElement, SpeedDialTabsProps>(
                                 >
                                     {tab.icon && <span className="flex w-5 shrink-0 items-center justify-center" aria-hidden="true">{renderIcon(tab.icon, iconSize)}</span>}
                                     <span className="min-w-0 flex-1 truncate">{tab.label}</span>
+                                    {selectedValue === tab.value && <PhosphorIcons.CheckIcon size={16} className="shrink-0" aria-hidden="true" />}
                                 </button>
                             ))}
                         </motion.div>
