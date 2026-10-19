@@ -10,7 +10,7 @@ let content = readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
 const sections = [start, '## Referência completa da API', '',
   'Gerada das declarações TypeScript da biblioteca por `npm run docs`. Abra um módulo para consultar todos os tipos, props, variantes, argumentos e retornos. Tipos herdados de React/HTML mantêm o contrato da dependência indicada. As declarações auxiliares sem `export` aparecem somente para explicar os tipos públicos.', '',
   'Cada título indica o subcaminho de importação; use `@matheusssousa/ui/` antes dele. Para `functions/serverFetch`, prefira a entrada `@matheusssousa/ui/server`. As declarações do índice ao final mostram exatamente quais nomes também estão disponíveis pela raiz.', ''];
-for (const directory of ['components', 'hooks', 'providers', 'functions']) {
+for (const directory of ['components', 'hooks', 'providers', 'functions', 'types']) {
   sections.push(`### ${directory}`, '');
   for (const name of readdirSync(path.join(root, 'dist', directory)).filter(n => n.endsWith('.d.ts')).sort()) {
     const module = `${directory}/${name.replace(/\.d\.ts$/, '')}`;

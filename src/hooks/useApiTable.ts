@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HttpClient, HttpRequestOptions } from '../functions/http.js';
+import type { LaravelPaginatedResponse } from '../types/responses.js';
+export type { LaravelPaginatedResponse } from '../types/responses.js';
 
 export interface ApiTableState {
   page: number;
@@ -16,10 +18,6 @@ export interface PaginationInfo {
   from: number; to: number; hasNextPage: boolean; hasPreviousPage: boolean;
 }
 export interface PaginatedResult<T> { data: T[]; pagination: PaginationInfo }
-export interface LaravelPaginatedResponse<T> {
-  data: T[]; current_page: number; last_page: number; total: number; per_page: number;
-  from?: number | null; to?: number | null;
-}
 export function normalizePagination<T>(response: LaravelPaginatedResponse<T>): PaginatedResult<T> {
   if (!response || !Array.isArray(response.data) || !Number.isFinite(response.current_page) ||
       !Number.isFinite(response.last_page) || !Number.isFinite(response.total) || !Number.isFinite(response.per_page)) {

@@ -3,10 +3,8 @@
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiNotifier } from './useApi.js';
 
-export interface ActionResponse<T> {
-  success?: boolean; data?: T; error?: string; errors?: Record<string, string[]>; message?: string;
-  showSuccessToast?: boolean; showErrorToast?: boolean;
-}
+import type { ActionResponse } from '../types/responses.js';
+export type { ActionResponse } from '../types/responses.js';
 export interface UseActionOptions<T> {
   notifier?: ApiNotifier;
   successMessage?: string;

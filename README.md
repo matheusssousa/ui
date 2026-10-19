@@ -20,6 +20,7 @@ Biblioteca privada de componentes, hooks e funções utilitárias para projetos 
 - [Migração dos utilitários do SaaS](#migração-dos-utilitários-do-saas)
 - [Migração da versão 0.2](#migração-da-versão-02)
 - [Desenvolvimento e publicação](#desenvolvimento-e-publicação)
+- [Tipos de responses de actions e Laravel](#tipos-de-responses-de-actions-e-laravel)
 - [Referência completa da API](#referência-completa-da-api)
 
 <!-- TOC:END -->
@@ -771,6 +772,22 @@ npm publish
 ```
 
 Quando alterar uma versão já publicada, incremente o número antes de publicar novamente, por exemplo com `npm version patch` para correções ou `npm version minor` para novas funcionalidades. O pacote tem `publishConfig.registry` apontando para o GitHub Packages. Não comite tokens nem arquivos `.npmrc` com credenciais.
+
+## Tipos de responses de actions e Laravel
+
+Importe pela raiz ou por `@matheusssousa/ui/types/responses`.
+
+- `IndexResponse<T>` / `LaravelPaginatedResponse<T>`: resposta de `paginate()`, com `data: T[]`, metadados e URLs de navega??o. Campos adicionais opcionais preservam a compatibilidade existente.
+- `ShowResponse<T>`: objeto `T` retornado diretamente pelo controller, sem pagina??o.
+- `LaravelResourceResponse<T>`: API Resource individual, com `{ data: T }`.
+- `LaravelPaginatedResourceResponse<T>`: API Resources paginados, com `{ data: T[], links, meta }`. No `useApiTable`, use `mapResponse` para esse formato.
+- `IndexActionResponse<T>` e `ShowActionResponse<T>`: respostas envolvidas em `ActionResponse`, com feedback de sucesso, erros e mensagens.
+
+`Promise<IndexResponse<Account>>` serve para uma action que retorna o corpo HTTP paginado diretamente; `Promise<ShowResponse<Account>>` serve para o objeto individual.
+
+Uma action com `IndexActionResponse<Account>` retorna `{ success: true, data: page }`: a lista fica em `response.data?.data` e o total em `response.data?.total`. O envelope de feedback ? uma conven??o da aplica??o; Laravel n?o adiciona `success` automaticamente.
+
+Refer?ncias: [pagina??o](https://laravel.com/docs/12.x/pagination#converting-results-to-json) e [API Resources](https://laravel.com/docs/12.x/eloquent-resources#pagination).
 
 <!-- API-REFERENCE:START -->
 ## Referência completa da API
@@ -3049,15 +3066,8 @@ Fonte: [hooks/useAction](src/hooks/useAction.ts).
 
 ```ts
 import type { ApiNotifier } from './useApi.js';
-export interface ActionResponse<T> {
-    success?: boolean;
-    data?: T;
-    error?: string;
-    errors?: Record<string, string[]>;
-    message?: string;
-    showSuccessToast?: boolean;
-    showErrorToast?: boolean;
-}
+import type { ActionResponse } from '../types/responses.js';
+export type { ActionResponse } from '../types/responses.js';
 export interface UseActionOptions<T> {
     notifier?: ApiNotifier;
     successMessage?: string;
@@ -3117,6 +3127,8 @@ Fonte: [hooks/useApiTable](src/hooks/useApiTable.ts).
 
 ```ts
 import type { HttpClient, HttpRequestOptions } from '../functions/http.js';
+import type { LaravelPaginatedResponse } from '../types/responses.js';
+export type { LaravelPaginatedResponse } from '../types/responses.js';
 export interface ApiTableState {
     page: number;
     per_page: number;
@@ -3138,15 +3150,6 @@ export interface PaginationInfo {
 export interface PaginatedResult<T> {
     data: T[];
     pagination: PaginationInfo;
-}
-export interface LaravelPaginatedResponse<T> {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    total: number;
-    per_page: number;
-    from?: number | null;
-    to?: number | null;
 }
 export declare function normalizePagination<T>(response: LaravelPaginatedResponse<T>): PaginatedResult<T>;
 export declare function buildTableParams(state: ApiTableState): Record<string, unknown>;
@@ -3818,6 +3821,76 @@ export declare function cn(...inputs: ClassValue[]): string;
 
 </details>
 
+### types
+
+<details>
+<summary><code>types/responses</code></summary>
+
+Fonte: [types/responses](src/types/responses.ts).
+
+```ts
+/** Envelope returned by server actions, including form feedback. */
+export interface ActionResponse<T = unknown> {
+    success?: boolean;
+    data?: T;
+    error?: string;
+    errors?: Record<string, string[]>;
+    message?: string;
+    showSuccessToast?: boolean;
+    showErrorToast?: boolean;
+}
+export interface LaravelPaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+/** Pagination fields shared by paginate() and paginated API Resources. */
+export interface LaravelPaginationMeta {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+    from?: number | null;
+    to?: number | null;
+    path?: string;
+    links?: LaravelPaginationLink[];
+}
+/** JSON returned directly by Laravel's paginate(). */
+export interface LaravelPaginatedResponse<T> extends LaravelPaginationMeta {
+    data: T[];
+    first_page_url?: string;
+    last_page_url?: string;
+    next_page_url?: string | null;
+    prev_page_url?: string | null;
+}
+export interface LaravelResourcePaginationLinks {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+}
+/** Default JSON envelope for a single Laravel API Resource. */
+export interface LaravelResourceResponse<T> {
+    data: T;
+}
+/** JSON returned by Resource::collection() with paginate(). */
+export interface LaravelPaginatedResourceResponse<T> {
+    data: T[];
+    links: LaravelResourcePaginationLinks;
+    meta: LaravelPaginationMeta;
+}
+/** HTTP response for an index returning paginate() directly. */
+export type IndexResponse<T> = LaravelPaginatedResponse<T>;
+/** HTTP response for a show returning a model directly (no pagination). */
+export type ShowResponse<T> = T;
+/** Action wrapping an index HTTP response; pagination lives in action.data. */
+export type IndexActionResponse<T> = ActionResponse<IndexResponse<T>>;
+/** Action wrapping a single model. */
+export type ShowActionResponse<T> = ActionResponse<ShowResponse<T>>;
+```
+
+</details>
+
 ### Exports da raiz
 
 ```ts
@@ -3827,6 +3900,7 @@ export * from './hooks/useDebounce.js';
 export * from './hooks/useTheme.js';
 export * from './hooks/useToast.js';
 export * from './hooks/useAction.js';
+export type * from './types/responses.js';
 export * from './hooks/useFetch.js';
 export * from './hooks/useApi.js';
 export * from './hooks/useCep.js';

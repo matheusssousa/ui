@@ -4,6 +4,7 @@ export * from './hooks/useDebounce.js';
 export * from './hooks/useTheme.js';
 export * from './hooks/useToast.js';
 export * from './hooks/useAction.js';
+export type * from './types/responses.js';
 export * from './hooks/useFetch.js';
 export * from './hooks/useApi.js';
 export * from './hooks/useCep.js';
