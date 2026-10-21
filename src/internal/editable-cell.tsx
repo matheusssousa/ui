@@ -103,8 +103,14 @@ export function EditableCell({ rowId, column, rowIndex, columnIndex, className }
       editor && editor.type === 'money' && 'text-right tabular-nums')}
     onFocus={() => navigation.setActive(id)} onKeyDown={onKeyDown}
     onClick={event => {
-      if (spreadsheet) { event.stopPropagation(); if (!editing) { td.current?.focus(); if (stacked && window.innerWidth < 768) begin(); } }
-    }} onDoubleClick={() => spreadsheet && begin()}
+      if (spreadsheet) {
+        event.stopPropagation();
+        if (!editing && !(event.target as HTMLElement).closest('a,button,input,select,textarea,[role="combobox"]')) {
+          td.current?.focus();
+          begin(editor && editor.type === 'select' ? 'ArrowDown' : undefined);
+        }
+      }
+    }}
     onBlur={() => {
       queueMicrotask(() => {
         if (!mounted.current || td.current?.contains(document.activeElement)) return;

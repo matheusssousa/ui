@@ -340,3 +340,47 @@ test('spreadsheet copy is single-cell text; range paste is not interpreted; stac
     assert.match(ui.container.querySelector('table').className, /ui-table-sticky/);
   } finally { await ui.dispose(); }
 });
+
+test('one click focuses the spreadsheet input and opens select options; readonly cells stay readonly', async () => {
+  const ui = await mount({ variant: 'spreadsheet', saveMode: 'row', columns: [column,
+    { key: 'status', label: 'Status', editor: { type: 'select', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } },
+    { key: 'locked', label: 'Locked', editor: { type: 'input', disabled: true } }],
+    data: [{ id: 1, name: 'Original', status: 'a', locked: 'Locked' }], onRowSave: async () => {} });
+  try {
+    const cells = ui.container.querySelectorAll('[role="gridcell"]');
+    await click(cells[0]);
+    const input = cells[0].querySelector('input');
+    assert.equal(input.value, 'Original'); assert.equal(document.activeElement, input);
+    await change(input, 'Changed'); await key(input, 'Escape');
+    assert.match(cells[0].textContent, /Original/);
+    await click(cells[1]);
+    assert.equal(cells[1].querySelector('[role="combobox"]').getAttribute('aria-expanded'), 'true');
+    await click(cells[1].querySelectorAll('[role="option"]')[1]);
+    assert.match(cells[1].querySelector('[role="combobox"]').textContent, /B/);
+    await click(cells[2]); assert.equal(cells[2].querySelector('input'), null);
+  } finally { await ui.dispose(); }
+});
+
+test('sidebar supports optional permissions, recursive menus and controlled collapse', async () => {
+  const { Sidebar } = await import('../dist/components/sidebar.js');
+  const sections = [{ title: 'Main', items: [
+    { label: 'Home', href: '/home' },
+    { label: 'Restricted', href: '/private', permission: 'view_private' },
+    { label: 'Parent', href: '/parent', subItems: [{ label: 'Child', href: '/parent/child', permission: 'child' }] }
+  ] }];
+  const ui = await mount({ sections, defaultOpen: true, pathname: '/home' }, Sidebar);
+  try {
+    assert.ok(ui.container.querySelector('a[href="/private"]'));
+    assert.equal(ui.container.querySelector('a[href="/home"]').getAttribute('aria-current'), 'page');
+    await click(ui.container.querySelector('[aria-label="Alternar Parent"]'));
+    assert.ok(ui.container.querySelector('a[href="/parent/child"]'));
+    await ui.render({ can: () => false });
+    assert.equal(ui.container.querySelector('a[href="/private"]'), null);
+    assert.equal(ui.container.querySelector('a[href="/parent/child"]'), null);
+    assert.ok(ui.container.querySelector('a[href="/parent"]'));
+    await click(ui.container.querySelector('[aria-label="Recolher menu"]'));
+    assert.equal(ui.container.querySelector('aside').getAttribute('data-open'), 'false');
+    await ui.render({ isOpen: true });
+    assert.equal(ui.container.querySelector('aside').getAttribute('data-open'), 'true');
+  } finally { await ui.dispose(); }
+});

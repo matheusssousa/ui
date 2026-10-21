@@ -257,3 +257,13 @@
   .ui-table-stacked .ui-table-stacked-cell [role="combobox"],
   .ui-table-stacked .ui-sheet-value { min-height: 44px !important; height: auto !important; }
 }
+
+/* Shared responsive sidebar. */
+.ui-sidebar { width: 80px; position: sticky; top: 0; height: 100dvh; transition: width .2s ease; }
+.ui-sidebar[data-open="true"] { width: 240px; }
+@media (max-width: 767px) {
+  .ui-sidebar, .ui-sidebar[data-open="true"] { width: 100%; height: auto; position: relative; }
+  .ui-sidebar[data-open="false"] .ui-sidebar-content { display: none; }
+  .ui-sidebar[data-open="true"] nav { max-height: 70dvh; }
+}
+@media (prefers-reduced-motion: reduce) { .ui-sidebar { transition: none; } }

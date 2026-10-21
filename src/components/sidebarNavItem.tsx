@@ -1,0 +1,45 @@
+'use client';
+import * as React from 'react';
+import { cn } from '../utils.js';
+
+export interface SidebarItem {
+  icon?: React.ElementType;
+  label: string;
+  href?: string;
+  permission?: string;
+  subItems?: SidebarItem[];
+  exact?: boolean;
+  dataTour?: string;
+}
+export interface SidebarNavItemProps {
+  item: SidebarItem;
+  isOpen: boolean;
+  onClick?: () => void;
+  isSubMenuOpen?: boolean;
+  toggleSubMenu?: () => void;
+  dataTour?: string;
+  pathname?: string;
+  /** Pass Next.js Link or another router's anchor-compatible component. */
+  linkComponent?: React.ElementType;
+}
+export function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link = 'a' }: SidebarNavItemProps) {
+  const [currentPath, setCurrentPath] = React.useState('');
+  React.useEffect(() => {
+    const update = () => setCurrentPath(window.location.pathname);
+    update(); window.addEventListener('popstate', update);
+    return () => window.removeEventListener('popstate', update);
+  }, []);
+  const normalize = (path: string) => path.replace(/\/+$/, '') || '/';
+  const path = normalize(pathname ?? currentPath);
+  const href = item.href ? normalize(item.href) : undefined;
+  const exact = item.exact ?? (href === '/' || ['/admin', '/tenant', '/landlord'].includes(href ?? ''));
+  const active = Boolean(href && (path === href || (!exact && path.startsWith(href + '/'))));
+  const Icon = item.icon;
+  const children = <>{Icon && <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />}{isOpen && <span className="truncate font-medium">{item.label}</span>}</>;
+  const classes = cn('flex min-w-0 flex-1 items-center gap-3 rounded-md p-2 text-sm transition-colors', !isOpen && 'justify-center', active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground');
+  return <div className="flex items-center gap-1" data-tour={dataTour ?? item.dataTour}>
+    {item.href ? <Link href={item.href} onClick={onClick} aria-label={item.label} aria-current={active ? 'page' : undefined} title={!isOpen ? item.label : undefined} className={classes}>{children}</Link>
+      : <button type="button" className={classes} aria-label={item.label} title={!isOpen ? item.label : undefined} aria-expanded={item.subItems?.length ? Boolean(isSubMenuOpen) : undefined} onClick={toggleSubMenu ?? onClick}>{children}</button>}
+    {isOpen && Boolean(item.subItems?.length) && item.href && <button type="button" className="rounded-md p-2 hover:bg-accent" aria-label={`Alternar ${item.label}`} aria-expanded={Boolean(isSubMenuOpen)} onClick={toggleSubMenu}><span aria-hidden="true">{isSubMenuOpen ? '▴' : '▾'}</span></button>}
+  </div>;
+}

@@ -81,3 +81,6 @@ export * from './functions/handleCopy.js';
 export * from './functions/openDownloadUrl.js';
 
 export * from './functions/table-values.js';
+export * from './components/sidebar.js';
+export * from './components/sidebarSection.js';
+export * from './components/sidebarNavItem.js';

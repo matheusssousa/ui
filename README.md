@@ -21,6 +21,7 @@ Biblioteca privada de componentes, hooks e funções utilitárias para projetos 
 - [Migração da versão 0.2](#migração-da-versão-02)
 - [Desenvolvimento e publicação](#desenvolvimento-e-publicação)
 - [Tipos de responses de actions e Laravel](#tipos-de-responses-de-actions-e-laravel)
+- [Sidebar](#sidebar)
 - [Referência completa da API](#referência-completa-da-api)
 
 <!-- TOC:END -->
@@ -583,9 +584,9 @@ As células têm aproximadamente 36 px no desktop, contorno de foco de 2 px, apr
 
 | Interação | Resultado |
 | --- | --- |
-| Clique | Seleciona a célula. |
+| Clique | Inicia a edição preservando o conteúdo; em selects, abre as opções. |
 | Digitação | Inicia edição substituindo o conteúdo. |
-| Duplo clique ou F2 | Edita preservando o conteúdo. |
+| F2 | Edita preservando o conteúdo. |
 | Setas com célula selecionada | Movem a seleção. Durante edição de texto, movem o cursor. |
 | Tab / Shift+Tab | Confirmam o rascunho e avançam/recuam; nas extremidades, saem da tabela. |
 | Enter / Shift+Enter | Confirmam o rascunho e descem/sobem na mesma coluna. |
@@ -997,6 +998,29 @@ Importe pela raiz ou por `@matheusssousa/ui/types/responses`.
 Uma action com `IndexActionResponse<Account>` retorna `{ success: true, data: page }`: a lista fica em `response.data?.data` e o total em `response.data?.total`. O envelope de feedback ? uma conven??o da aplica??o; Laravel n?o adiciona `success` automaticamente.
 
 Refer?ncias: [pagina??o](https://laravel.com/docs/12.x/pagination#converting-results-to-json) e [API Resources](https://laravel.com/docs/12.x/eloquent-resources#pagination).
+
+## Sidebar
+
+`Sidebar`, `SidebarSection` e `SidebarNavItem` são exportados pela raiz e por `components/sidebar`, `components/sidebarSection` e `components/sidebarNavItem`. Importe também `@matheusssousa/ui/styles.css` e mantenha a configuração Tailwind da biblioteca.
+
+```tsx
+import { Sidebar } from '@matheusssousa/ui';
+
+<Sidebar
+  sections={[{ title: 'Principal', items: [
+    { label: 'Início', href: '/', exact: true },
+    { label: 'Projetos', href: '/projects' },
+  ] }]}
+  header={open => open ? 'Meu sistema' : 'M'}
+  footer="v1.0"
+/>
+```
+
+Nenhuma seção ou rota de permissões é incluída automaticamente. `permission` nos itens e `can(permission)` na sidebar são opcionais: sem `can`, todos os itens configurados são exibidos. Com `can`, o filtro alcança os submenus; seções vazias são omitidas, e um pai com link próprio continua disponível quando seus filhos são filtrados. Use `loading` enquanto carrega as permissões.
+
+No Next.js, passe `linkComponent={Link}` e `pathname={usePathname()}` para navegação pelo router e atualização do item ativo. Sem router, os links são âncoras nativas. `exact` define correspondência exata; rotas internas também ativam o item pai por padrão.
+
+`isOpen` e `onOpenChange` controlam a abertura externamente; sem eles, use `defaultOpen`. O desktop alterna entre ícones e menu expandido. No mobile, o menu recolhido mantém o botão de abertura e fecha ao navegar. `SidebarSection` mantém as props `section`, `isOpen`, `onLinkClick`, `openSubMenus` e `toggleSubMenu`; os dois últimos são opcionais quando o estado é interno.
 
 <!-- API-REFERENCE:START -->
 ## Referência completa da API
@@ -1679,6 +1703,9 @@ export type CellEditorValue = string | number | undefined;
 export interface CellEditorBase<T = TableData> {
     placeholder?: string;
     disabled?: boolean;
+    required?: boolean;
+    /** Retorne campos dependentes a atualizar junto com este valor. */
+    onChange?: (value: unknown, draftRow: T) => Record<string, unknown> | void;
     /** Converte o rascunho antes de comparar, validar e salvar. */
     parse?: (value: CellEditorValue, row: T) => unknown;
     /** Retorne uma mensagem para impedir o salvamento. */
@@ -1687,6 +1714,13 @@ export interface CellEditorBase<T = TableData> {
 export type CellEditor<T = TableData> = CellEditorBase<T> & ({
     type: 'input';
     inputType?: 'text' | 'number' | 'email' | 'url' | 'tel' | 'password' | 'search';
+} | {
+    type: 'date';
+    min?: string;
+    max?: string;
+} | {
+    type: 'money';
+    currency?: string;
 } | {
     type: 'select';
     options: SelectOption[];
@@ -1710,6 +1744,40 @@ export interface RowSaveEvent<T = TableData> {
     previousValues: Record<string, unknown>;
     /** Snapshot completo com as alteracoes aplicadas. */
     updatedRow: T;
+}
+export type TableRowKey = string | number;
+export type TableFieldErrors = Record<string, string>;
+export interface TableEditingState {
+    dirtyRows: TableRowKey[];
+    savingRows: TableRowKey[];
+    errorRows: Array<{
+        rowKey: TableRowKey;
+        errors: TableFieldErrors;
+        error?: string;
+    }>;
+}
+export interface TableSaveResult {
+    rowKey: TableRowKey;
+    ok: boolean;
+    status: 'saved' | 'unchanged' | 'invalid' | 'error' | 'not-found' | 'readonly';
+    errors?: TableFieldErrors;
+    error?: string;
+}
+export interface TableEditingController {
+    saveRow(rowKey: TableRowKey): Promise<TableSaveResult>;
+    saveAll(): Promise<{
+        ok: boolean;
+        results: TableSaveResult[];
+    }>;
+    /** Retorna false se a linha estiver salvando ou nao existir. */
+    discardRow(rowKey: TableRowKey): boolean;
+    resetRow(rowKey: TableRowKey): boolean;
+    getEditingState(): TableEditingState;
+    focusCell(rowKey: TableRowKey, columnKey: string): boolean;
+    getDraftRow(rowKey: TableRowKey): TableData | undefined;
+    setDraftValue(rowKey: TableRowKey, columnKey: string, value: unknown): boolean;
+    patchDraft(rowKey: TableRowKey, changes: Record<string, unknown>): boolean;
+    validateRow(rowKey: TableRowKey): TableFieldErrors;
 }
 export interface TableData {
     [key: string]: any;
@@ -2707,6 +2775,95 @@ export { Separator };
 </details>
 
 <details>
+<summary><code>components/sidebar</code></summary>
+
+Fonte: [components/sidebar](src/components/sidebar.tsx).
+
+```ts
+import * as React from 'react';
+import { type SidebarSectionConfig } from './sidebarSection.js';
+export interface SidebarProps {
+    sections: SidebarSectionConfig[] | Record<string, SidebarSectionConfig>;
+    isOpen?: boolean;
+    defaultOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    onLinkClick?: () => void;
+    pathname?: string;
+    linkComponent?: React.ElementType;
+    can?: (permission: string) => boolean;
+    loading?: boolean;
+    header?: React.ReactNode | ((isOpen: boolean) => React.ReactNode);
+    footer?: React.ReactNode | ((isOpen: boolean) => React.ReactNode);
+    className?: string;
+    'aria-label'?: string;
+}
+/** Responsive sidebar with optional permission filtering and no application context dependency. */
+export declare function Sidebar({ sections, isOpen: controlledOpen, defaultOpen, onOpenChange, onLinkClick, pathname, linkComponent, can, loading, header, footer, className, 'aria-label': label }: SidebarProps): React.JSX.Element;
+```
+
+</details>
+
+<details>
+<summary><code>components/sidebarNavItem</code></summary>
+
+Fonte: [components/sidebarNavItem](src/components/sidebarNavItem.tsx).
+
+```ts
+import * as React from 'react';
+export interface SidebarItem {
+    icon?: React.ElementType;
+    label: string;
+    href?: string;
+    permission?: string;
+    subItems?: SidebarItem[];
+    exact?: boolean;
+    dataTour?: string;
+}
+export interface SidebarNavItemProps {
+    item: SidebarItem;
+    isOpen: boolean;
+    onClick?: () => void;
+    isSubMenuOpen?: boolean;
+    toggleSubMenu?: () => void;
+    dataTour?: string;
+    pathname?: string;
+    /** Pass Next.js Link or another router's anchor-compatible component. */
+    linkComponent?: React.ElementType;
+}
+export declare function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link }: SidebarNavItemProps): React.JSX.Element;
+```
+
+</details>
+
+<details>
+<summary><code>components/sidebarSection</code></summary>
+
+Fonte: [components/sidebarSection](src/components/sidebarSection.tsx).
+
+```ts
+import * as React from 'react';
+import { type SidebarItem } from './sidebarNavItem.js';
+export interface SidebarSectionConfig {
+    title: string;
+    items: SidebarItem[];
+}
+export interface SidebarSectionProps {
+    section: SidebarSectionConfig;
+    isOpen: boolean;
+    onLinkClick?: () => void;
+    openSubMenus?: string[];
+    toggleSubMenu?: (label: string) => void;
+    pathname?: string;
+    linkComponent?: React.ElementType;
+    /** Optional permission checker; omitted for systems without permissions. */
+    can?: (permission: string) => boolean;
+}
+export declare function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can }: SidebarSectionProps): React.JSX.Element | null;
+```
+
+</details>
+
+<details>
 <summary><code>components/skeleton</code></summary>
 
 Fonte: [components/skeleton](src/components/skeleton.tsx).
@@ -2946,11 +3103,11 @@ export { Switch };
 Fonte: [components/table](src/components/table.tsx).
 
 ```ts
-import type { TableData, Column, SortState, PaginationState, CellSaveEvent, RowSaveEvent } from './data-types.js';
+import type { TableData, Column, SortState, PaginationState, CellSaveEvent, RowSaveEvent, TableEditingController, TableEditingState, TableFieldErrors } from './data-types.js';
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const tableVariants: (props?: ({
-    variant?: "default" | "fixed" | "grid" | "outline" | "ghost" | "striped" | null | undefined;
+    variant?: "default" | "fixed" | "grid" | "outline" | "ghost" | "striped" | "spreadsheet" | null | undefined;
     size?: "default" | "sm" | "lg" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 /** Tabela com ordenação, seleção e paginação opcionais. */
@@ -2959,6 +3116,18 @@ export interface TableProps extends VariantProps<typeof tableVariants> {
     columns: Column[];
     /** Layout independente da aparência; variant=fixed permanece compatível. */
     layout?: 'auto' | 'fixed';
+    /** Interacao de planilha independente da variante visual. */
+    appearance?: 'default' | 'spreadsheet';
+    /** Mantem todos os campos acessiveis no celular. */
+    mobileLayout?: 'responsive' | 'scroll' | 'stacked';
+    stickyHeader?: boolean;
+    maxHeight?: number | string;
+    /** Nome acessivel da tabela ou grade. */
+    'aria-label'?: string;
+    /** Controle de edicao separado do ref HTML existente. */
+    editingRef?: React.Ref<TableEditingController>;
+    onEditingStateChange?: (state: TableEditingState) => void;
+    validateRow?: (draftRow: TableData) => TableFieldErrors;
     /** Rejeite a Promise para manter o rascunho e mostrar erro. */
     onCellSave?: (event: CellSaveEvent) => Promise<void>;
     /** Padrao cell; row salva ao sair da linha inteira. */
@@ -4074,6 +4243,21 @@ export declare function createServerFetch(config?: FetchClientOptions): <T>(url:
 </details>
 
 <details>
+<summary><code>functions/table-values</code></summary>
+
+Fonte: [functions/table-values](src/functions/table-values.ts).
+
+```ts
+/** Decimal monetario canonico como string, sem aritmetica de ponto flutuante. */
+export declare function parseTableMoney(value: unknown): string | undefined;
+export declare function formatTableMoney(value: unknown, currency?: string): string;
+export declare function parseTableDate(value: unknown): string | undefined;
+export declare function formatTableDate(value: unknown): string;
+```
+
+</details>
+
+<details>
 <summary><code>functions/utils</code></summary>
 
 Fonte: [functions/utils](src/functions/utils.ts).
@@ -4235,6 +4419,10 @@ export * from './components/switch-field.js';
 export * from './components/view-modal.js';
 export * from './functions/handleCopy.js';
 export * from './functions/openDownloadUrl.js';
+export * from './functions/table-values.js';
+export * from './components/sidebar.js';
+export * from './components/sidebarSection.js';
+export * from './components/sidebarNavItem.js';
 ```
 
 <!-- API-REFERENCE:END -->
