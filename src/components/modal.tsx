@@ -50,7 +50,7 @@ const modalContentVariants = cva(
 );
 
 type ButtonHeaderProps = {
-    text: string;
+    text?: string;
     onClick: () => void;
     icon?: React.ReactNode;
     variant?: VariantProps<typeof buttonVariants>['variant']; 

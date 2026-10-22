@@ -29,7 +29,7 @@ const buttonVariants = cva(
                 danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
                 gradient: 'bg-gradient-to-b from-primary to-secondary text-white hover:from-secondary hover:to-primary dark:font-semibold',
                 icon: 'p-3 rounded-xl bg-transparent border-2 border-border/30 text-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg w-auto h-auto',
-                iconSoft: 'p-2 rounded-full text-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg',
+                iconSoft: 'p-2 rounded-full bg-background/20! text-foreground transition-all duration-300 hover:scale-11',
                 edited: 'bg-warning text-warning-foreground hover:bg-warning/90',
                 deleted: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
                 restored: 'bg-success text-success-foreground hover:bg-success/90',
@@ -145,47 +145,47 @@ const buttonVariants = cva(
             {
                 variant: 'iconSoft',
                 color: 'default',
-                className: 'bg-background/10! hover:text-primary hover:bg-primary/10',
+                className: 'hover:text-primary hover:bg-primary/20',
             },
             {
                 variant: 'iconSoft',
                 color: 'blue',
-                className: 'bg-background/10! text-info! hover:bg-info/10!',
+                className: 'text-info! hover:bg-info/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'red',
-                className: 'bg-background/10! text-destructive! hover:bg-destructive/10!',
+                className: 'text-destructive! hover:bg-destructive/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'green',
-                className: 'bg-background/10! text-success! hover:bg-success/10!',
+                className: 'text-success! hover:bg-success/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'amber',
-                className: 'bg-background/10! text-warning! hover:bg-warning/10!',
+                className: 'text-warning! hover:bg-warning/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'purple',
-                className: 'bg-background/10! text-violet! hover:bg-violet/10!',
+                className: 'text-violet! hover:bg-violet/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'orange',
-                className: 'bg-background/10! text-orange! hover:bg-orange/10!',
+                className: 'text-orange! hover:bg-orange/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'card',
-                className: 'bg-background/10! text-card-foreground! hover:bg-card/10!',
+                className: 'text-card-foreground! hover:bg-card/10!',
             },
             {
                 variant: 'iconSoft',
                 color: 'dark',
-                className: 'bg-background/10! text-foreground! hover:bg-background/10!',
+                className: 'text-foreground! hover:bg-background/10!',
             },
             // Fast Action variant overrides
             {
