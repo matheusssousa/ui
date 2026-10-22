@@ -6,8 +6,8 @@ import { cn } from '../utils.js';
 import dynamic from 'next/dynamic.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toneScopeStyle, type UIColor } from './theme.js';
+import { buttonVariants } from './button.js';
 
-// Supondo que seu Button aceite uma prop `isLoading`
 const Button = dynamic(() => import('./button.js').then(mod => mod.Button), { ssr: false });
 const XIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.XIcon), { ssr: false });
 
@@ -49,49 +49,42 @@ const modalContentVariants = cva(
     }
 );
 
-// --- 1. PROPS ATUALIZADAS ---
+type ButtonHeaderProps = {
+    text: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    variant?: VariantProps<typeof buttonVariants>['variant']; 
+}
+
 export type ModalProps = React.PropsWithChildren<
     VariantProps<typeof modalOverlayVariants> &
     VariantProps<typeof modalContentVariants> & {
-        /** Tone do destaque do cabeçalho e dos botões; padrão `primary`. */
-        color?: UIColor;
-        /** Título do diálogo. */
-        title?: string;
-        /** Texto abaixo do título. */
-        description?: string;
-        /** URL da imagem de fundo do cabeçalho; usa recorte central e altura mínima de 120 px. */
-        headerBackgroundImage?: string;
-        /** Controla a abertura do diálogo. */
-        isOpen: boolean;
-        /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */
-        onClose: () => void;
-        /** Chamado ao confirmar. */
-        onConfirm?: () => void;
-        /** Chamado ao cancelar; usa `onClose` quando omitido. */
-        onCancel?: () => void;
-        /** Texto do botão de confirmação. */
-        confirmText?: string;
-        /** Texto do botão de cancelamento. */
-        cancelText?: string;
-        /** Ícone do botão de confirmação. */
-        confirmIcon?: React.ReactNode;
-        /** Ícone do botão de cancelamento. */
-        cancelIcon?: React.ReactNode;
+        color?: UIColor; // Cor do modal, usando o tipo UIColor do seu tema
+        title?: string; // Título do modal
+        description?: string; // Descrição do modal
+        headerBackgroundImage?: string; // URL da imagem de fundo do cabeçalho
+        isOpen: boolean; // Indica se o modal está aberto ou fechado
+        onClose: () => void; // Função chamada quando o modal deve ser fechado
+        onConfirm?: () => void; // Função chamada quando o botão de confirmar é clicado
+        onCancel?: () => void; // Função chamada quando o botão de cancelar é clicado
+        confirmText?: string; // Texto do botão de confirmar, com valor padrão "Confirmar"
+        cancelText?: string; // Texto do botão de cancelar, com valor padrão "Cancelar"
+        confirmIcon?: React.ReactNode; // Ícone do botão de confirmar
+        cancelIcon?: React.ReactNode; // Ícone do botão de cancelar
         confirmButtonVariant?: any; // Idealmente, importe o tipo de variante do seu botão
+        cancelButtonVariant?: any; // Idealmente, importe o tipo de variante do seu botão
         isConfirming?: boolean; // Para o estado de carregamento
         submitButton?: boolean; // Nova prop para indicar se o botão de confirmar é do tipo submit
         disabled?: boolean; // Para desabilitar o botão de confirmar
         loading?: boolean; // Para mostrar loading no botão
-        hideFooter?: boolean;
+        hideFooter?: boolean; // Para esconder o rodapé do modal, incluindo os botões
         hideConfirm?: boolean; // Para esconder apenas o botão de confirmar
         hideCancel?: boolean; // Para esconder apenas o botão de cancelar
         hideCloseIcon?: boolean; // Para esconder o ícone de fechar no canto superior direito
-        /** Quando muda, volta o conteúdo rolável ao início. */
-        resetScrollKey?: React.Key;
-        /** Classes adicionais para o conteúdo do diálogo. */
-        className?: string;
-        /** Estilos adicionais para o fundo do diálogo. */
-        style?: React.CSSProperties;
+        buttonsHeader?: ButtonHeaderProps[];
+        resetScrollKey?: React.Key; // Para resetar a rolagem do conteúdo do modal quando essa chave mudar
+        className?: string; // Para adicionar classes personalizadas ao modal
+        style?: React.CSSProperties; // Para adicionar estilos inline personalizados ao modal
     }>;
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
@@ -107,12 +100,12 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         children,
         onConfirm,
         onCancel,
-        // --- 2. VALORES PADRÃO PARA AS NOVAS PROPS ---
         confirmText = 'Confirmar',
         cancelText = 'Cancelar',
         confirmIcon = undefined,
         cancelIcon = undefined,
         confirmButtonVariant = 'filled',
+        cancelButtonVariant = 'outlined',
         isConfirming = false,
         submitButton = false,
         disabled = false,
@@ -121,6 +114,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         hideConfirm = false,
         hideCancel = false,
         hideCloseIcon = false,
+        buttonsHeader = [],
         resetScrollKey,
         className,
         style,
@@ -183,17 +177,33 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                     <h2 className={cn('text-lg font-semibold', hasHeaderImage ? 'text-white' : 'text-foreground')}>{title}</h2>
                                     {description && <p className={cn('text-xs', hasHeaderImage ? 'text-white/80' : 'text-muted-foreground')}>{description}</p>}
                                 </div>
-                                {!hideCloseIcon && (
-                                    <Button
-                                        variant={'text'}
-                                        color={color}
-                                        onClick={handleClose}
-                                        leftIcon={<XIcon size={20} />}
-                                        className={cn('w-fit p-0', hasHeaderImage ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
-                                        disabled={isConfirming}
-                                        fullWidth={false}
-                                    />
-                                )}
+                                <div className={cn('flex items-center justify-end gap-2', hasHeaderImage && 'shrink-0')}>
+                                    {buttonsHeader?.map((button, index) => (
+                                        <Button
+                                            key={index}
+                                            variant={button.variant || 'filled'}
+                                            color={color}
+                                            onClick={button.onClick}
+                                            leftIcon={button.icon}
+                                            className={cn(hasHeaderImage ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
+                                            disabled={isConfirming}
+                                            fullWidth={false}
+                                        >
+                                            {button.text}
+                                        </Button>
+                                    ))}
+                                    {!hideCloseIcon && (
+                                        <Button
+                                            variant={'icon'}
+                                            color={color}
+                                            onClick={handleClose}
+                                            leftIcon={<XIcon size={20} />}
+                                            className={cn(hasHeaderImage ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
+                                            disabled={isConfirming}
+                                            fullWidth={false}
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             <div
@@ -203,7 +213,6 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                 {children}
                             </div>
 
-                            {/* --- 3. BOTÕES AGORA SÃO DINÂMICOS --- */}
                             {!hideFooter && (
                                 <div className={cn(
                                     'sticky bottom-0 z-10 flex justify-end space-x-2 bg-card',
@@ -213,15 +222,15 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                 )}>
                                     {!hideCancel && (
                                         <Button
-                                        type="button"
-                                        variant="outlined"
-                                        color={color}
-                                        onClick={handleCancel}
-                                        disabled={isConfirming || loading}
-                                        leftIcon={cancelIcon}
-                                    >
-                                        {cancelText}
-                                    </Button>
+                                            type="button"
+                                            variant={cancelButtonVariant}
+                                            color={color}
+                                            onClick={handleCancel}
+                                            disabled={isConfirming || loading}
+                                            leftIcon={cancelIcon}
+                                        >
+                                            {cancelText}
+                                        </Button>
                                     )}
                                     {!hideConfirm && (onConfirm || submitButton) && (
                                         <Button
