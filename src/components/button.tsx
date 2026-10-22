@@ -29,7 +29,7 @@ const buttonVariants = cva(
                 danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
                 gradient: 'bg-gradient-to-b from-primary to-secondary text-white hover:from-secondary hover:to-primary dark:font-semibold',
                 icon: 'p-3 rounded-xl bg-transparent border-2 border-border/30 text-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg w-auto h-auto',
-                iconSoft: 'p-2 rounded-full bg-background/20! text-foreground transition-all duration-300 hover:scale-11',
+                iconSoft: 'p-2 rounded-full bg-background/20! text-foreground transition-all duration-300 hover:scale-110',
                 edited: 'bg-warning text-warning-foreground hover:bg-warning/90',
                 deleted: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
                 restored: 'bg-success text-success-foreground hover:bg-success/90',
