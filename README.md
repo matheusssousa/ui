@@ -1004,14 +1004,18 @@ Refer?ncias: [pagina??o](https://laravel.com/docs/12.x/pagination#converting-res
 `Sidebar`, `SidebarSection` e `SidebarNavItem` são exportados pela raiz e por `components/sidebar`, `components/sidebarSection` e `components/sidebarNavItem`. Importe também `@matheusssousa/ui/styles.css` e mantenha a configuração Tailwind da biblioteca.
 
 ```tsx
-import { Sidebar } from '@matheusssousa/ui';
+import { Sidebar, Search } from '@matheusssousa/ui';
 
 <Sidebar
   sections={[{ title: 'Principal', items: [
     { label: 'Início', href: '/', exact: true },
     { label: 'Projetos', href: '/projects' },
   ] }]}
-  header={open => open ? 'Meu sistema' : 'M'}
+  logo={<img src="/logo.svg" alt="Logo" />}
+  name="Meu sistema"
+  search={open => open ? <Search color="secondary" onSearch={buscar} /> : <button onClick={abrirBusca} aria-label="Search">S</button>}
+  notifications={open => <button onClick={abrirNotificacoes} aria-label="Notifications">{open ? 'Notifications' : 'N'}</button>}
+  color="secondary"
   footer="v1.0"
 />
 ```
@@ -1021,6 +1025,8 @@ Nenhuma seção ou rota de permissões é incluída automaticamente. `permission
 No Next.js, passe `linkComponent={Link}` e `pathname={usePathname()}` para navegação pelo router e atualização do item ativo. Sem router, os links são âncoras nativas. `exact` define correspondência exata; rotas internas também ativam o item pai por padrão.
 
 `isOpen` e `onOpenChange` controlam a abertura externamente; sem eles, use `defaultOpen`. O desktop alterna entre ícones e menu expandido. No mobile, o menu recolhido mantém o botão de abertura e fecha ao navegar. `SidebarSection` mantém as props `section`, `isOpen`, `onLinkClick`, `openSubMenus` e `toggleSubMenu`; os dois últimos são opcionais quando o estado é interno.
+
+`logo` permanece visivel ao recolher; `name` aparece apenas ao expandir. `search` fica acima da navegacao e `notifications` no final, abaixo do rodape. Esses slots aceitam componentes ou funcoes `(isOpen) => ReactNode`; conecte as acoes de busca e notificacoes da aplicacao. `color` aceita as cores `UIColor` e usa `secondary` por padrao nos itens ativos e no hover, incluindo submenus. Use `hover={false}` para desativar o efeito. `header` e `footer` continuam disponiveis.
 
 <!-- API-REFERENCE:START -->
 ## Referência completa da API
@@ -2781,7 +2787,9 @@ Fonte: [components/sidebar](src/components/sidebar.tsx).
 
 ```ts
 import * as React from 'react';
+import { type UIColor } from './theme.js';
 import { type SidebarSectionConfig } from './sidebarSection.js';
+export type SidebarSlot = React.ReactNode | ((isOpen: boolean) => React.ReactNode);
 export interface SidebarProps {
     sections: SidebarSectionConfig[] | Record<string, SidebarSectionConfig>;
     isOpen?: boolean;
@@ -2792,13 +2800,25 @@ export interface SidebarProps {
     linkComponent?: React.ElementType;
     can?: (permission: string) => boolean;
     loading?: boolean;
-    header?: React.ReactNode | ((isOpen: boolean) => React.ReactNode);
-    footer?: React.ReactNode | ((isOpen: boolean) => React.ReactNode);
+    /** Logo visible in both expanded and collapsed states. */
+    logo?: SidebarSlot;
+    /** Brand name visible only when expanded. */
+    name?: React.ReactNode;
+    /** Search above navigation. Render functions can supply a collapsed control. */
+    search?: SidebarSlot;
+    /** Notifications anchored below navigation and footer. */
+    notifications?: SidebarSlot;
+    /** Active item and hover tone. @default 'secondary' */
+    color?: UIColor;
+    /** Enable hover backgrounds. @default true */
+    hover?: boolean;
+    header?: SidebarSlot;
+    footer?: SidebarSlot;
     className?: string;
     'aria-label'?: string;
 }
 /** Responsive sidebar with optional permission filtering and no application context dependency. */
-export declare function Sidebar({ sections, isOpen: controlledOpen, defaultOpen, onOpenChange, onLinkClick, pathname, linkComponent, can, loading, header, footer, className, 'aria-label': label }: SidebarProps): React.JSX.Element;
+export declare function Sidebar({ sections, isOpen: controlledOpen, defaultOpen, onOpenChange, onLinkClick, pathname, linkComponent, can, loading, logo, name, search, notifications, color, hover, header, footer, className, 'aria-label': label }: SidebarProps): React.JSX.Element;
 ```
 
 </details>
@@ -2810,6 +2830,7 @@ Fonte: [components/sidebarNavItem](src/components/sidebarNavItem.tsx).
 
 ```ts
 import * as React from 'react';
+import { type UIColor } from './theme.js';
 export interface SidebarItem {
     icon?: React.ElementType;
     label: string;
@@ -2822,6 +2843,8 @@ export interface SidebarItem {
 export interface SidebarNavItemProps {
     item: SidebarItem;
     isOpen: boolean;
+    color?: UIColor;
+    hover?: boolean;
     onClick?: () => void;
     isSubMenuOpen?: boolean;
     toggleSubMenu?: () => void;
@@ -2830,7 +2853,7 @@ export interface SidebarNavItemProps {
     /** Pass Next.js Link or another router's anchor-compatible component. */
     linkComponent?: React.ElementType;
 }
-export declare function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link }: SidebarNavItemProps): React.JSX.Element;
+export declare function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link, color, hover }: SidebarNavItemProps): React.JSX.Element;
 ```
 
 </details>
@@ -2842,6 +2865,7 @@ Fonte: [components/sidebarSection](src/components/sidebarSection.tsx).
 
 ```ts
 import * as React from 'react';
+import { type UIColor } from './theme.js';
 import { type SidebarItem } from './sidebarNavItem.js';
 export interface SidebarSectionConfig {
     title: string;
@@ -2850,6 +2874,8 @@ export interface SidebarSectionConfig {
 export interface SidebarSectionProps {
     section: SidebarSectionConfig;
     isOpen: boolean;
+    color?: UIColor;
+    hover?: boolean;
     onLinkClick?: () => void;
     openSubMenus?: string[];
     toggleSubMenu?: (label: string) => void;
@@ -2858,7 +2884,7 @@ export interface SidebarSectionProps {
     /** Optional permission checker; omitted for systems without permissions. */
     can?: (permission: string) => boolean;
 }
-export declare function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can }: SidebarSectionProps): React.JSX.Element | null;
+export declare function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can, color, hover }: SidebarSectionProps): React.JSX.Element | null;
 ```
 
 </details>
