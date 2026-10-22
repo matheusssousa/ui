@@ -194,7 +194,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                     ))}
                                     {!hideCloseIcon && (
                                         <Button
-                                            variant={'icon'}
+                                            variant={'iconSoft'}
                                             color={color}
                                             onClick={handleClose}
                                             leftIcon={<XIcon size={20} />}
