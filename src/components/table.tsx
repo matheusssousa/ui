@@ -26,13 +26,13 @@ const tableVariants = cva(
   {
     variants: {
       variant: {
-        default: '',
+        default: 'ui-table-finance',
         ghost: 'bg-transparent',
         striped: '[&_tbody_tr:nth-child(even)]:bg-muted/20',
         outline: '[&_thead]:bg-muted/30 [&_tbody_tr:not(:last-child)]:border-b [&_tbody_tr]:border-border/60',
         grid: '[&_th]:border [&_td]:border [&_th]:border-border/60 [&_td]:border-border/60 [&_thead]:bg-muted/30',
         fixed: 'table-fixed',
-        spreadsheet: '[&_th]:border [&_td]:border [&_th]:border-border/60 [&_td]:border-border/60 [&_thead]:bg-muted/30',
+        spreadsheet: 'ui-table-finance',
       },
       size: {
         sm: 'text-xs [&_th]:px-2 [&_th]:py-2 [&_td]:px-2 [&_td]:py-1',
@@ -158,6 +158,15 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     ...props
   }, ref) => {
     const spreadsheet = appearance === 'spreadsheet' || variant === 'spreadsheet';
+    // Relative column units share the space left after explicit CSS widths.
+    const columnUnits = columns.map(column => typeof column.width === 'string' ? /^([1-9]\d*)-col$/.exec(column.width) : null);
+    const hasColumnUnits = columnUnits.some(Boolean);
+    const totalUnits = columns.reduce((total, column, index) => total + (columnUnits[index] ? Number(columnUnits[index]![1]) : column.width == null ? 1 : 0), 0);
+    const reservedWidths = columns.flatMap((column, index) => column.width != null && !columnUnits[index] ? [typeof column.width === 'number' ? `${column.width}px` : column.width] : []);
+    if (selectable && hasColumnUnits) reservedWidths.push('48px');
+    const columnWidths = columns.map((column, index) => hasColumnUnits && (columnUnits[index] || column.width == null)
+      ? `calc((100%${reservedWidths.map(width => ` - ${width}`).join('')}) * ${columnUnits[index] ? Number(columnUnits[index]![1]) : 1} / ${totalUnits})`
+      : column.width);
     const effectiveMobileLayout = mobileLayout ?? 'scroll';
     const tableId = React.useId();
     const store = React.useMemo(() => new TableEditingStore({ columns, rowKey, saveMode, onCellSave, onRowSave, validateRow: rowValidator }, data), [rowKey]);
@@ -276,14 +285,14 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
         {renderBulkActions && selectedRows.length > 0 && (
           renderBulkActions(selectedRows, handleClearSelection)
         )}
-        <div style={{ maxHeight: maxHeight ?? (spreadsheet ? 480 : undefined) }} className={cn('min-w-0 max-w-full rounded-lg', (variant === 'outline' || variant === 'grid' || variant === 'spreadsheet') && 'border border-border/60', (responsive || spreadsheet || maxHeight !== undefined) && 'overflow-auto', scrollClassName)}>
-          <table ref={ref} data-variant={variant ?? 'default'} role={spreadsheet ? 'grid' : undefined} aria-label={spreadsheet ? 'Tabela editavel' : undefined} aria-rowcount={spreadsheet ? data.length + 1 : undefined} aria-colcount={spreadsheet ? columns.length + (selectable ? 1 : 0) : undefined} className={cn(tableVariants({ variant, size }), spreadsheet && 'ui-spreadsheet', (stickyHeader ?? spreadsheet) && 'ui-table-sticky', effectiveMobileLayout === 'stacked' && 'ui-table-stacked', (layout ?? (variant === 'fixed' ? 'fixed' : 'auto')) === 'fixed' ? 'table-fixed' : 'table-auto', className)} {...props}>
+        <div style={{ maxHeight: maxHeight ?? (spreadsheet ? 480 : undefined) }} className={cn('min-w-0 max-w-full rounded-lg', (variant === 'outline' || variant === 'grid') && 'border border-border/60', (responsive || spreadsheet || maxHeight !== undefined) && 'overflow-auto', scrollClassName)}>
+          <table ref={ref} data-variant={variant ?? 'default'} role={spreadsheet ? 'grid' : undefined} aria-label={spreadsheet ? 'Tabela editavel' : undefined} aria-rowcount={spreadsheet ? data.length + 1 : undefined} aria-colcount={spreadsheet ? columns.length + (selectable ? 1 : 0) : undefined} className={cn(tableVariants({ variant, size }), spreadsheet && 'ui-spreadsheet', (stickyHeader ?? spreadsheet) && 'ui-table-sticky', effectiveMobileLayout === 'stacked' && 'ui-table-stacked', (layout ?? (variant === 'fixed' || hasColumnUnits ? 'fixed' : 'auto')) === 'fixed' ? 'table-fixed' : 'table-auto', className)} {...props}>
             {caption && <caption className="p-3 text-left text-sm text-muted-foreground">{caption}</caption>}
             <thead className={headerClassName} role={spreadsheet ? 'rowgroup' : undefined}>
               <tr>
                 {selectable && (
                   <th scope="col" role={spreadsheet ? 'columnheader' : undefined} aria-colindex={spreadsheet ? 1 : undefined} className={cn(
-                    "h-10 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
+                    "w-12 h-10 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
                     "hidden md:table-cell",
                     selectedRows.length > 0 && "!table-cell"
                   )}>
@@ -315,7 +324,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                       sortable && column.sortable && 'cursor-pointer select-none hover:text-foreground',
                       responsive && effectiveMobileLayout === 'responsive' && index >= limitColumnsShow && 'hidden md:table-cell'
                     )}
-                    style={{ width: column.width }}
+                    style={{ width: columnWidths[index] }}
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
                     <div className={cn('flex items-center gap-1 whitespace-nowrap', column.align === 'right' && 'justify-end', column.align === 'center' && 'justify-center')}>
@@ -376,7 +385,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                         </td>
                       )}
                       {columns.map((column, index) => (
-                        <EditableCell key={column.key} rowId={row[rowKey] ?? rowIndex} column={column} rowIndex={rowIndex} columnIndex={index}
+                        <EditableCell key={column.key} rowId={row[rowKey] ?? rowIndex} column={{ ...column, width: columnWidths[index] }} rowIndex={rowIndex} columnIndex={index}
                           className={cn(column.className,
                             column.align === 'center' && 'text-center', column.align === 'right' && 'text-right', column.align === 'left' && 'text-left',
                             responsive && effectiveMobileLayout === 'responsive' && index >= limitColumnsShow && 'hidden md:table-cell')}

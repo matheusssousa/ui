@@ -1314,7 +1314,7 @@ Fonte: [components/button](src/components/button.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const buttonVariants: (props?: ({
-    variant?: "text" | "filled" | "icon" | "success" | "warning" | "danger" | "deleted" | "gradient" | "soft" | "ghost" | "outlined" | "edited" | "restored" | "linkSettings" | "fastAction" | null | undefined;
+    variant?: "text" | "filled" | "icon" | "success" | "warning" | "danger" | "deleted" | "gradient" | "soft" | "ghost" | "outlined" | "iconSoft" | "edited" | "restored" | "linkSettings" | "fastAction" | null | undefined;
     color?: "default" | "dark" | "blue" | "cyan" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | "amber" | "card" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | "icon" | "xs" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -1705,8 +1705,11 @@ Fonte: [components/data-types](src/components/data-types.ts).
 import type * as React from 'react';
 import type { UIColor } from './theme.js';
 import type { SelectOption } from './select.js';
+import type { InputProps } from './input.js';
 export type CellEditorValue = string | number | undefined;
 export interface CellEditorBase<T = TableData> {
+    /** Personaliza o Input preservando o valor e o salvamento da tabela. */
+    inputProps?: Omit<InputProps, 'value' | 'defaultValue' | 'onChange' | 'onValueChange' | 'type' | 'disabled'>;
     placeholder?: string;
     disabled?: boolean;
     required?: boolean;
@@ -1795,8 +1798,9 @@ export interface Column<T = any> {
     render?: (value: any, row: T, index: number) => React.ReactNode;
     /** Editor fixo ou definido individualmente por linha. */
     editor?: CellEditor<T> | ((row: T, index: number) => CellEditor<T> | false);
-    className?: string;
+    /** Largura CSS, pixels ou proporcoes como 2-col e 3-col (Table). */
     width?: string | number;
+    className?: string;
     align?: 'left' | 'center' | 'right';
 }
 export interface SortState {
@@ -2351,6 +2355,7 @@ Fonte: [components/modal](src/components/modal.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
+import { buttonVariants } from './button.js';
 declare const modalOverlayVariants: (props?: ({
     isOpen?: boolean | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -2358,32 +2363,27 @@ declare const modalContentVariants: (props?: ({
     size?: "sm" | "md" | "lg" | "xl" | "full" | null | undefined;
     variant?: "default" | "customer" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
+type ButtonHeaderProps = {
+    text?: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    variant?: VariantProps<typeof buttonVariants>['variant'];
+};
 export type ModalProps = React.PropsWithChildren<VariantProps<typeof modalOverlayVariants> & VariantProps<typeof modalContentVariants> & {
-    /** Tone do destaque do cabeçalho e dos botões; padrão `primary`. */
     color?: UIColor;
-    /** Título do diálogo. */
     title?: string;
-    /** Texto abaixo do título. */
     description?: string;
-    /** URL da imagem de fundo do cabeçalho; usa recorte central e altura mínima de 120 px. */
     headerBackgroundImage?: string;
-    /** Controla a abertura do diálogo. */
     isOpen: boolean;
-    /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */
     onClose: () => void;
-    /** Chamado ao confirmar. */
     onConfirm?: () => void;
-    /** Chamado ao cancelar; usa `onClose` quando omitido. */
     onCancel?: () => void;
-    /** Texto do botão de confirmação. */
     confirmText?: string;
-    /** Texto do botão de cancelamento. */
     cancelText?: string;
-    /** Ícone do botão de confirmação. */
     confirmIcon?: React.ReactNode;
-    /** Ícone do botão de cancelamento. */
     cancelIcon?: React.ReactNode;
     confirmButtonVariant?: any;
+    cancelButtonVariant?: any;
     isConfirming?: boolean;
     submitButton?: boolean;
     disabled?: boolean;
@@ -2392,11 +2392,9 @@ export type ModalProps = React.PropsWithChildren<VariantProps<typeof modalOverla
     hideConfirm?: boolean;
     hideCancel?: boolean;
     hideCloseIcon?: boolean;
-    /** Quando muda, volta o conteúdo rolável ao início. */
+    buttonsHeader?: ButtonHeaderProps[];
     resetScrollKey?: React.Key;
-    /** Classes adicionais para o conteúdo do diálogo. */
     className?: string;
-    /** Estilos adicionais para o fundo do diálogo. */
     style?: React.CSSProperties;
 }>;
 declare const Modal: React.ForwardRefExoticComponent<VariantProps<(props?: ({
@@ -2405,31 +2403,20 @@ declare const Modal: React.ForwardRefExoticComponent<VariantProps<(props?: ({
     size?: "sm" | "md" | "lg" | "xl" | "full" | null | undefined;
     variant?: "default" | "customer" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string> & {
-    /** Tone do destaque do cabeçalho e dos botões; padrão `primary`. */
     color?: UIColor;
-    /** Título do diálogo. */
     title?: string;
-    /** Texto abaixo do título. */
     description?: string;
-    /** URL da imagem de fundo do cabeçalho; usa recorte central e altura mínima de 120 px. */
     headerBackgroundImage?: string;
-    /** Controla a abertura do diálogo. */
     isOpen: boolean;
-    /** Chamado ao fechar pelo botão, pelo fundo ou pela tecla Escape. */
     onClose: () => void;
-    /** Chamado ao confirmar. */
     onConfirm?: () => void;
-    /** Chamado ao cancelar; usa `onClose` quando omitido. */
     onCancel?: () => void;
-    /** Texto do botão de confirmação. */
     confirmText?: string;
-    /** Texto do botão de cancelamento. */
     cancelText?: string;
-    /** Ícone do botão de confirmação. */
     confirmIcon?: React.ReactNode;
-    /** Ícone do botão de cancelamento. */
     cancelIcon?: React.ReactNode;
     confirmButtonVariant?: any;
+    cancelButtonVariant?: any;
     isConfirming?: boolean;
     submitButton?: boolean;
     disabled?: boolean;
@@ -2438,11 +2425,9 @@ declare const Modal: React.ForwardRefExoticComponent<VariantProps<(props?: ({
     hideConfirm?: boolean;
     hideCancel?: boolean;
     hideCloseIcon?: boolean;
-    /** Quando muda, volta o conteúdo rolável ao início. */
+    buttonsHeader?: ButtonHeaderProps[];
     resetScrollKey?: React.Key;
-    /** Classes adicionais para o conteúdo do diálogo. */
     className?: string;
-    /** Estilos adicionais para o fundo do diálogo. */
     style?: React.CSSProperties;
 } & {
     children?: React.ReactNode | undefined;
@@ -3168,6 +3153,13 @@ export interface TableProps extends VariantProps<typeof tableVariants> {
     emptyMessage?: string;
     /** Classe do contêiner. */
     className?: string;
+    /** Classes da raiz e da área rolável, independentes da tabela. */
+    containerClassName?: string;
+    scrollClassName?: string;
+    headerClassName?: string;
+    rowClassName?: string | ((row: TableData, index: number) => string);
+    /** Legenda visível e acessível. */
+    caption?: React.ReactNode;
     /** Habilita ordenação pelos cabeçalhos. */
     sortable?: boolean;
     /** Coluna e direção de ordenação atuais. */
@@ -4460,3 +4452,5 @@ O padrão é `mobileLayout="scroll"`, com todas as colunas acessíveis. Use `mob
 `containerClassName`, `scrollClassName`, `headerClassName` e `rowClassName` personalizam cada área; `rowClassName` também aceita `(row, index) => string`. `caption` adiciona uma legenda. Combine com `variant`, `size`, `layout`, `stickyHeader`, `maxHeight` e `columns[].className/width/align`.
 
 Os editores de texto, número, moeda e data usam `Input`; seleção usa `Select`. `editor.inputProps` permite configurar máscara, ícones, variante e atributos do campo, preservando o controle de valor e salvamento da tabela. O editor monetário mantém strings decimais exatas.
+
+As tabelas normal e spreadsheet usam cabe?alho arredondado com a cor primary do tema, campos com fundo discreto e divisores tracejados. Em `columns[].width`, use `"2-col"` e `"3-col"` para larguras proporcionais (2:3). Colunas sem largura recebem uma unidade; larguras CSS e n?meros em pixels continuam aceitos e s?o reservados antes da distribui??o. Unidades proporcionais ativam layout fixo por padr?o.

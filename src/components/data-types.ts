@@ -76,7 +76,9 @@ export interface Column<T = any> {
   render?: (value: any, row: T, index: number) => React.ReactNode;
   /** Editor fixo ou definido individualmente por linha. */
   editor?: CellEditor<T> | ((row: T, index: number) => CellEditor<T> | false);
-  className?: string; width?: string | number; align?: 'left' | 'center' | 'right';
+  /** Largura CSS, pixels ou proporcoes como 2-col e 3-col (Table). */
+  width?: string | number;
+  className?: string; align?: 'left' | 'center' | 'right';
 }
 export interface SortState { column: string | null; direction: 'asc' | 'desc' | null }
 export interface PaginationState { currentPage: number; totalPages: number; totalItems: number; itemsPerPage: number }

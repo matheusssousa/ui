@@ -245,6 +245,21 @@
 .ui-sheet-status button { min-width: 14px; font-weight: bold; }
 .ui-table-sticky thead th { position: sticky; top: 0; z-index: 3; background: var(--card); }
 .ui-table-mobile-label { display: none; }
+/* Shared appearance for normal tables and spreadsheets. */
+.ui-table-finance { border-collapse: separate; border-spacing: 0; }
+.ui-table-finance > thead { color: var(--primary-foreground); }
+.ui-table-finance > thead th { background: var(--primary); color: inherit; height: 44px; font-size: inherit; }
+.ui-table-finance > thead th:first-child { border-radius: 8px 0 0 8px; }
+.ui-table-finance > thead th:last-child { border-radius: 0 8px 8px 0; }
+.ui-table-finance > thead th:only-child { border-radius: 8px; }
+.ui-table-finance.ui-table-sticky > thead th { background: var(--primary); }
+.ui-table-finance > tbody > tr > td { border-bottom: 1px dashed color-mix(in srgb, var(--primary) 55%, transparent); }
+.ui-table-finance.ui-spreadsheet td.ui-sheet-cell { padding: 8px !important; }
+.ui-table-finance [data-table-cell]:not([data-readonly]) > .relative { border-radius: 6px; background: var(--muted); }
+.ui-table-finance.ui-spreadsheet .ui-sheet-cell[data-readonly] { background: transparent; }
+.ui-table-finance.ui-spreadsheet .ui-sheet-cell input,
+.ui-table-finance.ui-spreadsheet .ui-sheet-cell [role="combobox"] { border-radius: 6px !important; }
+.ui-table-finance.ui-spreadsheet .ui-sheet-cell [role="combobox"] > div:last-child { opacity: 1; }
 @media (max-width: 767px) {
   .ui-table-stacked, .ui-table-stacked tbody { display: block; width: 100%; }
   .ui-table-stacked thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

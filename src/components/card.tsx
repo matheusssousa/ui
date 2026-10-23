@@ -36,7 +36,7 @@ const cardVariants = cva(
         default: 'shadow-sm',
         outlined: 'border-input shadow-none',
         filled: 'border-transparent bg-muted text-foreground',
-        minimal: 'border-transparent bg-transparent shadow-none',
+        minimal: 'bg-transparent shadow-none',
         elevated: 'border-border/60 shadow-lg shadow-black/5 dark:shadow-black/20',
         glass: 'border-white/15 bg-card/75 shadow-lg backdrop-blur-xl',
         gradient: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card',

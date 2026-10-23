@@ -418,3 +418,23 @@ test('date picker fits narrow viewports, respects bounds and returns focus on Es
   }
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: previousWidth });
 });
+
+
+test('relative widths align headers and cells while preserving explicit widths', async () => {
+  const ui = await mount({ columns: [
+    { key: 'a', label: 'A', width: '2-col' },
+    { key: 'b', label: 'B', width: '3-col' },
+    { key: 'c', label: 'C', width: 80 },
+  ], data: [{ id: 1, a: 'A', b: 'B', c: 'C' }] });
+  try {
+    assert.ok(ui.container.querySelector('table').classList.contains('table-fixed'));
+    const headers = ui.container.querySelectorAll('th');
+    const cells = ui.container.querySelectorAll('[data-table-cell]');
+    for (let index = 0; index < headers.length; index++) {
+      assert.ok(headers[index].style.width);
+      assert.equal(headers[index].style.width, cells[index].style.width);
+    }
+    assert.equal(headers[2].style.width, '80px');
+    assert.notEqual(headers[0].style.width, headers[1].style.width);
+  } finally { await ui.dispose(); }
+});
