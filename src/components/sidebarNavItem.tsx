@@ -17,6 +17,7 @@ export interface SidebarNavItemProps {
   isOpen: boolean;
   color?: UIColor;
   hover?: boolean;
+  itemVariant?: 'solid' | 'soft' | 'outline' | 'minimal';
   onClick?: () => void;
   isSubMenuOpen?: boolean;
   toggleSubMenu?: () => void;
@@ -25,7 +26,7 @@ export interface SidebarNavItemProps {
   /** Pass Next.js Link or another router's anchor-compatible component. */
   linkComponent?: React.ElementType;
 }
-export function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link = 'a', color = 'secondary', hover = true }: SidebarNavItemProps) {
+export function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link = 'a', color = 'secondary', hover = true, itemVariant = 'solid' }: SidebarNavItemProps) {
   const [currentPath, setCurrentPath] = React.useState('');
   React.useEffect(() => {
     const update = () => setCurrentPath(window.location.pathname);
@@ -38,9 +39,10 @@ export function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSub
   const exact = item.exact ?? (href === '/' || ['/admin', '/tenant', '/landlord'].includes(href ?? ''));
   const active = Boolean(href && (path === href || (!exact && path.startsWith(href + '/'))));
   const Icon = item.icon;
-  const children = <>{Icon && <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />}{isOpen && <span className="truncate font-medium">{item.label}</span>}</>;
+  const children = <>{Icon && <Icon className="ui-sidebar-icon h-5 w-5 shrink-0" aria-hidden="true" />}{(isOpen || !Icon) && <span className="truncate font-medium">{item.label}</span>}</>;
   const tone = toneClasses[color];
-  const classes = cn('flex min-w-0 flex-1 items-center gap-3 rounded-md p-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', !isOpen && 'justify-center', active ? tone.solid : cn('text-muted-foreground', hover && tone.hoverSoft), active && hover && 'hover:brightness-95');
+  const activeClass = itemVariant === 'soft' ? tone.soft : itemVariant === 'outline' ? cn('border', tone.outline) : itemVariant === 'minimal' ? cn('font-semibold', tone.text) : tone.solid;
+  const classes = cn('ui-sidebar-link flex min-w-0 flex-1 items-center gap-3 rounded-md p-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', !isOpen && 'justify-center', active ? activeClass : cn('text-muted-foreground', hover && tone.hoverSoft), active && hover && 'hover:brightness-95');
   return <div className="flex items-center gap-1" data-tour={dataTour ?? item.dataTour}>
     {item.href ? <Link href={item.href} onClick={onClick} aria-label={item.label} aria-current={active ? 'page' : undefined} title={!isOpen ? item.label : undefined} className={classes}>{children}</Link>
       : <button type="button" className={classes} aria-label={item.label} title={!isOpen ? item.label : undefined} aria-expanded={item.subItems?.length ? Boolean(isSubMenuOpen) : undefined} onClick={toggleSubMenu ?? onClick}>{children}</button>}

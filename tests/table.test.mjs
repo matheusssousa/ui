@@ -438,3 +438,26 @@ test('relative widths align headers and cells while preserving explicit widths',
     assert.notEqual(headers[0].style.width, headers[1].style.width);
   } finally { await ui.dispose(); }
 });
+
+
+test('sidebar logo replaces the toggle and ordered slots preserve controlled state', async () => {
+  const { Sidebar } = await import('../dist/components/sidebar.js');
+  const changes = [];
+  const ui = await mount({ sections: [], logo: h('img', { src: '/logo.svg', alt: 'Brand' }), search: 'Search', footer: 'Footer', order: ['footer', 'brand', 'search', 'navigation', 'brand'], variant: 'floating', side: 'right', animation: 'none', onOpenChange: value => changes.push(value) }, Sidebar);
+  try {
+    assert.equal(ui.container.querySelector('[data-sidebar-part="toggle"]'), null);
+    assert.equal(ui.container.querySelectorAll('[data-sidebar-part="brand"]').length, 1);
+    assert.equal(ui.container.querySelector('[data-sidebar-part]').dataset.sidebarPart, 'footer');
+    const button = ui.container.querySelector('button');
+    assert.ok(button.querySelector('img'));
+    assert.equal(button.getAttribute('aria-controls'), ui.container.querySelector('nav').id);
+    await click(button);
+    assert.equal(ui.container.querySelector('aside').dataset.open, 'true');
+    await ui.render({ isOpen: true });
+    await click(button);
+    assert.equal(changes.at(-1), false);
+    assert.equal(ui.container.querySelector('aside').dataset.open, 'true');
+    await ui.render({ logo: undefined });
+    assert.ok(ui.container.querySelector('[data-sidebar-part="toggle"]'));
+  } finally { await ui.dispose(); }
+});

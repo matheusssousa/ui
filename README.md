@@ -23,6 +23,7 @@ Biblioteca privada de componentes, hooks e funções utilitárias para projetos 
 - [Tipos de responses de actions e Laravel](#tipos-de-responses-de-actions-e-laravel)
 - [Sidebar](#sidebar)
 - [Referência completa da API](#referência-completa-da-api)
+- [Sidebar: designs e layout](#sidebar-designs-e-layout)
 
 <!-- TOC:END -->
 
@@ -2775,7 +2776,22 @@ import * as React from 'react';
 import { type UIColor } from './theme.js';
 import { type SidebarSectionConfig } from './sidebarSection.js';
 export type SidebarSlot = React.ReactNode | ((isOpen: boolean) => React.ReactNode);
+export type SidebarPart = 'brand' | 'header' | 'toggle' | 'search' | 'navigation' | 'notifications' | 'footer';
 export interface SidebarProps {
+    variant?: 'default' | 'outline' | 'floating' | 'compact' | 'glass';
+    side?: 'left' | 'right';
+    position?: 'static' | 'sticky' | 'fixed';
+    animation?: 'none' | 'smooth' | 'spring';
+    itemVariant?: 'solid' | 'soft' | 'outline' | 'minimal';
+    itemShape?: 'rounded' | 'pill' | 'square';
+    iconPosition?: 'start' | 'end' | 'top';
+    align?: 'start' | 'center' | 'end';
+    /** Ordem visual e de teclado; partes omitidas sao acrescentadas ao final. */
+    order?: SidebarPart[];
+    slotAlign?: Partial<Record<SidebarPart, 'start' | 'center' | 'end'>>;
+    slotClassNames?: Partial<Record<SidebarPart, string>>;
+    width?: number | string;
+    collapsedWidth?: number | string;
     sections: SidebarSectionConfig[] | Record<string, SidebarSectionConfig>;
     isOpen?: boolean;
     defaultOpen?: boolean;
@@ -2785,25 +2801,19 @@ export interface SidebarProps {
     linkComponent?: React.ElementType;
     can?: (permission: string) => boolean;
     loading?: boolean;
-    /** Logo visible in both expanded and collapsed states. */
     logo?: SidebarSlot;
-    /** Brand name visible only when expanded. */
     name?: React.ReactNode;
-    /** Search above navigation. Render functions can supply a collapsed control. */
     search?: SidebarSlot;
-    /** Notifications anchored below navigation and footer. */
     notifications?: SidebarSlot;
-    /** Active item and hover tone. @default 'secondary' */
     color?: UIColor;
-    /** Enable hover backgrounds. @default true */
     hover?: boolean;
     header?: SidebarSlot;
     footer?: SidebarSlot;
     className?: string;
     'aria-label'?: string;
 }
-/** Responsive sidebar with optional permission filtering and no application context dependency. */
-export declare function Sidebar({ sections, isOpen: controlledOpen, defaultOpen, onOpenChange, onLinkClick, pathname, linkComponent, can, loading, logo, name, search, notifications, color, hover, header, footer, className, 'aria-label': label }: SidebarProps): React.JSX.Element;
+/** Sidebar with configurable appearance, placement and slots. */
+export declare function Sidebar({ sections, isOpen: controlledOpen, defaultOpen, onOpenChange, onLinkClick, pathname, linkComponent, can, loading, logo, name, search, notifications, color, hover, header, footer, className, variant, side, position, animation, itemVariant, itemShape, iconPosition, align, order, slotAlign, slotClassNames, width, collapsedWidth, 'aria-label': label }: SidebarProps): React.JSX.Element;
 ```
 
 </details>
@@ -2830,6 +2840,7 @@ export interface SidebarNavItemProps {
     isOpen: boolean;
     color?: UIColor;
     hover?: boolean;
+    itemVariant?: 'solid' | 'soft' | 'outline' | 'minimal';
     onClick?: () => void;
     isSubMenuOpen?: boolean;
     toggleSubMenu?: () => void;
@@ -2838,7 +2849,7 @@ export interface SidebarNavItemProps {
     /** Pass Next.js Link or another router's anchor-compatible component. */
     linkComponent?: React.ElementType;
 }
-export declare function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link, color, hover }: SidebarNavItemProps): React.JSX.Element;
+export declare function SidebarNavItem({ item, isOpen, onClick, isSubMenuOpen, toggleSubMenu, dataTour, pathname, linkComponent: Link, color, hover, itemVariant }: SidebarNavItemProps): React.JSX.Element;
 ```
 
 </details>
@@ -2861,6 +2872,7 @@ export interface SidebarSectionProps {
     isOpen: boolean;
     color?: UIColor;
     hover?: boolean;
+    itemVariant?: 'solid' | 'soft' | 'outline' | 'minimal';
     onLinkClick?: () => void;
     openSubMenus?: string[];
     toggleSubMenu?: (label: string) => void;
@@ -2869,7 +2881,7 @@ export interface SidebarSectionProps {
     /** Optional permission checker; omitted for systems without permissions. */
     can?: (permission: string) => boolean;
 }
-export declare function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can, color, hover }: SidebarSectionProps): React.JSX.Element | null;
+export declare function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can, color, hover, itemVariant }: SidebarSectionProps): React.JSX.Element | null;
 ```
 
 </details>
@@ -4454,3 +4466,41 @@ O padrão é `mobileLayout="scroll"`, com todas as colunas acessíveis. Use `mob
 Os editores de texto, número, moeda e data usam `Input`; seleção usa `Select`. `editor.inputProps` permite configurar máscara, ícones, variante e atributos do campo, preservando o controle de valor e salvamento da tabela. O editor monetário mantém strings decimais exatas.
 
 As tabelas normal e spreadsheet usam cabe?alho arredondado com a cor primary do tema, campos com fundo discreto e divisores tracejados. Em `columns[].width`, use `"2-col"` e `"3-col"` para larguras proporcionais (2:3). Colunas sem largura recebem uma unidade; larguras CSS e n?meros em pixels continuam aceitos e s?o reservados antes da distribui??o. Unidades proporcionais ativam layout fixo por padr?o.
+
+
+## Sidebar: designs e layout
+
+Combine as propriedades abaixo sem alterar as sections existentes:
+
+| Propriedade | Valores |
+| --- | --- |
+| variant | default, outline, floating, compact, glass |
+| side | left, right |
+| position | static, sticky, fixed |
+| animation | none, smooth, spring |
+| itemVariant | solid, soft, outline, minimal |
+| itemShape | rounded, pill, square |
+| iconPosition | start, end, top |
+| align | start, center, end |
+
+Use order para ordenar brand, header, toggle, search, navigation, notifications e footer. A ordem do teclado acompanha a ordem visual; partes omitidas ficam no final. slotAlign e slotClassNames permitem personalizar cada parte. width e collapsedWidth aceitam pixels (numero) ou largura CSS.
+
+Com logo, o botao extra desaparece e a propria logo abre/recolhe o menu, com suporte a teclado. Passe imagem, SVG ou conteudo sem links/botoes dentro da logo. isOpen/onOpenChange continuam permitindo controle externo. Sem icone, o texto do link permanece visivel no modo recolhido.
+
+No desktop, side=right posiciona a sidebar no fim de um pai flex; position=fixed ancora na borda da janela e requer que o app reserve espaco para o conteudo. No celular, o menu ocupa a largura disponivel e recolhe a navegacao. As animacoes respeitam prefers-reduced-motion.
+
+```tsx
+<Sidebar
+  sections={sections}
+  logo={<img src="/logo.svg" alt="Marca" />}
+  defaultOpen
+  variant="floating"
+  side="left"
+  animation="spring"
+  itemVariant="soft"
+  itemShape="pill"
+  order={['brand', 'header', 'search', 'navigation', 'notifications', 'footer']}
+  slotAlign={{ brand: 'center', footer: 'center' }}
+  width={280}
+/>
+```

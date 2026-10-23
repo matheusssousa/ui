@@ -9,6 +9,7 @@ export interface SidebarSectionProps {
   isOpen: boolean;
   color?: UIColor;
   hover?: boolean;
+  itemVariant?: 'solid' | 'soft' | 'outline' | 'minimal';
   onLinkClick?: () => void;
   openSubMenus?: string[];
   toggleSubMenu?: (label: string) => void;
@@ -17,7 +18,7 @@ export interface SidebarSectionProps {
   /** Optional permission checker; omitted for systems without permissions. */
   can?: (permission: string) => boolean;
 }
-export function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can, color = 'secondary', hover = true }: SidebarSectionProps) {
+export function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, toggleSubMenu, pathname, linkComponent, can, color = 'secondary', hover = true, itemVariant = 'solid' }: SidebarSectionProps) {
   const [localOpen, setLocalOpen] = React.useState<string[]>([]);
   const opened = openSubMenus ?? localOpen;
   const toggle = toggleSubMenu ?? ((label: string) => setLocalOpen(previous => previous.includes(label) ? previous.filter(value => value !== label) : [...previous, label]));
@@ -27,8 +28,8 @@ export function SidebarSection({ section, isOpen, onLinkClick, openSubMenus, tog
   });
   const items = filter(section.items);
   const renderItems = (entries: SidebarItem[]): React.ReactNode => entries.map(item => <div key={item.href ?? item.label} className="space-y-1">
-    <SidebarNavItem item={item} isOpen={isOpen} color={color} hover={hover} onClick={onLinkClick} isSubMenuOpen={opened.includes(item.label)} toggleSubMenu={() => toggle(item.label)} pathname={pathname} linkComponent={linkComponent} />
-    {isOpen && opened.includes(item.label) && Boolean(item.subItems?.length) && <div className="space-y-1 pl-4">{renderItems(item.subItems!)}</div>}
+    <SidebarNavItem item={item} isOpen={isOpen} color={color} hover={hover} itemVariant={itemVariant} onClick={onLinkClick} isSubMenuOpen={opened.includes(item.label)} toggleSubMenu={() => toggle(item.label)} pathname={pathname} linkComponent={linkComponent} />
+    {isOpen && opened.includes(item.label) && Boolean(item.subItems?.length) && <div className="ui-sidebar-submenu space-y-1 pl-4">{renderItems(item.subItems!)}</div>}
   </div>);
   if (!items.length) return null;
   return <div className="space-y-1">{isOpen && <h3 className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</h3>}{renderItems(items)}</div>;
