@@ -1,6 +1,6 @@
 {
   "name": "@matheusssousa/ui",
-  "version": "0.4.19",
+  "version": "0.4.20",
   "description": "Componentes, hooks e clientes HTTP compartilhados",
   "type": "module",
   "license": "UNLICENSED",
