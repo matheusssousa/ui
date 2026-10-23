@@ -244,14 +244,12 @@
 [data-error] .ui-sheet-status { color: var(--destructive); }
 .ui-sheet-status button { min-width: 14px; font-weight: bold; }
 .ui-table-sticky thead th { position: sticky; top: 0; z-index: 3; background: var(--card); }
-.ui-table-date { width: 100%; min-height: 36px; border: 0; border-radius: 0; background: transparent; color: inherit; padding: 6px 8px; }
-.ui-table-date:focus { outline: none; background: color-mix(in srgb, var(--muted) 60%, transparent); }
 .ui-table-mobile-label { display: none; }
 @media (max-width: 767px) {
   .ui-table-stacked, .ui-table-stacked tbody { display: block; width: 100%; }
   .ui-table-stacked thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .ui-table-stacked .ui-table-stacked-row { display: block; margin-bottom: 12px; border: 1px solid var(--border); }
-  .ui-table-stacked td.ui-table-stacked-cell { display: grid !important; grid-template-columns: minmax(90px, 30%) minmax(0, 1fr); align-items: center; min-height: 48px; height: auto; }
+  .ui-table-stacked td.ui-table-stacked-cell { display: grid !important; grid-template-columns: minmax(0, 30%) minmax(0, 1fr); width: 100% !important; align-items: center; min-height: 48px; height: auto; }
   .ui-table-stacked .ui-table-mobile-label { display: block; padding: 8px; color: var(--muted-foreground); font-size: 0.75rem; text-align: left; }
   .ui-table-stacked .ui-table-stacked-cell input,
   .ui-table-stacked .ui-table-stacked-cell [role="combobox"],

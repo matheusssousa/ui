@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import { containsFieldFocus } from './field-focus.js';
 import type { TableRowKey } from '../components/data-types.js';
 import { useTableRuntime } from './table-runtime.js';
 
@@ -21,7 +22,7 @@ export function EditableRow({ rowId, colSpan, children, ...props }: React.HTMLAt
       onBlur={event => {
         props.onBlur?.(event);
         if (canEdit && store.options.saveMode === 'row') queueMicrotask(() => {
-          if (mounted.current && !container.current?.contains(document.activeElement) && Object.keys(store.changes(rowId)).length) void store.saveRow(rowId);
+          if (mounted.current && !containsFieldFocus(container.current, document.activeElement) && Object.keys(store.changes(rowId)).length) void store.saveRow(rowId);
         });
       }}>{children}</tr>
     {!spreadsheet && (pending || error) && <tr><td colSpan={colSpan}>

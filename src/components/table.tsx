@@ -79,6 +79,13 @@ export interface TableProps extends VariantProps<typeof tableVariants> {
   emptyMessage?: string;
   /** Classe do contêiner. */
   className?: string;
+  /** Classes da raiz e da área rolável, independentes da tabela. */
+  containerClassName?: string;
+  scrollClassName?: string;
+  headerClassName?: string;
+  rowClassName?: string | ((row: TableData, index: number) => string);
+  /** Legenda visível e acessível. */
+  caption?: React.ReactNode;
   /** Habilita ordenação pelos cabeçalhos. */
   sortable?: boolean;
   /** Coluna e direção de ordenação atuais. */
@@ -117,6 +124,11 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     loading = false,
     emptyMessage = 'Nenhum item encontrado',
     className,
+    containerClassName,
+    scrollClassName,
+    headerClassName,
+    rowClassName,
+    caption,
     variant,
     size,
     layout,
@@ -146,7 +158,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     ...props
   }, ref) => {
     const spreadsheet = appearance === 'spreadsheet' || variant === 'spreadsheet';
-    const effectiveMobileLayout = mobileLayout ?? (spreadsheet ? 'scroll' : 'responsive');
+    const effectiveMobileLayout = mobileLayout ?? 'scroll';
     const tableId = React.useId();
     const store = React.useMemo(() => new TableEditingStore({ columns, rowKey, saveMode, onCellSave, onRowSave, validateRow: rowValidator }, data), [rowKey]);
     store.options = { columns, rowKey, saveMode, onCellSave, onRowSave, validateRow: rowValidator };
@@ -260,13 +272,14 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     return (
       <TableRuntimeContext.Provider value={{ store, navigation, spreadsheet, canEdit, tableId, stacked: effectiveMobileLayout === 'stacked', columnOffset: selectable ? 1 : 0 }}>
       <TableStyleContext.Provider value={{ size: size ?? 'default', borderless: variant !== 'outline' && variant !== 'grid' && variant !== 'spreadsheet', spreadsheet }}>
-      <div className="w-full space-y-4">
+      <div className={cn('w-full min-w-0 max-w-full space-y-4', containerClassName)}>
         {renderBulkActions && selectedRows.length > 0 && (
           renderBulkActions(selectedRows, handleClearSelection)
         )}
-        <div style={{ maxHeight: maxHeight ?? (spreadsheet ? 480 : undefined) }} className={cn('rounded-lg', (variant === 'outline' || variant === 'grid' || variant === 'spreadsheet') && 'border border-border/60', (responsive || spreadsheet || maxHeight !== undefined) && 'overflow-auto')}>
+        <div style={{ maxHeight: maxHeight ?? (spreadsheet ? 480 : undefined) }} className={cn('min-w-0 max-w-full rounded-lg', (variant === 'outline' || variant === 'grid' || variant === 'spreadsheet') && 'border border-border/60', (responsive || spreadsheet || maxHeight !== undefined) && 'overflow-auto', scrollClassName)}>
           <table ref={ref} data-variant={variant ?? 'default'} role={spreadsheet ? 'grid' : undefined} aria-label={spreadsheet ? 'Tabela editavel' : undefined} aria-rowcount={spreadsheet ? data.length + 1 : undefined} aria-colcount={spreadsheet ? columns.length + (selectable ? 1 : 0) : undefined} className={cn(tableVariants({ variant, size }), spreadsheet && 'ui-spreadsheet', (stickyHeader ?? spreadsheet) && 'ui-table-sticky', effectiveMobileLayout === 'stacked' && 'ui-table-stacked', (layout ?? (variant === 'fixed' ? 'fixed' : 'auto')) === 'fixed' ? 'table-fixed' : 'table-auto', className)} {...props}>
-            <thead role={spreadsheet ? 'rowgroup' : undefined}>
+            {caption && <caption className="p-3 text-left text-sm text-muted-foreground">{caption}</caption>}
+            <thead className={headerClassName} role={spreadsheet ? 'rowgroup' : undefined}>
               <tr>
                 {selectable && (
                   <th scope="col" role={spreadsheet ? 'columnheader' : undefined} aria-colindex={spreadsheet ? 1 : undefined} className={cn(
@@ -331,6 +344,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
                       key={row[rowKey] == null ? rowIndex : `${typeof row[rowKey]}:${row[rowKey]}`}
                       className={cn(
                         'transition-colors',
+                        typeof rowClassName === 'function' ? rowClassName(row, rowIndex) : rowClassName,
                         isSelected && 'bg-card-foreground/10',
                         (isMobile && onRowClick) && 'cursor-pointer'
                       )}
@@ -378,7 +392,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
 
         {/* Pagination */}
         {pagination && onPageChange && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-center sm:justify-between">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between">
             <div className="hidden sm:block text-sm text-muted-foreground">
               Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} até{' '}
               {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} de{' '}

@@ -2,6 +2,7 @@
 import * as React from 'react';
 import type { Column, TableRowKey } from '../components/data-types.js';
 import { Input } from '../components/input.js';
+import { containsFieldFocus } from './field-focus.js';
 import { Select } from '../components/select.js';
 import { cn } from '../utils.js';
 import { formatTableDate, formatTableMoney } from '../functions/table-values.js';
@@ -97,6 +98,7 @@ export function EditableCell({ rowId, column, rowIndex, columnIndex, className }
     aria-selected={spreadsheet ? navigation.activeId === id : undefined}
     aria-invalid={error ? true : undefined} aria-describedby={error || rowError ? messageId : undefined}
     aria-busy={pending} tabIndex={spreadsheet ? (navigation.activeId === id ? 0 : -1) : -1}
+    style={{ width: column.width }}
     data-table-cell="" data-editing={editing || undefined} data-readonly={!editable || undefined}
     data-dirty={dirty || undefined} data-error={Boolean(error || rowError) || undefined}
     className={cn('align-middle', className, spreadsheet && 'ui-sheet-cell', stacked && 'ui-table-stacked-cell',
@@ -113,7 +115,7 @@ export function EditableCell({ rowId, column, rowIndex, columnIndex, className }
     }}
     onBlur={() => {
       queueMicrotask(() => {
-        if (!mounted.current || td.current?.contains(document.activeElement)) return;
+        if (!mounted.current || containsFieldFocus(td.current, document.activeElement)) return;
         if (editing) setEditing(false);
         if (canEdit && store.options.saveMode === 'cell') void store.saveCell(rowId, column.key);
       });
@@ -135,9 +137,9 @@ export function EditableCell({ rowId, column, rowIndex, columnIndex, className }
             clearable={editor.clearable} display={editor.display}
             onValueChange={next => { if (!Array.isArray(next)) store.setDraftValue(rowId, column.key, next); }} />
         : editor.type === 'date'
-          ? <input {...field} id={nativeId} type="date" min={editor.min} max={editor.max} value={String(raw ?? '')}
-              className="ui-table-date" onChange={event => store.setDraftValue(rowId, column.key, event.target.value)} />
-          : <Input {...field} type={editor.type === 'money' ? 'text' : editor.inputType ?? 'text'}
+          ? <Input {...editor.inputProps} {...field} id={nativeId} type="date" min={editor.min} max={editor.max} value={String(raw ?? '')}
+              onChange={event => store.setDraftValue(rowId, column.key, event.target.value)} />
+          : <Input {...editor.inputProps} {...field} type={editor.type === 'money' ? 'text' : editor.inputType ?? 'text'}
               inputMode={editor.type === 'money' ? 'decimal' : undefined} value={String(raw ?? '')}
               onChange={event => store.setDraftValue(rowId, column.key, event.target.value)} />
         : <div className={spreadsheet ? 'ui-sheet-value' : undefined}>{display}</div>}

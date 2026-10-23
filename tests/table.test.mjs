@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://example.test' });
+const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://example.test', pretendToBeVisual: true });
 for (const key of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'Event', 'MouseEvent', 'KeyboardEvent']) globalThis[key] = key === 'window' ? dom.window : dom.window[key];
 globalThis.self = dom.window;
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -157,6 +157,8 @@ test('readonly table retains sorting, pagination, selection and responsive colum
     await click(ui.container.querySelector('tbody input')); assert.deepEqual(selected, [0]);
     const next = [...ui.container.querySelectorAll('button')].find(button => button.textContent.trim() === '2');
     assert.ok(next); await click(next); assert.equal(page, 2);
+    assert.doesNotMatch(ui.container.querySelector('tbody td:last-child').className, /hidden/);
+    await ui.render({ mobileLayout: 'responsive' });
     assert.match(ui.container.querySelector('tbody td:last-child').className, /hidden md:table-cell/);
     await ui.render({ responsive: false }); assert.doesNotMatch(ui.container.querySelector('tbody td:last-child').className, /hidden/);
   } finally { await ui.dispose(); }
@@ -320,8 +322,16 @@ test('money and date editors send exact decimal and ISO strings and format edita
     assert.match(cells[1].textContent, /19\/10\/2026/); assert.match(cells[2].textContent, /Formatted note/);
     await focus(cells[0]); await key(cells[0], 'F2'); let input = cells[0].querySelector('input');
     await change(input, '145,50'); await key(input, 'Tab');
-    await key(cells[1], 'F2'); input = cells[1].querySelector('input'); assert.equal(input.type, 'date');
-    await change(input, '2026-11-02'); await focus(ui.outside);
+    await key(cells[1], 'F2'); input = cells[1].querySelector('input'); assert.equal(input.type, 'text');
+    await click(input);
+    let dialog = document.body.querySelector('[role="dialog"]');
+    assert.ok(dialog); assert.equal(ui.container.contains(dialog), false);
+    assert.equal(dialog.style.position, 'fixed'); assert.ok(parseFloat(dialog.style.width) >= 304);
+    await focus(dialog.querySelector('button')); assert.equal(calls.length, 0);
+    await click(dialog.querySelectorAll('button')[2]);
+    dialog = document.body.querySelector('[role="dialog"]');
+    await click([...dialog.querySelectorAll('button')].find(button => button.textContent.trim() === '2'));
+    assert.equal(document.activeElement, input); await focus(ui.outside);
     assert.equal(calls.length, 1); assert.deepEqual(calls[0].changes, { amount: '145.50', date: '2026-11-02' });
   } finally { await ui.dispose(); }
 });
@@ -383,4 +393,28 @@ test('sidebar supports optional permissions, recursive menus and controlled coll
     await ui.render({ isOpen: true });
     assert.equal(ui.container.querySelector('aside').getAttribute('data-open'), 'true');
   } finally { await ui.dispose(); }
+});
+
+
+test('date picker fits narrow viewports, respects bounds and returns focus on Escape', async () => {
+  const previousWidth = window.innerWidth;
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 280 });
+  for (const label of [undefined, 'Data']) {
+    const ui = await mount({ type: 'date', label, value: '2026-10-19', min: '2026-10-10', max: '2026-10-20' }, Input);
+    try {
+      const input = ui.container.querySelector('input');
+      await focus(input); await click(input);
+      const dialog = document.body.querySelector('[role="dialog"]');
+      assert.ok(dialog); assert.equal(dialog.parentElement, document.body);
+      assert.ok(parseFloat(dialog.style.width) <= 264);
+      const days = [...dialog.querySelectorAll('button')];
+      assert.equal(days.find(button => button.textContent.trim() === '9').disabled, true);
+      assert.equal(days.find(button => button.textContent.trim() === '19').disabled, false);
+      assert.equal(days.find(button => button.textContent.trim() === '21').disabled, true);
+      await focus(days[0]); await key(days[0], 'Escape');
+      assert.equal(document.body.querySelector('[role="dialog"]'), null);
+      assert.equal(document.activeElement, input);
+    } finally { await ui.dispose(); }
+  }
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: previousWidth });
 });

@@ -629,7 +629,7 @@ const transactionColumns: Column[] = [
 ];
 ```
 
-- `type: 'date'` usa o editor de data/calendário nativo, salva `YYYY-MM-DD` sem conversão de fuso e apresenta `dd/MM/aaaa` fora da edição. Aceita `min` e `max` em ISO; a apresentação do editor nativo segue o navegador.
+- `type: 'date'` usa o componente `Input` com calendário em portal, dimensionado para a tela sem cortes pela rolagem da tabela. Salva `YYYY-MM-DD`, exibe `dd/MM/aaaa` e respeita `min` e `max` em ISO.
 - `type: 'money'` aceita `145,50` e `1.234,50`, retorna a string decimal exata `"145.50"` e formata em BRL fora da edição. Aceita `currency` para alterar o identificador monetário. Use strings decimais também nos dados recebidos; números JavaScript que já perderam precisão não podem ser recuperados. Mais de duas casas decimais são rejeitadas, sem arredondamento silencioso.
 - Os helpers `parseTableMoney`, `formatTableMoney`, `parseTableDate` e `formatTableDate` são exportados pela raiz e por `functions/table-values`.
 
@@ -4452,3 +4452,11 @@ export * from './components/sidebarNavItem.js';
 ```
 
 <!-- API-REFERENCE:END -->
+
+### Personalização e responsividade da tabela
+
+O padrão é `mobileLayout="scroll"`, com todas as colunas acessíveis. Use `mobileLayout="stacked"` para campos empilhados com rótulos ou `mobileLayout="responsive"` para manter a política de ocultar colunas extras com `limitColumnsShow`.
+
+`containerClassName`, `scrollClassName`, `headerClassName` e `rowClassName` personalizam cada área; `rowClassName` também aceita `(row, index) => string`. `caption` adiciona uma legenda. Combine com `variant`, `size`, `layout`, `stickyHeader`, `maxHeight` e `columns[].className/width/align`.
+
+Os editores de texto, número, moeda e data usam `Input`; seleção usa `Select`. `editor.inputProps` permite configurar máscara, ícones, variante e atributos do campo, preservando o controle de valor e salvamento da tabela. O editor monetário mantém strings decimais exatas.

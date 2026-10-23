@@ -1,9 +1,12 @@
 import type * as React from 'react';
 import type { UIColor } from './theme.js';
 import type { SelectOption } from './select.js';
+import type { InputProps } from './input.js';
 
 export type CellEditorValue = string | number | undefined;
 export interface CellEditorBase<T = TableData> {
+  /** Personaliza o Input preservando o valor e o salvamento da tabela. */
+  inputProps?: Omit<InputProps, 'value' | 'defaultValue' | 'onChange' | 'onValueChange' | 'type' | 'disabled'>;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;

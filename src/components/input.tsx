@@ -126,7 +126,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
         const [viewMonth, setViewMonth] = React.useState<Date>(() => new Date());
         const [calendarView, setCalendarView] = React.useState<'day' | 'month' | 'year'>('day');
-        const [calendarWidth, setCalendarWidth] = React.useState<number | undefined>();
         const [dateTimePosition, setDateTimePosition] = React.useState({
             top: 8,
             left: 8,
@@ -138,6 +137,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         const [selectedTime, setSelectedTime] = React.useState<string>('');
         const [timePickerWidth, setTimePickerWidth] = React.useState<number | undefined>();
 
+        const pickerOwner = React.useId();
         const inputRef = React.useRef<HTMLInputElement>(null);
         const datePortalRef = React.useRef<HTMLDivElement>(null);
         const timePortalRef = React.useRef<HTMLDivElement>(null);
@@ -530,6 +530,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             const event = { target: { value: iso } } as unknown as React.ChangeEvent<HTMLInputElement>;
             props.onChange?.(event);
             setDateOpen(false);
+            inputRef.current?.focus();
             setCalendarView('day'); // Reseta a view
         };
 
@@ -543,19 +544,18 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 setTimeMinute(currentTime.slice(3, 5));
             }
 
-            setCalendarWidth(inputRef.current?.offsetWidth);
             setDateOpen((open) => !open);
             setIsFocused(true);
         };
 
         const updateDateTimePosition = React.useCallback(() => {
-            if (!isDateTime || !inputRef.current || typeof window === 'undefined') return;
+            if ((!isDate && !isDateTime) || !inputRef.current || typeof window === 'undefined') return;
 
             const viewportPadding = 8;
             const gap = 8;
             const inputRect = inputRef.current.getBoundingClientRect();
             const width = Math.min(
-                Math.max(inputRect.width, 352),
+                Math.max(inputRect.width, isDateTime ? 352 : 304),
                 window.innerWidth - (viewportPadding * 2)
             );
             const panelHeight = datePortalRef.current?.offsetHeight ?? 520;
@@ -578,10 +578,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             );
 
             setDateTimePosition({ top, left, width, maxHeight: availableHeight });
-        }, [isDateTime]);
+        }, [isDate, isDateTime]);
 
         React.useLayoutEffect(() => {
-            if (!isDateTime || !dateOpen) return;
+            if ((!isDate && !isDateTime) || !dateOpen) return;
 
             updateDateTimePosition();
             const animationFrameId = window.requestAnimationFrame(updateDateTimePosition);
@@ -594,11 +594,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 window.removeEventListener('resize', updateDateTimePosition);
                 window.removeEventListener('scroll', updateDateTimePosition, true);
             };
-        }, [isDateTime, dateOpen, updateDateTimePosition]);
+        }, [isDate, isDateTime, dateOpen, calendarView, updateDateTimePosition]);
 
         const closeCalendarOnOutside = React.useCallback((e: MouseEvent) => {
             if (datePortalRef.current && inputRef.current) {
                 if (!datePortalRef.current.contains(e.target as Node) && !inputRef.current.contains(e.target as Node)) {
+                    if (datePortalRef.current.contains(document.activeElement)) inputRef.current.focus();
                     setDateOpen(false);
                     setIsFocused(false);
                 }
@@ -650,13 +651,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
             return (
                 <div className="flex items-center justify-between mb-2">
-                    <button type="button" className="p-1 rounded hover:bg-accent" onClick={() => changeViewDate(-1)}>
+                    <button type="button" aria-label="Período anterior" className="shrink-0 p-2 rounded hover:bg-accent" onClick={() => changeViewDate(-1)}>
                         <CaretLeftIcon className="w-4 h-4" />
                     </button>
                     <button type="button" className="text-sm font-medium hover:text-primary-text" onClick={handleHeaderClick}>
                         {headerText}
                     </button>
-                    <button type="button" className="p-1 rounded hover:bg-accent" onClick={() => changeViewDate(1)}>
+                    <button type="button" aria-label="Próximo período" className="shrink-0 p-2 rounded hover:bg-accent" onClick={() => changeViewDate(1)}>
                         <CaretRightIcon className="w-4 h-4" />
                     </button>
                 </div>
@@ -863,9 +864,26 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             props.onChange?.(event);
         };
 
+        const renderDatePicker = () => typeof document !== 'undefined' ? createPortal(
+            <div ref={datePortalRef} data-input-portal={pickerOwner} role="dialog" aria-label="Selecionar data"
+                className="z-[100] overflow-y-auto overscroll-contain rounded-xl border border-border/60 bg-background p-3 shadow-xl"
+                style={{ ...toneScopeStyle(color), position: 'fixed', top: dateTimePosition.top, left: dateTimePosition.left,
+                    width: dateTimePosition.width, maxHeight: dateTimePosition.maxHeight }}
+                onKeyDown={event => {
+                    event.stopPropagation();
+                    if (event.key === 'Escape') { event.preventDefault(); setDateOpen(false); inputRef.current?.focus(); }
+                }}
+                onBlur={event => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node) && event.relatedTarget !== inputRef.current) setDateOpen(false);
+                }}>
+                {renderCalendarHeader()}
+                {renderCalendarBody()}
+            </div>, document.body) : null;
+
         const renderDateTimePicker = () => typeof document !== 'undefined' ? createPortal((
             <div
                 ref={datePortalRef}
+                data-input-portal={pickerOwner}
                 role="dialog"
                 aria-label="Selecionar data e hora"
                 style={{
@@ -1152,6 +1170,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     )}
                     <input
                         ref={setCombinedRefs}
+                        data-input-owner={pickerOwner}
                         type={isCurrency || isMasked ? 'text' : (isDate || isTime || isDateTime ? 'text' : effectiveType)}
                         name={isMasked || isDate || isTime || isDateTime ? undefined : inputName}
                         className={cn(
@@ -1228,16 +1247,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{rightPlaceholder}</span>
                     )}
                     {isDateTime && dateOpen && renderDateTimePicker()}
-                    {isDate && dateOpen && (
-                        // ALTERADO: Estilo e classe para largura dinâmica
-                        <div
-                            ref={datePortalRef}
-                            style={{ width: calendarWidth ? `${calendarWidth}px` : 'auto' }}
-                            className="absolute z-50 mt-2 rounded-md border border-border/60 bg-background shadow-lg p-3 top-full">
-                            {renderCalendarHeader()}
-                            {renderCalendarBody()}
-                        </div>
-                    )}
+                    {isDate && dateOpen && renderDatePicker()}
                     {isTime && timeOpen && (
                         <div
                             ref={timePortalRef}
@@ -1331,6 +1341,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     )}
                     <input
                         ref={setCombinedRefs}
+                        data-input-owner={pickerOwner}
                         type={isCurrency || isMasked ? 'text' : (isDate || isTime || isDateTime ? 'text' : effectiveType)}
                         name={isMasked || isDate || isTime || isDateTime ? undefined : inputName}
                         className={cn(
@@ -1383,16 +1394,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{rightPlaceholder}</span>
                     )}
                     {isDateTime && dateOpen && renderDateTimePicker()}
-                    {isDate && dateOpen && (
-                        <div
-                            ref={datePortalRef}
-                            style={{ width: calendarWidth ? `${calendarWidth}px` : 'auto' }}
-                            className="absolute z-50 mt-2 rounded-md border border-border/60 bg-background shadow-lg p-3 top-full"
-                        >
-                            {renderCalendarHeader()}
-                            {renderCalendarBody()}
-                        </div>
-                    )}
+                    {isDate && dateOpen && renderDatePicker()}
                     {isTime && timeOpen && (
                         <div
                             ref={timePortalRef}
