@@ -1029,6 +1029,8 @@ No Next.js, passe `linkComponent={Link}` e `pathname={usePathname()}` para naveg
 
 `logo` permanece visivel ao recolher; `name` aparece apenas ao expandir. `search` fica acima da navegacao e `notifications` no final, abaixo do rodape. Esses slots aceitam componentes ou funcoes `(isOpen) => ReactNode`; conecte as acoes de busca e notificacoes da aplicacao. `color` aceita as cores `UIColor` e usa `secondary` por padrao nos itens ativos e no hover, incluindo submenus. Use `hover={false}` para desativar o efeito. `header` e `footer` continuam disponiveis.
 
+Consulte o [guia de gráficos](docs/charts.md) para exemplos, variantes, cores e interação.
+
 <!-- API-REFERENCE:START -->
 ## Referência completa da API
 
@@ -1624,74 +1626,94 @@ Fonte: [components/chart](src/components/chart.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const chartVariants: (props?: ({
-    variant?: "default" | "filled" | "minimal" | "outlined" | null | undefined;
+    variant?: "default" | "filled" | "soft" | "elevated" | "minimal" | "outlined" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
+export declare const chartPalettes: {
+    readonly default: readonly ["var(--chart-1, #8b7cf8)", "var(--chart-2, #2dd4bf)", "var(--chart-3, #fbbf24)", "var(--chart-4, #60a5fa)", "var(--chart-5, #f472b6)", "var(--chart-6, #fb923c)", "var(--chart-7, #a3e635)", "var(--chart-8, #22d3ee)"];
+    readonly ocean: readonly ["#38bdf8", "#2dd4bf", "#818cf8", "#06b6d4", "#a5b4fc"];
+    readonly sunset: readonly ["#fb7185", "#fb923c", "#fbbf24", "#c084fc", "#f472b6"];
+};
 export type ChartDataPoint = {
     label: string;
     value: number;
     color?: string;
 };
-/** Configuração compartilhada pelos gráficos. */
-export interface BaseChartProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof chartVariants> {
-    /** Pontos exibidos no gráfico. */
-    data: ChartDataPoint[];
-    /** Título acima do gráfico. */
-    title?: string;
-    /** Texto auxiliar abaixo do título. */
-    subtitle?: string;
-    /** Exibe a legenda. */
-    showLegend?: boolean;
-    /** Exibe linhas de grade. */
-    showGrid?: boolean;
-    /** Exibe valores dos pontos. */
-    showValues?: boolean;
-    /** Anima a apresentação dos dados. */
-    animate?: boolean;
-    /** Cores CSS usadas nas séries; padrão usa os tokens `--chart-*`. */
-    colors?: string[];
+export interface ChartTooltipContext {
+    data: ChartDataPoint;
+    index: number;
+    color: string;
+    percentage: number;
 }
-/** Opções específicas do gráfico de linha. */
+/** Opções comuns; valores não finitos são ignorados. */
+export interface BaseChartProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color'>, VariantProps<typeof chartVariants> {
+    data: ChartDataPoint[];
+    title?: string;
+    subtitle?: string;
+    showLegend?: boolean;
+    showGrid?: boolean;
+    showValues?: boolean;
+    animate?: boolean;
+    colors?: readonly string[];
+    /** Cor CSS única; aceita também tokens como primary, secondary e success. */
+    color?: string;
+    palette?: keyof typeof chartPalettes;
+    showTooltip?: boolean;
+    legendPosition?: 'top' | 'bottom' | 'right';
+    valueFormatter?: (value: number) => string;
+    labelFormatter?: (label: string) => string;
+    emptyMessage?: string;
+    renderTooltip?: (context: ChartTooltipContext) => React.ReactNode;
+    onDataPointClick?: (point: ChartDataPoint, index: number) => void;
+}
 export interface LineChartProps extends BaseChartProps {
-    /** Suaviza a curva. */
     smooth?: boolean;
-    /** Espessura da linha em pixels. */
+    curve?: 'linear' | 'smooth' | 'step';
     strokeWidth?: number;
-    /** Exibe marcadores dos pontos. */
     showDots?: boolean;
-    /** Preenche a área abaixo da linha. */
     fillArea?: boolean;
+    fillOpacity?: number;
+    gradient?: boolean;
+    /** Oculta eixos e usa toda a área para tendências compactas. */
+    compact?: boolean;
 }
 export declare const LineChart: React.ForwardRefExoticComponent<LineChartProps & React.RefAttributes<HTMLDivElement>>;
-/** Opções específicas do gráfico de barras. */
-export interface BarChartProps extends BaseChartProps {
-    /** Desenha as barras na horizontal. */
-    horizontal?: boolean;
-    /** Raio dos cantos das barras em pixels. */
-    barRadius?: number;
-}
-export declare const BarChart: React.ForwardRefExoticComponent<BarChartProps & React.RefAttributes<HTMLDivElement>>;
-/** Opções específicas do gráfico de setores. */
-export interface PieChartProps extends BaseChartProps {
-    /** Abre um espaço no centro do gráfico. */
-    donut?: boolean;
-    /** Largura do anel quando `donut` está ativo. */
-    donutWidth?: number;
-    /** Exibe a porcentagem por setor. */
-    showPercentage?: boolean;
-}
-export declare const PieChart: React.ForwardRefExoticComponent<PieChartProps & React.RefAttributes<HTMLDivElement>>;
-/** Opções específicas do gráfico de área. */
-export interface AreaChartProps extends BaseChartProps {
-    /** Suaviza a curva. */
-    smooth?: boolean;
-    /** Espessura da borda da área em pixels. */
-    strokeWidth?: number;
-    /** Opacidade do preenchimento, de 0 a 1. */
-    fillOpacity?: number;
+export interface AreaChartProps extends LineChartProps {
 }
 export declare const AreaChart: React.ForwardRefExoticComponent<AreaChartProps & React.RefAttributes<HTMLDivElement>>;
+export declare const SparklineChart: React.ForwardRefExoticComponent<LineChartProps & React.RefAttributes<HTMLDivElement>>;
+export interface BarChartProps extends BaseChartProps {
+    horizontal?: boolean;
+    barRadius?: number;
+    barGap?: number;
+}
+export declare const BarChart: React.ForwardRefExoticComponent<BarChartProps & React.RefAttributes<HTMLDivElement>>;
+export interface PieChartProps extends BaseChartProps {
+    donut?: boolean;
+    donutWidth?: number;
+    showPercentage?: boolean;
+    showCenter?: boolean;
+    centerLabel?: string;
+    centerValue?: React.ReactNode;
+    /** Conteúdo customizado substitui todo o centro padrão. */
+    centerContent?: React.ReactNode;
+    activeCenter?: boolean;
+    startAngle?: number;
+    padAngle?: number;
+}
+export declare const PieChart: React.ForwardRefExoticComponent<PieChartProps & React.RefAttributes<HTMLDivElement>>;
 export declare const DonutChart: React.ForwardRefExoticComponent<PieChartProps & React.RefAttributes<HTMLDivElement>>;
+export interface RadarChartProps extends BaseChartProps {
+    maxValue?: number;
+    fillOpacity?: number;
+}
+export declare const RadarChart: React.ForwardRefExoticComponent<RadarChartProps & React.RefAttributes<HTMLDivElement>>;
+export interface RadialBarChartProps extends BaseChartProps {
+    maxValue?: number;
+    trackWidth?: number;
+}
+/** Anéis concêntricos de progresso; valores negativos são ignorados. */
+export declare const RadialBarChart: React.ForwardRefExoticComponent<RadialBarChartProps & React.RefAttributes<HTMLDivElement>>;
 export {};
 ```
 
