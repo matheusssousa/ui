@@ -336,6 +336,34 @@ test('money and date editors send exact decimal and ISO strings and format edita
   } finally { await ui.dispose(); }
 });
 
+test('spreadsheet keeps a date editor mounted while a portaled day is clicked without receiving focus', async () => {
+  const calls = [];
+  const ui = await mount({ variant: 'spreadsheet', saveMode: 'row', columns: [
+    { key: 'date', label: 'Date', editor: { type: 'date' } },
+  ], data: [{ id: 1, date: '2026-10-19' }], onRowSave: async event => calls.push(event) });
+  try {
+    const cell = ui.container.querySelector('[role="gridcell"]');
+    await click(cell);
+    const input = cell.querySelector('input');
+    await click(input);
+    const day = [...document.body.querySelectorAll('[role="dialog"] button')]
+      .find(button => button.textContent.trim() === '20');
+
+    await act(async () => {
+      day.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+      input.blur();
+      await Promise.resolve();
+    });
+    assert.equal(input.isConnected, true);
+
+    await click(day);
+    assert.equal(cell.querySelector('input').value, '20/10/2026');
+    await focus(ui.outside);
+    assert.equal(calls.length, 1);
+    assert.deepEqual(calls[0].changes, { date: '2026-10-20' });
+  } finally { await ui.dispose(); }
+});
+
 test('spreadsheet copy is single-cell text; range paste is not interpreted; stacked layout exposes every label', async () => {
   const ui = await mount({ appearance: 'spreadsheet', mobileLayout: 'stacked', columns: ['a', 'b', 'c', 'd'].map(key => ({ key, label: key, editor: { type: 'input' } })), data: [{ id: 1, a: 'Copy me', b: 'B', c: 'C', d: 'D' }], onCellSave: async () => {} });
   try {

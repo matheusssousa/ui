@@ -873,6 +873,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     event.stopPropagation();
                     if (event.key === 'Escape') { event.preventDefault(); setDateOpen(false); inputRef.current?.focus(); }
                 }}
+                onMouseDownCapture={event => {
+                    const portal = event.currentTarget;
+                    portal.setAttribute('data-input-portal-active', '');
+                    window.setTimeout(() => portal.removeAttribute('data-input-portal-active'), 0);
+                }}
                 onBlur={event => {
                     if (!event.currentTarget.contains(event.relatedTarget as Node) && event.relatedTarget !== inputRef.current) setDateOpen(false);
                 }}>
