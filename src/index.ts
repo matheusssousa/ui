@@ -30,6 +30,7 @@ export * from './components/input.js';
 export * from './components/textarea.js';
 export * from './components/info.js';
 export * from './components/modal.js';
+export * from './components/gradient.js';
 export * from './components/accordion.js';
 export * from './components/card.js';
 export * from './components/alert.js';

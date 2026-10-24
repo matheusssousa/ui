@@ -5,6 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import { motion } from 'framer-motion';
 import type { UIColor } from './theme.js';
+import { getGradientStyle, type UIGradientValue } from './gradient.js';
 
 const progressBarVariants = cva(
     'relative w-full overflow-hidden rounded-full bg-muted',
@@ -72,6 +73,8 @@ export interface ProgressBarProps
     autoColor?: boolean;
     /** Tone da barra quando `autoColor` está desativado. */
     color?: ColorVariant;
+    /** Preset compartilhado usado quando `color="gradient"`. */
+    gradient?: UIGradientValue;
 }
 
 const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
@@ -79,6 +82,7 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
         className,
         size,
         color,
+        gradient,
         value,
         max = 100,
         showLabel = false,
@@ -132,6 +136,7 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
                         animate={{ width: `${percentage}%` }}
                         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                         role="progressbar"
+                        style={finalColor === 'gradient' && gradient ? getGradientStyle(gradient) : undefined}
                         aria-valuenow={value}
                         aria-valuemin={0}
                         aria-valuemax={max}
@@ -161,10 +166,12 @@ export interface StatsProgressProps {
     color?: ColorVariant;
     /** Escolhe a cor conforme o percentual. */
     autoColor?: boolean;
+    /** Preset compartilhado usado quando `color="gradient"`. */
+    gradient?: UIGradientValue;
 }
 
 const StatsProgress = React.forwardRef<HTMLDivElement, StatsProgressProps>(
-    ({ label, value, subValue, percentage, icon, color = 'default', autoColor = false }, ref) => {
+    ({ label, value, subValue, percentage, icon, color = 'default', autoColor = false, gradient }, ref) => {
         return (
             <div ref={ref} className="flex flex-col gap-2 p-4 rounded-xl bg-background/50 border border-border/30">
                 <div className="flex items-center justify-between">
@@ -184,6 +191,7 @@ const StatsProgress = React.forwardRef<HTMLDivElement, StatsProgressProps>(
                     value={percentage} 
                     color={color} 
                     autoColor={autoColor}
+                    gradient={gradient}
                     size="sm" 
                 />
             </div>

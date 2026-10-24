@@ -238,6 +238,43 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@matheusssousa/ui/comp
 
 No `Modal`, `headerBackgroundImage` define uma imagem decorativa de fundo para o cabeçalho nas variantes `default` e `customer`. A faixa ocupa toda a largura, tem altura mínima de 120 px e recorte central (`cover`), com camada escura para manter o texto legível. Textos longos podem aumentar a altura. Sem imagem ou com string vazia, o cabeçalho mantém o visual padrão.
 
+O cabeçalho também aceita gradientes temáticos com `headerGradient`. A imagem, quando informada, tem prioridade:
+
+```tsx
+<Modal isOpen={open} onClose={() => setOpen(false)} title="Detalhes" headerGradient="primary-secondary">
+  Conteúdo do modal
+</Modal>
+
+<Card variant="gradient" gradient="irregular">
+  Conteúdo do card
+</Card>
+```
+
+O sistema de gradients é compartilhado por `Modal`, `Card`, `Button`, `Badge`, `Avatar`, `ProgressBar` e `Separator`. Os presets visuais são `irregular`, `radial-ramp`, `blurred`, `edgy`, `landscape`, `multicolor`, `retro`, `duotone`, `tricolor`, `volume-mesh`, `banding` e `gradient-image`; os presets temáticos anteriores continuam disponíveis.
+
+```tsx
+<Button variant="gradient" gradient="retro">Continuar</Button>
+<Avatar variant="gradient" gradient="volume-mesh" name="Maria Silva" />
+<ProgressBar color="gradient" gradient="landscape" value={72} />
+
+<Card
+  variant="gradient"
+  gradient={{
+    preset: 'gradient-image',
+    image: '/images/cover.jpg',
+    tones: ['primary', 'secondary', 'tertiary'],
+    position: 'center',
+    size: 'cover',
+  }}
+>
+  Gradiente sobre imagem
+</Card>
+```
+
+Para componentes futuros ou superfícies próprias, importe `getGradientStyle`, `UIGradientValue` e `uiGradients` de `components/gradient`. `getGradientStyle(value, 'subtle')` aplica uma camada adequada a superfícies com conteúdo; o modo padrão é `vibrant`.
+
+Os novos presets usam `primary`, `secondary` e `tertiary` do tema por padrão. A opção `tones` aceita quaisquer cores semânticas de `UIColor`, permitindo combinações como `['success', 'info', 'tertiary']` sem valores de cor fixos.
+
 ### Seletor de mês e ano
 
 ```tsx
@@ -1137,6 +1174,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type HTMLMotionProps } from 'framer-motion';
 import { type UIColor } from './theme.js';
+import { type UIGradientValue } from './gradient.js';
 declare const avatarVariants: (props?: ({
     variant?: "default" | "primary" | "secondary" | "success" | "tertiary" | "outline" | "gradient" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | "xs" | null | undefined;
@@ -1157,6 +1195,8 @@ export interface AvatarProps extends Omit<HTMLMotionProps<'span'>, 'children'>, 
     status?: 'online' | 'offline' | 'busy' | 'away';
     /** Anima o avatar ao passar o mouse ou pressionar. */
     interactive?: boolean;
+    /** Preset compartilhado usado por `variant="gradient"`. */
+    gradient?: UIGradientValue;
 }
 declare const Avatar: React.ForwardRefExoticComponent<Omit<AvatarProps, "ref"> & React.RefAttributes<HTMLSpanElement>>;
 export { Avatar, avatarVariants };
@@ -1173,6 +1213,7 @@ Fonte: [components/badge](src/components/badge.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
+import { type UIGradientValue } from './gradient.js';
 declare const badgeVariants: (props?: ({
     variant?: "default" | "cyan" | "purple" | "secondary" | "success" | "warning" | "info" | "neutral" | "tertiary" | "destructive" | "scheduled" | "cancelled" | "completed" | "outline" | "gradient" | "muted" | null | undefined;
     size?: "default" | "sm" | "lg" | "xs" | null | undefined;
@@ -1203,8 +1244,10 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLElement>, VariantPr
     display?: 'badge' | 'indicator';
     /** Oculta o texto visível, preservando o rótulo acessível no indicador. */
     showLabel?: boolean;
+    /** Preset compartilhado usado por `variant="gradient"`. */
+    gradient?: UIGradientValue;
 }
-declare function Badge({ className, variant, color, size, children, leftIcon, rightIcon, clickable, onBadgeClick, dot, pill, animated, pulse, status, display, showLabel, ...props }: BadgeProps): React.JSX.Element;
+declare function Badge({ className, variant, color, gradient, style, size, children, leftIcon, rightIcon, clickable, onBadgeClick, dot, pill, animated, pulse, status, display, showLabel, ...props }: BadgeProps): React.JSX.Element;
 declare function StatusBadge({ status, className, ...props }: {
     status: 'active' | 'inactive' | 'pending' | 'verified' | 'blocked';
 } & Omit<BadgeProps, 'children' | 'variant'>): React.JSX.Element;
@@ -1316,6 +1359,7 @@ Fonte: [components/button](src/components/button.tsx).
 ```ts
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
+import { type UIGradientValue } from './gradient.js';
 declare const buttonVariants: (props?: ({
     variant?: "text" | "filled" | "icon" | "success" | "warning" | "danger" | "deleted" | "gradient" | "soft" | "ghost" | "outlined" | "iconSoft" | "edited" | "restored" | "linkSettings" | "fastAction" | null | undefined;
     color?: "default" | "dark" | "blue" | "cyan" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | "amber" | "card" | null | undefined;
@@ -1363,6 +1407,8 @@ export interface ButtonProps extends Omit<PolymorphicProps, 'color'>, VariantPro
     fullWidth?: boolean;
     /** Habilita escala na interação. */
     motionScale?: boolean;
+    /** Preset compartilhado usado por `variant="gradient"`. */
+    gradient?: UIGradientValue;
 }
 /**
  * Botão altamente personalizável com suporte a variantes, estados de carregamento, ícones, animações e funcionalidade de cópia para área de transferência. Pode ser renderizado como um botão tradicional ou como um link, com estilos adaptados para cada caso. Ideal para ações comuns em interfaces de usuário, oferecendo feedback visual e interatividade aprimorada.
@@ -1468,6 +1514,7 @@ import { type VariantProps } from 'class-variance-authority';
 import { type HTMLMotionProps } from 'framer-motion';
 import { type MotionPreset } from './motion.js';
 import { type UIColor, type UIRadius } from './theme.js';
+import { type UIGradientValue } from './gradient.js';
 /** Dados apresentados quando `Card` recebe a prop `metric`. */
 export interface CardMetric {
     /** Nome da métrica. */
@@ -1506,6 +1553,8 @@ export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'title' | 'child
     radius?: UIRadius;
     /** Tone das superfícies coloridas e da métrica. */
     color?: UIColor;
+    /** Preset do gradiente. Usado com `variant="gradient"`. */
+    gradient?: UIGradientValue;
     /** Habilita aparência interativa. */
     interactive?: boolean;
     /** Mostra estrutura provisória de carregamento. */
@@ -2117,6 +2166,40 @@ export {};
 </details>
 
 <details>
+<summary><code>components/gradient</code></summary>
+
+Fonte: [components/gradient](src/components/gradient.ts).
+
+```ts
+import type * as React from 'react';
+import type { UIColor } from './theme.js';
+/** Presets de gradiente disponíveis para qualquer componente da biblioteca. */
+export declare const uiGradients: readonly ["primary", "secondary", "tertiary", "success", "warning", "danger", "info", "primary-secondary", "primary-tertiary", "info-primary", "success-info", "warning-danger", "irregular", "radial-ramp", "blurred", "edgy", "landscape", "multicolor", "retro", "duotone", "tricolor", "volume-mesh", "banding", "gradient-image"];
+export type UIGradient = (typeof uiGradients)[number];
+/** Configuração reutilizável para presets que recebem imagem ou ajustes de posição. */
+export interface UIGradientOptions {
+    preset: UIGradient;
+    /** Imagem usada pelo preset `gradient-image`. */
+    image?: string;
+    position?: React.CSSProperties['backgroundPosition'];
+    size?: React.CSSProperties['backgroundSize'];
+    /** Paleta semântica do tema. Padrão: primary, secondary e tertiary. */
+    tones?: readonly [UIColor, UIColor?, UIColor?];
+}
+export type UIGradientValue = UIGradient | UIGradientOptions;
+export type UIGradientSurface = 'vibrant' | 'subtle';
+/** Resolve qualquer preset para estilos inline, inclusive composições com imagem. */
+export declare function getGradientStyle(value?: UIGradientValue, surface?: UIGradientSurface): React.CSSProperties | undefined;
+/** Classes estruturais mantidas para compatibilidade com a API anterior. */
+export declare const gradientClasses: Record<UIGradient, {
+    card: string;
+    header: string;
+}>;
+```
+
+</details>
+
+<details>
 <summary><code>components/image-input</code></summary>
 
 Fonte: [components/image-input](src/components/image-input.tsx).
@@ -2379,6 +2462,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 import { buttonVariants } from './button.js';
+import { type UIGradientValue } from './gradient.js';
 declare const modalOverlayVariants: (props?: ({
     isOpen?: boolean | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -2397,6 +2481,8 @@ export type ModalProps = React.PropsWithChildren<VariantProps<typeof modalOverla
     title?: string;
     description?: string;
     headerBackgroundImage?: string;
+    /** Gradiente temático do cabeçalho. A imagem, quando presente, tem prioridade. */
+    headerGradient?: UIGradientValue;
     isOpen: boolean;
     onClose: () => void;
     onConfirm?: () => void;
@@ -2430,6 +2516,8 @@ declare const Modal: React.ForwardRefExoticComponent<VariantProps<(props?: ({
     title?: string;
     description?: string;
     headerBackgroundImage?: string;
+    /** Gradiente temático do cabeçalho. A imagem, quando presente, tem prioridade. */
+    headerGradient?: UIGradientValue;
     isOpen: boolean;
     onClose: () => void;
     onConfirm?: () => void;
@@ -2590,6 +2678,7 @@ Fonte: [components/progress-bar](src/components/progress-bar.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import type { UIColor } from './theme.js';
+import { type UIGradientValue } from './gradient.js';
 declare const progressBarVariants: (props?: ({
     size?: "sm" | "md" | "lg" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -2616,6 +2705,8 @@ export interface ProgressBarProps extends Omit<React.HTMLAttributes<HTMLDivEleme
     autoColor?: boolean;
     /** Tone da barra quando `autoColor` está desativado. */
     color?: ColorVariant;
+    /** Preset compartilhado usado quando `color="gradient"`. */
+    gradient?: UIGradientValue;
 }
 declare const ProgressBar: React.ForwardRefExoticComponent<ProgressBarProps & React.RefAttributes<HTMLDivElement>>;
 /** Resumo numérico com barra de progresso. */
@@ -2634,6 +2725,8 @@ export interface StatsProgressProps {
     color?: ColorVariant;
     /** Escolhe a cor conforme o percentual. */
     autoColor?: boolean;
+    /** Preset compartilhado usado quando `color="gradient"`. */
+    gradient?: UIGradientValue;
 }
 declare const StatsProgress: React.ForwardRefExoticComponent<StatsProgressProps & React.RefAttributes<HTMLDivElement>>;
 export { ProgressBar, StatsProgress };
@@ -2769,6 +2862,7 @@ Fonte: [components/separator](src/components/separator.tsx).
 
 ```ts
 import * as React from 'react';
+import { type UIGradientValue } from './gradient.js';
 /** Divisor horizontal ou vertical. */
 export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
     /** Direção do divisor; padrão horizontal. */
@@ -2781,6 +2875,8 @@ export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
     animationEntrance?: boolean;
     /** Anima a saída. */
     animationOut?: boolean;
+    /** Preset compartilhado usado por `variant="gradient"`. */
+    gradient?: UIGradientValue;
 }
 declare const Separator: React.ForwardRefExoticComponent<SeparatorProps & React.RefAttributes<HTMLDivElement>>;
 export { Separator };
@@ -3300,7 +3396,7 @@ import { VariantProps } from "class-variance-authority";
 import React from "react";
 import { type UIColor } from './theme.js';
 declare const textVariants: (props?: ({
-    variant?: "default" | "large" | "small" | "success" | "warning" | "info" | "error" | "code" | "muted" | "emphasis" | "lead" | "highlight" | "subtle" | "field" | null | undefined;
+    variant?: "default" | "large" | "small" | "success" | "warning" | "info" | "error" | "code" | "subtle" | "muted" | "emphasis" | "lead" | "highlight" | "field" | null | undefined;
     align?: "center" | "left" | "right" | null | undefined;
     weight?: "light" | "normal" | "medium" | "bold" | "semibold" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | null | undefined;
@@ -4425,6 +4521,7 @@ export * from './components/input.js';
 export * from './components/textarea.js';
 export * from './components/info.js';
 export * from './components/modal.js';
+export * from './components/gradient.js';
 export * from './components/accordion.js';
 export * from './components/card.js';
 export * from './components/alert.js';

@@ -9,6 +9,7 @@ import { radiusClasses, type UIColor, type UIRadius } from './theme.js';
 import { toneClasses } from './theme.js';
 import { Skeleton } from './skeleton.js';
 import { formatCurrency } from '../functions/formatCurrency.js';
+import { getGradientStyle, gradientClasses, type UIGradientValue } from './gradient.js';
 
 /** Dados apresentados quando `Card` recebe a prop `metric`. */
 export interface CardMetric {
@@ -127,6 +128,8 @@ export interface CardProps
   radius?: UIRadius;
   /** Tone das superfícies coloridas e da métrica. */
   color?: UIColor;
+  /** Preset do gradiente. Usado com `variant="gradient"`. */
+  gradient?: UIGradientValue;
   /** Habilita aparência interativa. */
   interactive?: boolean;
   /** Mostra estrutura provisória de carregamento. */
@@ -151,6 +154,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
     variant,
     size,
     color,
+    gradient,
     title,
     description,
     icon,
@@ -165,6 +169,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
     animationDelay = 0,
     children,
     metric,
+    style,
     ...props
   },
   ref,
@@ -183,7 +188,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
       whileHover={interactive ? { y: -3 } : undefined}
       whileTap={interactive ? { scale: 0.995 } : undefined}
       aria-busy={loading || undefined}
-      className={cn(cardVariants({ variant: interactive ? 'interactive' : variant, size, color }), radiusClasses[radius], loading && 'pointer-events-none overflow-hidden', className)}
+      className={cn(cardVariants({ variant: interactive ? 'interactive' : variant, size, color }), variant === 'gradient' && gradient && gradientClasses[typeof gradient === 'string' ? gradient : gradient.preset].card, radiusClasses[radius], loading && 'pointer-events-none overflow-hidden', className)}
+      style={variant === 'gradient' && gradient ? { ...getGradientStyle(gradient, 'subtle'), ...style } : style}
       {...props}
     >
       {loading && !metric && <span className="absolute inset-0 z-10 animate-pulse bg-muted/65 backdrop-blur-[1px]" aria-hidden="true" />}

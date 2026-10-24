@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toneScopeStyle, type UIColor } from './theme.js';
 import { buttonVariants } from './button.js';
+import { getGradientStyle, gradientClasses, type UIGradientValue } from './gradient.js';
 
 const Button = dynamic(() => import('./button.js').then(mod => mod.Button), { ssr: false });
 const XIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.XIcon), { ssr: false });
@@ -63,6 +64,8 @@ export type ModalProps = React.PropsWithChildren<
         title?: string; // Título do modal
         description?: string; // Descrição do modal
         headerBackgroundImage?: string; // URL da imagem de fundo do cabeçalho
+        /** Gradiente temático do cabeçalho. A imagem, quando presente, tem prioridade. */
+        headerGradient?: UIGradientValue;
         isOpen: boolean; // Indica se o modal está aberto ou fechado
         onClose: () => void; // Função chamada quando o modal deve ser fechado
         onConfirm?: () => void; // Função chamada quando o botão de confirmar é clicado
@@ -97,6 +100,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         title,
         description,
         headerBackgroundImage,
+        headerGradient,
         children,
         onConfirm,
         onCancel,
@@ -122,6 +126,8 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     }, ref) => {
         const contentRef = React.useRef<HTMLDivElement>(null);
         const hasHeaderImage = Boolean(headerBackgroundImage?.trim());
+        const hasHeaderGradient = !hasHeaderImage && Boolean(headerGradient);
+        const hasDecoratedHeader = hasHeaderImage || hasHeaderGradient;
 
         // Impede que o modal seja fechado enquanto uma ação está em andamento
         const handleClose = () => !isConfirming && onClose();
@@ -167,17 +173,18 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                         >
                             <div className={cn(
                                 'flex items-start justify-between gap-3',
-                                hasHeaderImage
+                                hasDecoratedHeader
                                     ? '-mx-4 -mt-4 min-h-[160px] shrink-0 bg-black bg-cover bg-center bg-no-repeat px-4 py-4 md:-mx-6 md:-mt-6 md:px-6'
                                     : variant === 'customer' && '-mx-4 -mt-4 border-b border-border/70 bg-gradient-to-r from-primary/10 via-card to-card px-4 py-4 md:-mx-6 md:-mt-6 md:px-6',
+                                hasHeaderGradient && gradientClasses[typeof headerGradient === 'string' ? headerGradient : headerGradient!.preset].header,
                             )} style={hasHeaderImage ? {
                                 backgroundImage: `linear-gradient(rgb(0 0 0 / 60%), rgb(0 0 0 / 60%)), url(${JSON.stringify(headerBackgroundImage)})`,
-                            } : undefined}>
-                                <div className={cn('w-full', hasHeaderImage && 'min-w-0 break-words')}>
-                                    <h2 className={cn('text-lg font-semibold', hasHeaderImage ? 'text-white' : 'text-foreground')}>{title}</h2>
-                                    {description && <p className={cn('text-xs', hasHeaderImage ? 'text-white/80' : 'text-muted-foreground')}>{description}</p>}
+                            } : getGradientStyle(headerGradient)}>
+                                <div className={cn('w-full', hasDecoratedHeader && 'min-w-0 break-words')}>
+                                    <h2 className={cn('text-lg font-semibold', hasDecoratedHeader ? 'text-white' : 'text-foreground')}>{title}</h2>
+                                    {description && <p className={cn('text-xs', hasDecoratedHeader ? 'text-white/80' : 'text-muted-foreground')}>{description}</p>}
                                 </div>
-                                <div className={cn('flex items-center justify-end gap-2', hasHeaderImage && 'shrink-0')}>
+                                <div className={cn('flex items-center justify-end gap-2', hasDecoratedHeader && 'shrink-0')}>
                                     {buttonsHeader?.map((button, index) => (
                                         <Button
                                             key={index}
@@ -185,7 +192,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                             color={color}
                                             onClick={button.onClick}
                                             leftIcon={button.icon}
-                                            className={cn(hasHeaderImage ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
+                                            className={cn(hasDecoratedHeader ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
                                             disabled={isConfirming}
                                             fullWidth={false}
                                         >
@@ -198,7 +205,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                                             color={color}
                                             onClick={handleClose}
                                             leftIcon={<XIcon size={20} />}
-                                            className={cn(hasHeaderImage ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
+                                            className={cn(hasDecoratedHeader ? 'shrink-0 text-white focus-visible:ring-white' : 'text-muted-foreground')}
                                             disabled={isConfirming}
                                             fullWidth={false}
                                         />

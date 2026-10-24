@@ -16,7 +16,7 @@ for (const directory of ['components', 'hooks', 'providers', 'functions', 'types
     const module = `${directory}/${name.replace(/\.d\.ts$/, '')}`;
     const declarations = readFileSync(path.join(root, 'dist', directory, name), 'utf8').trim();
     sections.push('<details>', `<summary><code>${module}</code></summary>`, '',
-      `Fonte: [${module}](src/${module}.${directory === 'components' && !['data-types', 'theme'].includes(name.replace(/\.d\.ts$/, '')) || directory === 'providers' ? 'tsx' : 'ts'}).`, '',
+      `Fonte: [${module}](src/${module}.${directory === 'components' && !['data-types', 'gradient', 'theme'].includes(name.replace(/\.d\.ts$/, '')) || directory === 'providers' ? 'tsx' : 'ts'}).`, '',
       '```ts', declarations, '```', '', '</details>', '');
   }
 }

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cn } from '../utils.js';
 import { motion } from 'framer-motion';
+import { getGradientStyle, type UIGradientValue } from './gradient.js';
 
 /** Divisor horizontal ou vertical. */
 export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -14,10 +15,12 @@ export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
     animationEntrance?: boolean;
     /** Anima a saída. */
     animationOut?: boolean;
+    /** Preset compartilhado usado por `variant="gradient"`. */
+    gradient?: UIGradientValue;
 }
 
 const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(
-    ({ className, orientation = 'horizontal', variant = 'default', text, animationEntrance = false, animationOut = false, ...props }, ref) => {
+    ({ className, orientation = 'horizontal', variant = 'default', text, animationEntrance = false, animationOut = false, gradient, style, ...props }, ref) => {
         const animationProps = (animationEntrance || animationOut) ? {
             initial: { opacity: 0, scaleX: orientation === 'horizontal' ? 0 : 1, scaleY: orientation === 'vertical' ? 0 : 1 },
             animate: { opacity: 1, scaleX: 1, scaleY: 1 },
@@ -62,6 +65,7 @@ const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(
                             : 'h-full w-px bg-gradient-to-b from-transparent via-border to-transparent mx-6',
                         className
                     )}
+                    style={gradient ? { ...getGradientStyle(gradient), ...style } : style}
                     {...props}
                 />
             );

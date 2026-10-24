@@ -6,6 +6,11 @@ import { readFileSync } from 'node:fs';
 import { Spinner } from '../dist/components/spinner.js';
 import { Badge } from '../dist/components/badge.js';
 import { Card } from '../dist/components/card.js';
+import { Modal } from '../dist/components/modal.js';
+import { getGradientStyle, uiGradients } from '../dist/components/gradient.js';
+import { Avatar } from '../dist/components/avatar.js';
+import { ProgressBar } from '../dist/components/progress-bar.js';
+import { Separator } from '../dist/components/separator.js';
 import { useAction } from '../dist/hooks/useAction.js';
 import { useFetch } from '../dist/hooks/useFetch.js';
 import { useApi } from '../dist/hooks/useApi.js';
@@ -32,6 +37,36 @@ test('metric card renders its value and loading skeleton', () => {
   assert.match(renderToStaticMarkup(React.createElement(Card, { metric })), /Receita/);
   assert.match(renderToStaticMarkup(React.createElement(Card, { metric })), /vs anterior/);
   assert.match(renderToStaticMarkup(React.createElement(Card, { metric, loading: true })), /animate-pulse/);
+});
+
+test('shared gradient system supports every visual preset and image composition', () => {
+  assert.ok(uiGradients.length >= 24);
+  for (const gradient of uiGradients) {
+    const markup = renderToStaticMarkup(React.createElement(Card, { variant: 'gradient', gradient }, gradient));
+    assert.match(markup, /background-image:/);
+    assert.ok(getGradientStyle(gradient).backgroundImage.includes('gradient'));
+  }
+  assert.match(getGradientStyle({ preset: 'gradient-image', image: '/cover.jpg' }).backgroundImage, /url\("\/cover\.jpg"\)/);
+  const themed = getGradientStyle({ preset: 'irregular', tones: ['success', 'info', 'tertiary'] }).backgroundImage;
+  assert.match(themed, /var\(--success\)/);
+  assert.match(themed, /var\(--info\)/);
+  assert.match(themed, /var\(--tertiary\)/);
+  assert.match(renderToStaticMarkup(React.createElement(Avatar, { variant: 'gradient', gradient: 'irregular', name: 'Ada' })), /radial-gradient/);
+  assert.match(renderToStaticMarkup(React.createElement(Badge, { variant: 'gradient', gradient: 'retro' }, 'Novo')), /linear-gradient/);
+  assert.match(renderToStaticMarkup(React.createElement(ProgressBar, { value: 50, color: 'gradient', gradient: 'tricolor' })), /radial-gradient/);
+  assert.match(renderToStaticMarkup(React.createElement(Separator, { variant: 'gradient', gradient: 'banding' })), /linear-gradient/);
+});
+
+test('modal header supports a thematic gradient', () => {
+  const markup = renderToStaticMarkup(React.createElement(Modal, {
+    isOpen: true,
+    onClose() {},
+    title: 'Detalhes',
+    headerGradient: 'primary-secondary',
+  }, 'Conteúdo'));
+  assert.match(markup, /var\(--primary\)/);
+  assert.match(markup, /var\(--secondary\)/);
+  assert.match(markup, /text-white/);
 });
 
 test('all four client hooks render with their initial state', () => {

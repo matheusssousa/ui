@@ -10,6 +10,7 @@ import { handleCopy } from '../functions/handleCopy.js';
 import { CheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { motion } from 'framer-motion';
 import { toneClasses, type UIColor } from './theme.js';
+import { getGradientStyle, type UIGradientValue } from './gradient.js';
 
 const CircleNotchIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CircleNotchIcon));
 const CopySimpleIcon = dynamic(() => import('@phosphor-icons/react/dist/ssr').then(mod => mod.CopySimpleIcon));
@@ -328,6 +329,8 @@ export interface ButtonProps
     fullWidth?: boolean;
     /** Habilita escala na interação. */
     motionScale?: boolean;
+    /** Preset compartilhado usado por `variant="gradient"`. */
+    gradient?: UIGradientValue;
 };
 
 /**
@@ -347,6 +350,8 @@ const Button = React.forwardRef<
             variant,
             size,
             color,
+            gradient,
+            style,
             asLink = false,
             href,
             loading = false,
@@ -539,6 +544,7 @@ const Button = React.forwardRef<
         );
 
         const isDisabled = loading || props.disabled;
+        const gradientStyle = variant === 'gradient' && gradient ? { ...getGradientStyle(gradient), ...style } : style;
 
         // Animações do Framer Motion
         const animationProps = (animationEntrance || animationOut) ? {
@@ -557,6 +563,7 @@ const Button = React.forwardRef<
                 disabled={isDisabled}
                 onClick={handleRippleAndCopy}
                 type={props.type || 'button'}
+                style={gradientStyle}
                 {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
             >
                 {content}
@@ -577,6 +584,7 @@ const Button = React.forwardRef<
                 }}
                 aria-disabled={isDisabled}
                 tabIndex={isDisabled ? -1 : undefined}
+                style={gradientStyle}
                 {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
             >
                 {content}

@@ -7,6 +7,7 @@ import { cn } from '../utils.js';
 import { getStatusMeta } from '../functions/getStatusBadge.js';
 import { toneClasses, type UIColor } from './theme.js';
 import { useTableStyle, tableBadgeClass } from '../internal/table-style.js';
+import { getGradientStyle, type UIGradientValue } from './gradient.js';
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
@@ -80,12 +81,16 @@ export interface BadgeProps
   display?: 'badge' | 'indicator';
   /** Oculta o texto visível, preservando o rótulo acessível no indicador. */
   showLabel?: boolean;
+  /** Preset compartilhado usado por `variant="gradient"`. */
+  gradient?: UIGradientValue;
 }
 
 function Badge({
   className,
   variant,
   color,
+  gradient,
+  style,
   size,
   children,
   leftIcon,
@@ -111,7 +116,7 @@ function Badge({
   const resolvedVariant = meta?.variant ?? variant;
   const content = children ?? (showLabel ? meta?.label : undefined);
   if (display === 'indicator') {
-    return <span className={cn('inline-flex items-center gap-2 text-xs text-muted-foreground', className)} {...props}>
+    return <span className={cn('inline-flex items-center gap-2 text-xs text-muted-foreground', className)} style={style} {...props}>
       <span className="relative flex size-2.5" aria-hidden="true">
         {pulse && <span className={cn('absolute inline-flex size-full animate-ping rounded-full opacity-40', color ? toneClasses[color].fill : indicatorColors[resolvedVariant ?? 'default'])} />}
         <span className={cn('relative inline-flex size-2.5 rounded-full', color ? toneClasses[color].fill : indicatorColors[resolvedVariant ?? 'default'])} />
@@ -132,6 +137,7 @@ function Badge({
         pill && 'rounded-full',
         className
       )}
+      style={resolvedVariant === 'gradient' && gradient ? { ...getGradientStyle(gradient), ...style } : style}
       onClick={clickable ? onBadgeClick : undefined}
       {...props}
     >
