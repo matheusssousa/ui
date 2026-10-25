@@ -376,6 +376,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             return `${digits.slice(0, 2)}:${digits.slice(2)}`;
         };
 
+        const normalizeDateInput = (value: string): string => {
+            const digits = value.replace(/\D/g, '').slice(0, 8);
+            if (digits.length <= 2) return digits;
+            if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+            return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+        };
+
+        const parseDisplayDate = (value: string): Date | null => {
+            const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+            if (!match) return null;
+            const [, day, month, year] = match;
+            const date = new Date(Number(year), Number(month) - 1, Number(day));
+            return date.getFullYear() === Number(year)
+                && date.getMonth() === Number(month) - 1
+                && date.getDate() === Number(day) ? date : null;
+        };
+
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             if (isCurrency) {
                 const val = parseCurrencyInput(e.target.value);
@@ -413,6 +430,34 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     props.onChange(synthetic);
                 }
 
+                return;
+            }
+
+            if (isDate) {
+                const displayDate = normalizeDateInput(e.target.value);
+                const parsedDate = parseDisplayDate(displayDate);
+                setDisplayValue(displayDate);
+                setHasValue(!!displayDate);
+
+                if (parsedDate) {
+                    const serializedValue = toISODate(parsedDate);
+                    setSelectedDate(parsedDate);
+                    setViewMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
+                    onValueChange?.(serializedValue);
+                    props.onChange?.({
+                        ...e,
+                        target: { ...(e.target as any), name: props.name, value: serializedValue },
+                        currentTarget: { ...(e.currentTarget as any), name: props.name, value: serializedValue },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                } else if (!displayDate) {
+                    setSelectedDate(null);
+                    onValueChange?.('');
+                    props.onChange?.({
+                        ...e,
+                        target: { ...(e.target as any), name: props.name, value: '' },
+                        currentTarget: { ...(e.currentTarget as any), name: props.name, value: '' },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                }
                 return;
             }
 
@@ -1193,8 +1238,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         onBlur={handleBlur}
                         onChange={isMasked ? handleMaskedReactChange : handleChange}
                         value={isMasked ? maskedValue : (isCurrency || isDate || isTime || isDateTime ? displayValue : props.value)}
-                        readOnly={isDate || isDateTime || props.readOnly}
-                        inputMode={isCurrency ? 'numeric' : isDate || isDateTime ? 'none' : isTime ? 'numeric' : undefined}
+                        readOnly={isDateTime || props.readOnly}
+                        inputMode={isCurrency || isDate || isTime ? 'numeric' : isDateTime ? 'none' : undefined}
                         onClick={isDate || isDateTime ? openCalendar : isTime ? openTimePicker : undefined}
                         {...restProps}
                     />
@@ -1362,8 +1407,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         onBlur={handleBlur}
                         onChange={isMasked ? handleMaskedReactChange : handleChange}
                         value={isMasked ? maskedValue : (isCurrency || isDate || isTime || isDateTime ? displayValue : props.value)}
-                        readOnly={isDate || isDateTime || props.readOnly}
-                        inputMode={isCurrency ? 'numeric' : isDate || isDateTime ? 'none' : isTime ? 'numeric' : undefined}
+                        readOnly={isDateTime || props.readOnly}
+                        inputMode={isCurrency || isDate || isTime ? 'numeric' : isDateTime ? 'none' : undefined}
                         onClick={isDate || isDateTime ? openCalendar : isTime ? openTimePicker : undefined}
                         {...restProps}
                     />

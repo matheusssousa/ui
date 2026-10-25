@@ -35,9 +35,12 @@ const tableVariants = cva(
         spreadsheet: 'ui-table-finance',
       },
       size: {
+        xs: 'text-[0.6875rem] [&_th]:px-1.5 [&_th]:py-1.5 [&_td]:px-1.5 [&_td]:py-0.5',
         sm: 'text-xs [&_th]:px-2 [&_th]:py-2 [&_td]:px-2 [&_td]:py-1',
+        md: 'text-sm [&_th]:px-3 [&_th]:py-3 [&_td]:px-3 [&_td]:py-2',
         default: 'text-sm [&_th]:px-3 [&_th]:py-3 [&_td]:px-3 [&_td]:py-2',
         lg: 'text-base [&_th]:px-4 [&_th]:py-4 [&_td]:px-4 [&_td]:py-3',
+        xl: 'text-lg [&_th]:px-5 [&_th]:py-5 [&_td]:px-5 [&_td]:py-4',
       },
     },
     defaultVariants: {
@@ -280,7 +283,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
 
     return (
       <TableRuntimeContext.Provider value={{ store, navigation, spreadsheet, canEdit, tableId, stacked: effectiveMobileLayout === 'stacked', columnOffset: selectable ? 1 : 0 }}>
-      <TableStyleContext.Provider value={{ size: size ?? 'default', borderless: variant !== 'outline' && variant !== 'grid' && variant !== 'spreadsheet', spreadsheet }}>
+      <TableStyleContext.Provider value={{ size: size ?? 'md', borderless: variant !== 'outline' && variant !== 'grid' && variant !== 'spreadsheet', spreadsheet }}>
       <div className={cn('w-full min-w-0 max-w-full space-y-4', containerClassName)}>
         {renderBulkActions && selectedRows.length > 0 && (
           renderBulkActions(selectedRows, handleClearSelection)

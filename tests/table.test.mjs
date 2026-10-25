@@ -112,9 +112,11 @@ test('per-row editor and readonly render, concurrent saves, unmount and prop upd
 
 test('variants, sizes, layout, readonly compatibility and standalone controls', () => {
   for (const variant of ['default', 'ghost', 'striped', 'outline', 'grid', 'fixed']) {
-    for (const size of ['sm', 'default', 'lg']) {
+    for (const size of ['xs', 'sm', 'md', 'lg', 'xl', 'default']) {
       const markup = renderToStaticMarkup(h(Table, { variant, size, data: [{ id: 0, name: 'A' }], columns: [column], onCellSave: async () => {} }));
       assert.match(markup, /border-0!/); assert.match(markup, /ring-0!/); assert.match(markup, /focus:bg-muted\/60!/);
+      if (size === 'xs') assert.match(markup, /text-\[0\.6875rem\]!/);
+      if (size === 'xl') assert.match(markup, /text-lg!/);
       if (variant === 'fixed') assert.match(markup, /table-fixed/);
       if (variant === 'grid') assert.match(markup, /\[&amp;_td\]:border/);
     }
@@ -333,6 +335,34 @@ test('money and date editors send exact decimal and ISO strings and format edita
     await click([...dialog.querySelectorAll('button')].find(button => button.textContent.trim() === '2'));
     assert.equal(document.activeElement, input); await focus(ui.outside);
     assert.equal(calls.length, 1); assert.deepEqual(calls[0].changes, { amount: '145.50', date: '2026-11-02' });
+  } finally { await ui.dispose(); }
+});
+
+test('table date editor accepts a typed Brazilian date and stores its ISO value', async () => {
+  const calls = [];
+  const ui = await mount({ columns: [
+    { key: 'date', label: 'Date', editor: { type: 'date' } },
+  ], data: [{ id: 1, date: '2026-10-19' }], onCellSave: async event => calls.push(event) });
+  try {
+    const input = ui.container.querySelector('input');
+    assert.equal(input.readOnly, false);
+    assert.equal(input.placeholder, '');
+    await focus(input); await change(input, '20102026');
+    assert.equal(input.value, '20/10/2026');
+    await focus(ui.outside);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].value, '2026-10-20');
+  } finally { await ui.dispose(); }
+});
+
+test('empty table date editor stays visually blank even when its editor has a placeholder', async () => {
+  const ui = await mount({ columns: [
+    { key: 'date', label: 'Date', editor: { type: 'date', placeholder: 'DD/MM/AAAA' } },
+  ], data: [{ id: 1, date: '' }], onCellSave: async () => {} });
+  try {
+    const input = ui.container.querySelector('input');
+    assert.equal(input.value, '');
+    assert.equal(input.placeholder, '');
   } finally { await ui.dispose(); }
 });
 

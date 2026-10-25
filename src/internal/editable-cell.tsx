@@ -137,7 +137,7 @@ export function EditableCell({ rowId, column, rowIndex, columnIndex, className }
             clearable={editor.clearable} display={editor.display}
             onValueChange={next => { if (!Array.isArray(next)) store.setDraftValue(rowId, column.key, next); }} />
         : editor.type === 'date'
-          ? <Input {...editor.inputProps} {...field} id={nativeId} type="date" min={editor.min} max={editor.max} value={String(raw ?? '')}
+          ? <Input {...editor.inputProps} {...field} placeholder="" id={nativeId} type="date" min={editor.min} max={editor.max} value={String(raw ?? '')}
               onChange={event => store.setDraftValue(rowId, column.key, event.target.value)} />
           : <Input {...editor.inputProps} {...field} type={editor.type === 'money' ? 'text' : editor.inputType ?? 'text'}
               inputMode={editor.type === 'money' ? 'decimal' : undefined} value={String(raw ?? '')}

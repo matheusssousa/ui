@@ -793,7 +793,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     aria-label="Buscar opções"
-                                    className={cn('w-full px-2 py-1 text-sm bg-transparent border-0 rounded-md outline-none placeholder:text-muted-foreground', tableStyle && 'ring-0 focus:bg-muted/60')}
+                                    className={cn('w-full px-2 py-1 text-sm bg-transparent border-0 rounded-md outline-none placeholder:text-muted-foreground', tableStyle && ['ring-0 focus:bg-muted/60', tableFieldSizes[tableStyle.size]])}
                                 />
                             </div>
                         )}
@@ -801,7 +801,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                             {multiple && showSelectAll && enabledOptionValues.length > 0 && (
                                 <button
                                     type="button"
-                                    className="relative flex w-full cursor-pointer items-center rounded-sm border-b border-border/60 px-2 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                                    className={cn("relative flex w-full cursor-pointer items-center rounded-sm border-b border-border/60 px-2 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground", tableStyle && tableFieldSizes[tableStyle.size])}
                                     onClick={(event) => {
                                         event.stopPropagation();
                                         handleSelectAll();
@@ -822,7 +822,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                 </button>
                             )}
                             {filteredOptions.length === 0 ? (
-                                <div className="py-2 text-center text-sm text-muted-foreground">{emptyMessage}</div>
+                                <div className={cn("py-2 text-center text-sm text-muted-foreground", tableStyle && tableFieldSizes[tableStyle.size])}>{emptyMessage}</div>
                             ) : (
                                 filteredOptions.map((option, index) => (
                                     <div
@@ -832,6 +832,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                                         onMouseDown={event => event.preventDefault()}
                                         className={cn(
                                             'relative flex items-center rounded-sm px-2 py-1.5 text-sm select-none transition-colors capitalize',
+                                            tableStyle && tableFieldSizes[tableStyle.size],
                                             option.disabled
                                                 ? 'opacity-50 cursor-not-allowed'
                                                 : 'cursor-pointer hover:bg-accent hover:text-accent-foreground',
