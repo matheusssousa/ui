@@ -166,6 +166,14 @@ test('default solid and soft theme colors meet text contrast in light and dark t
   }
 });
 
+test('spreadsheet cells inherit the table font size', () => {
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  const cellRule = css.match(/\.ui-spreadsheet td\.ui-sheet-cell\s*\{([^}]+)\}/)?.[1];
+
+  assert.ok(cellRule, 'missing spreadsheet cell rule');
+  assert.match(cellRule, /font-size:\s*inherit\s*;/);
+});
+
 test('month and year picker shows the selected month and disables navigation at year limits', () => {
   const october = renderToStaticMarkup(React.createElement(MonthYearPicker, {
     defaultValue: new Date(2026, 9, 1), minYear: 2025, maxYear: 2027,

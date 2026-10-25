@@ -225,7 +225,7 @@
 /* Table cells and editors keep focus without drawing an outline or ring. */
 .ui-spreadsheet { border-collapse: separate; border-spacing: 0; }
 .ui-spreadsheet th { height: 36px; padding: 6px 8px !important; font-size: 0.75rem; background: var(--card); }
-.ui-spreadsheet td.ui-sheet-cell { position: relative; height: 36px; padding: 0 !important; font-size: 0.875rem; }
+.ui-spreadsheet td.ui-sheet-cell { position: relative; height: 36px; padding: 0 !important; font-size: inherit; }
 .ui-spreadsheet .ui-sheet-value { min-height: 36px; display: flex; align-items: center; padding: 6px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ui-spreadsheet .text-right .ui-sheet-value { justify-content: flex-end; }
 .ui-spreadsheet .text-center .ui-sheet-value { justify-content: center; }
