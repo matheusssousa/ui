@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo, useReducedMotion } from 'framer-motion';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import dynamic from 'next/dynamic.js';
@@ -92,6 +92,8 @@ export interface CarouselProps extends VariantProps<typeof carouselVariants> {
     onSlideChange?: (index: number) => void;
     /** Índice inicial do slide. */
     initialSlide?: number;
+    indicatorVariant?: 'dots' | 'bars';
+    indicatorsClassName?: string;
 }
 
 const swipeConfidenceThreshold = 10000;
@@ -115,12 +117,17 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
     loop = true,
     onSlideChange,
     initialSlide = 0,
+    indicatorVariant = 'dots',
+    indicatorsClassName,
     ...props
 }, ref) => {
-    const [currentIndex, setCurrentIndex] = useState(initialSlide);
+    const reducedMotion = useReducedMotion();
+    const [currentIndex, setCurrentIndex] = useState(Number.isFinite(initialSlide) ? Math.max(0, Math.min(Math.floor(initialSlide), items.length - 1)) : 0);
     const [direction, setDirection] = useState(0);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const isAutoPlayPausedRef = useRef(false);
+    const focusPausedRef = useRef(false);
+    useEffect(() => { setCurrentIndex(index => Math.max(0, Math.min(index, items.length - 1))); }, [items.length]);
 
     const slideVariants = {
         enter: (direction: number) => ({
@@ -176,13 +183,14 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
 
     // Auto-play functionality
     useEffect(() => {
-        if (!autoPlay) return;
+        if (!autoPlay || reducedMotion || items.length < 2) return;
 
         const startAutoPlay = () => {
             intervalRef.current = setInterval(() => {
-                if (!isAutoPlayPausedRef.current) {
+                if (!isAutoPlayPausedRef.current && !focusPausedRef.current) {
                     setDirection(1);
                     setCurrentIndex((prev) => {
+                        if (!loop && prev >= items.length - 1) return prev;
                         const newIndex = (prev + 1) % items.length;
                         onSlideChange?.(newIndex);
                         return newIndex;
@@ -198,7 +206,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                 clearInterval(intervalRef.current);
             }
         };
-    }, [autoPlay, autoPlayInterval, items.length, onSlideChange]);
+    }, [autoPlay, autoPlayInterval, items.length, onSlideChange, reducedMotion, loop]);
 
     const handleMouseEnter = () => {
         if (pauseOnHover && autoPlay) {
@@ -229,17 +237,19 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
             style={toneScopeStyle(color, style)}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onFocusCapture={() => { focusPausedRef.current = true; }}
+            onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) focusPausedRef.current = false; }}
             {...props}
         >
             <AnimatePresence initial={false} custom={direction} mode="wait">
                 <motion.div
                     key={currentIndex}
                     custom={direction}
-                    variants={slideVariants}
+                    variants={reducedMotion ? { enter: { opacity: 1 }, center: { opacity: 1 }, exit: { opacity: 1 } } : slideVariants}
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{
+                    transition={reducedMotion ? { duration: 0 } : {
                         x: { type: "spring", stiffness: 300, damping: 30 },
                         opacity: { duration: 0.2 }
                     }}
@@ -249,7 +259,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                     onDragEnd={handleDragEnd}
                     className="absolute inset-0 w-full h-full flex items-center justify-center"
                 >
-                    {items[currentIndex]?.content}
+                    {items[Math.min(currentIndex, items.length - 1)]?.content}
                 </motion.div>
             </AnimatePresence>
 
@@ -257,6 +267,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
             {showArrows && items.length > 1 && (
                 <>
                     <button
+                        type="button"
                         className={cn(buttonVariants({ position: 'left' }))}
                         onClick={() => paginate(-1)}
                         disabled={!loop && currentIndex === 0}
@@ -265,6 +276,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                         <CaretLeftIcon className="w-5 h-5 text-foreground" />
                     </button>
                     <button
+                        type="button"
                         className={cn(buttonVariants({ position: 'right' }))}
                         onClick={() => paginate(1)}
                         disabled={!loop && currentIndex === items.length - 1}
@@ -277,14 +289,17 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
 
             {/* Indicators */}
             {showIndicators && items.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                <div className={cn('absolute bottom-1 left-1/2 -translate-x-1/2 flex max-w-full flex-wrap justify-center z-10', indicatorsClassName)}>
                     {items.map((_, index) => (
                         <button
+                            type="button"
                             key={index}
-                            className={cn(indicatorVariants({ active: index === currentIndex }))}
+                            className="ui-carousel-indicator"
+                            data-variant={indicatorVariant}
+                            aria-current={index === currentIndex ? 'true' : undefined}
                             onClick={() => goToSlide(index)}
                             aria-label={`Ir para slide ${index + 1}`}
-                        />
+                        ><span aria-hidden="true" /></button>
                     ))}
                 </div>
             )}

@@ -7,7 +7,7 @@ import { cn } from '../utils.js';
 
 const chartVariants = cva('relative flex w-full min-w-0 flex-col gap-3 rounded-xl border border-border bg-background p-4 text-foreground', {
     variants: {
-        variant: { default: '', outlined: 'border-2 border-input', filled: 'bg-muted', minimal: 'border-0 bg-transparent p-0', elevated: 'bg-card shadow-md', soft: 'border-transparent bg-muted/40' },
+        variant: { default: '', outlined: 'border-2 border-input', filled: 'bg-muted', minimal: 'border-0 bg-transparent p-0', elevated: 'bg-card shadow-md', soft: 'border-transparent bg-muted/40', glow: 'ui-surface-glow' },
         size: { sm: 'h-48', md: 'h-64', lg: 'h-80', xl: 'h-96' },
     },
     defaultVariants: { variant: 'default', size: 'md' },
@@ -175,8 +175,10 @@ export interface LineChartProps extends BaseChartProps {
     gradient?: boolean;
     /** Oculta eixos e usa toda a área para tendências compactas. */
     compact?: boolean;
+    /** Destaca o último ponto mesmo quando os demais pontos estão ocultos. */
+    highlightLast?: boolean;
 }
-export const LineChart = React.forwardRef<HTMLDivElement, LineChartProps>(({ smooth = false, curve, strokeWidth = 2.5, showDots = true, fillArea = false, fillOpacity = 0.25, gradient = true, compact = false, ...props }, ref) => <ChartFrame {...props} chartRef={ref} singleColor>{plot => {
+export const LineChart = React.forwardRef<HTMLDivElement, LineChartProps>(({ smooth = false, curve, strokeWidth = 2.5, showDots = true, fillArea = false, fillOpacity = 0.25, gradient = true, compact = false, highlightLast = false, ...props }, ref) => <ChartFrame {...props} chartRef={ref} singleColor>{plot => {
     const b = bounds(plot, false, compact);
     const points = plot.data.map((p, i) => ({ x: b.left + (plot.data.length === 1 ? b.width / 2 : b.width * i / (plot.data.length - 1)), y: b.y(p.value) }));
     const path = linePath(points, curve || (smooth ? 'smooth' : 'linear'));
@@ -189,7 +191,7 @@ export const LineChart = React.forwardRef<HTMLDivElement, LineChartProps>(({ smo
         {points.map((point, i) => <g key={i}>
             {!compact && i % interval === 0 && <text x={point.x} y={b.top + b.height + 20} textAnchor="middle" fontSize="11" className="fill-muted-foreground">{plot.label(plot.data[i].label).slice(0, 14)}</text>}
             {plot.active === i && <line x1={point.x} x2={point.x} y1={b.top} y2={b.top + b.height} stroke={plot.color(i)} strokeDasharray="3 4" opacity="0.4" />}
-            {(showDots || points.length === 1 || plot.active === i) && <circle cx={point.x} cy={point.y} r={plot.active === i ? 5 : 3.5} fill={plot.data[i].color || plot.color(0)} stroke="var(--background, #fff)" strokeWidth="2" />}
+            {(showDots || points.length === 1 || plot.active === i || (highlightLast && i === points.length - 1)) && <circle cx={point.x} cy={point.y} r={plot.active === i ? 5 : 3.5} fill={plot.data[i].color || plot.color(0)} stroke="var(--background, #fff)" strokeWidth="2" />}
             {props.showValues && <text x={point.x} y={point.y - 10} textAnchor="middle" fontSize="11" fill="currentColor">{plot.format(plot.data[i].value)}</text>}
             <rect {...plot.bind(i) as React.SVGProps<SVGRectElement>} x={i === 0 ? b.left - 5 : (points[i - 1].x + point.x) / 2} y={b.top - 6} width={points.length === 1 ? b.width + 10 : b.width / (points.length - 1) / (i === 0 || i === points.length - 1 ? 2 : 1) + 5} height={b.height + 12} fill="transparent" />
         </g>)}

@@ -8,7 +8,7 @@ export type SidebarSlot = React.ReactNode | ((isOpen: boolean) => React.ReactNod
 
 export type SidebarPart = 'brand' | 'header' | 'toggle' | 'search' | 'navigation' | 'notifications' | 'footer';
 export interface SidebarProps {
-  variant?: 'default' | 'outline' | 'floating' | 'compact' | 'glass';
+  variant?: 'default' | 'outline' | 'floating' | 'compact' | 'glass' | 'glow';
   side?: 'left' | 'right';
   position?: 'static' | 'sticky' | 'fixed';
   animation?: 'none' | 'smooth' | 'spring';

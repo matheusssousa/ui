@@ -85,3 +85,4 @@ export * from './functions/table-values.js';
 export * from './components/sidebar.js';
 export * from './components/sidebarSection.js';
 export * from './components/sidebarNavItem.js';
+export * from './components/slider.js';

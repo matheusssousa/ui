@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { UIColor } from './theme.js';
 import { getGradientStyle, type UIGradientValue } from './gradient.js';
 
@@ -24,7 +24,7 @@ const progressBarVariants = cva(
 );
 
 const progressFillVariants = cva(
-    'h-full transition-all duration-500 ease-out rounded-full',
+    'h-full w-full origin-left rounded-full',
     {
         variants: {
             color: {
@@ -75,6 +75,12 @@ export interface ProgressBarProps
     color?: ColorVariant;
     /** Preset compartilhado usado quando `color="gradient"`. */
     gradient?: UIGradientValue;
+    variant?: 'default' | 'glow' | 'segmented';
+    segments?: number;
+    trackClassName?: string;
+    fillClassName?: string;
+    /** Posição do percentual em relação à barra. */
+    labelPosition?: 'top' | 'bottom' | 'inline';
 }
 
 const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
@@ -92,9 +98,18 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
         animated = false,
         striped = false,
         autoColor = false,
+        variant = 'default',
+        segments = 5,
+        trackClassName,
+        fillClassName,
+        labelPosition = 'top',
         ...props
     }, ref) => {
-        const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+        const reducedMotion = useReducedMotion();
+        const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
+        const safeValue = Number.isFinite(value) ? Math.min(Math.max(value, 0), safeMax) : 0;
+        const percentage = safeValue / safeMax * 100;
+        const count = Number.isFinite(segments) ? Math.min(100, Math.max(1, Math.floor(segments))) : 5;
 
         // Auto color based on percentage
         const getAutoColor = (): ColorVariant => {
@@ -106,41 +121,39 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
         const finalColor: ColorVariant = autoColor ? getAutoColor() : (color || 'default');
 
         const stripedClasses = striped ? 'bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)]' : '';
-        const animatedClasses = animated ? 'animate-[progress-stripes_1s_linear_infinite]' : '';
+        const animatedClasses = animated && !reducedMotion ? 'animate-[progress-stripes_1s_linear_infinite]' : '';
 
         return (
-            <div className={cn('w-full space-y-1', className)} ref={ref} {...props}>
+            <div className={cn('ui-progress w-full min-w-0 gap-2', className)} data-label-position={labelPosition} ref={ref} {...props}>
                 {(showLabel || showPercentage) && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="ui-progress-label flex flex-wrap items-center justify-between gap-2 text-sm">
                         {showLabel && label && (
                             <span className="text-muted-foreground">{label}</span>
                         )}
                         {showPercentage && (
                             <span className="text-muted-foreground font-medium">
                                 {formatValue 
-                                    ? formatValue(value, max) 
+                                    ? formatValue(safeValue, safeMax)
                                     : `${percentage.toFixed(1)}%`
                                 }
                             </span>
                         )}
                     </div>
                 )}
-                <div className={cn(progressBarVariants({ size }))}>
+                <div className={cn(progressBarVariants({ size }), 'ui-progress-track', variant === 'glow' && 'ui-progress-glow', trackClassName)} role="progressbar" aria-label={label ?? props['aria-label'] ?? 'Progresso'} aria-labelledby={props['aria-labelledby']} aria-valuenow={safeValue} aria-valuemin={0} aria-valuemax={safeMax}>
                     <motion.div
                         className={cn(
                             progressFillVariants({ color: finalColor }),
                             stripedClasses,
-                            animatedClasses
+                            animatedClasses,
+                            fillClassName
                         )}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                        role="progressbar"
+                        initial={reducedMotion ? false : { scaleX: 0 }}
+                        animate={{ scaleX: percentage / 100 }}
+                        transition={{ duration: reducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
                         style={finalColor === 'gradient' && gradient ? getGradientStyle(gradient) : undefined}
-                        aria-valuenow={value}
-                        aria-valuemin={0}
-                        aria-valuemax={max}
                     />
+                    {variant === 'segmented' && <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex">{Array.from({ length: count }, (_, index) => <span key={index} className="flex-1" style={{ borderInlineStart: index ? '4px solid var(--card)' : undefined }} />)}</div>}
                 </div>
             </div>
         );

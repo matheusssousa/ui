@@ -167,6 +167,10 @@ const delayedQuery = useDebounce(query, 300);
 
 Importe diretamente por `@matheusssousa/ui/components/<arquivo>`. Os exports nomeados também estão disponíveis pela raiz do pacote. Componentes com estado, eventos ou animação devem ser usados em componentes cliente.
 
+### Composições de dashboard
+
+Veja [variantes e exemplos inspirados nas referências](docs/dashboard-components.md): superfícies `glow`, cartões com mídia, `AvatarGroup`, `Slider`, progresso segmentado e indicadores em barras. As composições reutilizam os componentes existentes e as novas animações respeitam movimento reduzido.
+
 ### Exemplos comuns
 
 ```tsx
@@ -1158,8 +1162,11 @@ export interface AlertProps extends Omit<MotionBoxProps, 'title' | 'color' | 'ch
     motionPreset?: MotionPreset;
     /** Conteúdo adicional do aviso. */
     children?: React.ReactNode;
+    variant?: 'soft' | 'outlined' | 'glow';
+    contentLayout?: 'stacked' | 'inline';
+    iconClassName?: string;
 }
-export declare function Alert({ title, description, color, icon, action, onDismiss, motionPreset, className, children, ...props }: AlertProps): React.JSX.Element;
+export declare function Alert({ title, description, color, icon, action, onDismiss, motionPreset, className, children, variant, contentLayout, iconClassName, ...props }: AlertProps): React.JSX.Element;
 ```
 
 </details>
@@ -1200,6 +1207,17 @@ export interface AvatarProps extends Omit<HTMLMotionProps<'span'>, 'children'>, 
 }
 declare const Avatar: React.ForwardRefExoticComponent<Omit<AvatarProps, "ref"> & React.RefAttributes<HTMLSpanElement>>;
 export { Avatar, avatarVariants };
+/** Composição de Avatar com sobreposição e legenda opcional. */
+export interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+    avatars: AvatarProps[];
+    max?: number;
+    size?: AvatarProps['size'];
+    overlap?: 'sm' | 'md' | 'lg';
+    label?: React.ReactNode;
+    description?: React.ReactNode;
+    accessory?: React.ReactNode;
+}
+export declare const AvatarGroup: React.ForwardRefExoticComponent<AvatarGroupProps & React.RefAttributes<HTMLDivElement>>;
 ```
 
 </details>
@@ -1533,7 +1551,7 @@ export interface CardMetric {
     change?: number;
 }
 declare const cardVariants: (props?: ({
-    variant?: "default" | "filled" | "gradient" | "interactive" | "elevated" | "glass" | "minimal" | "outlined" | null | undefined;
+    variant?: "default" | "filled" | "gradient" | "interactive" | "glow" | "elevated" | "glass" | "minimal" | "outlined" | null | undefined;
     size?: "none" | "sm" | "md" | "lg" | "xl" | "xs" | null | undefined;
     color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -1571,6 +1589,11 @@ export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'title' | 'child
     children?: React.ReactNode;
     /** Dados para apresentar um cartão de métrica. */
     metric?: CardMetric;
+    /** Mídia lateral ou superior; reutiliza o Card para metas e destaques. */
+    media?: React.ReactNode;
+    mediaPosition?: 'top' | 'start' | 'responsive';
+    eyebrow?: React.ReactNode;
+    slotClassNames?: Partial<Record<'media' | 'content' | 'header' | 'title' | 'description' | 'footer' | 'metricValue', string>>;
 }
 declare const Card: React.ForwardRefExoticComponent<Omit<CardProps, "ref"> & React.RefAttributes<HTMLDivElement>>;
 export { Card, cardVariants };
@@ -1624,6 +1647,8 @@ export interface CarouselProps extends VariantProps<typeof carouselVariants> {
     onSlideChange?: (index: number) => void;
     /** Índice inicial do slide. */
     initialSlide?: number;
+    indicatorVariant?: 'dots' | 'bars';
+    indicatorsClassName?: string;
 }
 export declare const Carousel: React.ForwardRefExoticComponent<CarouselProps & React.RefAttributes<HTMLDivElement>>;
 export interface ImageCarouselItem {
@@ -1675,7 +1700,7 @@ Fonte: [components/chart](src/components/chart.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const chartVariants: (props?: ({
-    variant?: "default" | "filled" | "soft" | "elevated" | "minimal" | "outlined" | null | undefined;
+    variant?: "default" | "filled" | "soft" | "glow" | "elevated" | "minimal" | "outlined" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export declare const chartPalettes: {
@@ -1725,6 +1750,8 @@ export interface LineChartProps extends BaseChartProps {
     gradient?: boolean;
     /** Oculta eixos e usa toda a área para tendências compactas. */
     compact?: boolean;
+    /** Destaca o último ponto mesmo quando os demais pontos estão ocultos. */
+    highlightLast?: boolean;
 }
 export declare const LineChart: React.ForwardRefExoticComponent<LineChartProps & React.RefAttributes<HTMLDivElement>>;
 export interface AreaChartProps extends LineChartProps {
@@ -2707,6 +2734,12 @@ export interface ProgressBarProps extends Omit<React.HTMLAttributes<HTMLDivEleme
     color?: ColorVariant;
     /** Preset compartilhado usado quando `color="gradient"`. */
     gradient?: UIGradientValue;
+    variant?: 'default' | 'glow' | 'segmented';
+    segments?: number;
+    trackClassName?: string;
+    fillClassName?: string;
+    /** Posição do percentual em relação à barra. */
+    labelPosition?: 'top' | 'bottom' | 'inline';
 }
 declare const ProgressBar: React.ForwardRefExoticComponent<ProgressBarProps & React.RefAttributes<HTMLDivElement>>;
 /** Resumo numérico com barra de progresso. */
@@ -2896,7 +2929,7 @@ import { type SidebarSectionConfig } from './sidebarSection.js';
 export type SidebarSlot = React.ReactNode | ((isOpen: boolean) => React.ReactNode);
 export type SidebarPart = 'brand' | 'header' | 'toggle' | 'search' | 'navigation' | 'notifications' | 'footer';
 export interface SidebarProps {
-    variant?: 'default' | 'outline' | 'floating' | 'compact' | 'glass';
+    variant?: 'default' | 'outline' | 'floating' | 'compact' | 'glass' | 'glow';
     side?: 'left' | 'right';
     position?: 'static' | 'sticky' | 'fixed';
     animation?: 'none' | 'smooth' | 'spring';
@@ -3040,6 +3073,39 @@ declare const SkeletonTable: React.ForwardRefExoticComponent<{
 } & React.RefAttributes<HTMLDivElement>>;
 declare const SkeletonForm: React.ForwardRefExoticComponent<SkeletonProps & React.RefAttributes<HTMLDivElement>>;
 export { Skeleton, SkeletonText, SkeletonTitle, SkeletonAvatar, SkeletonButton, SkeletonCard, SkeletonList, SkeletonTable, SkeletonForm, skeletonVariants };
+```
+
+</details>
+
+<details>
+<summary><code>components/slider</code></summary>
+
+Fonte: [components/slider](src/components/slider.tsx).
+
+```ts
+import * as React from 'react';
+import { type UIColor } from './theme.js';
+export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'size' | 'color' | 'value' | 'defaultValue' | 'min' | 'max' | 'step'> {
+    value?: number;
+    defaultValue?: number;
+    min?: number;
+    max?: number;
+    step?: number;
+    onValueChange?: (value: number) => void;
+    label?: React.ReactNode;
+    description?: React.ReactNode;
+    color?: UIColor;
+    variant?: 'default' | 'split';
+    /** Quantidade de marcas decorativas; limitada a 101. */
+    ticks?: number;
+    startLabel?: React.ReactNode;
+    endLabel?: React.ReactNode;
+    showValue?: boolean;
+    formatValue?: (value: number, percentage: number) => string;
+    inputClassName?: string;
+}
+/** Entrada range nativa, com teclado, toque e composição para divisão de valores. */
+export declare const Slider: React.ForwardRefExoticComponent<SliderProps & React.RefAttributes<HTMLInputElement>>;
 ```
 
 </details>
@@ -3249,7 +3315,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const tableVariants: (props?: ({
     variant?: "default" | "fixed" | "grid" | "outline" | "ghost" | "striped" | "spreadsheet" | null | undefined;
-    size?: "default" | "sm" | "lg" | null | undefined;
+    size?: "default" | "sm" | "md" | "lg" | "xl" | "xs" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 /** Tabela com ordenação, seleção e paginação opcionais. */
 export interface TableProps extends VariantProps<typeof tableVariants> {
@@ -3337,12 +3403,12 @@ export type TabsSize = 'sm' | 'md' | 'lg';
 export type TabsMobileBehavior = 'scroll' | 'wrap' | 'equal';
 export type TabsContentAnimation = 'fade' | 'slide' | 'none';
 declare const tabsListVariants: (props?: ({
-    variant?: "underline" | "pills" | "segmented" | "cards" | "sidebar" | null | undefined;
+    variant?: "underline" | "segmented" | "pills" | "cards" | "sidebar" | null | undefined;
     mobileBehavior?: "scroll" | "wrap" | "equal" | null | undefined;
     fullWidth?: boolean | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 declare const tabsTriggerVariants: (props?: ({
-    variant?: "underline" | "pills" | "segmented" | "cards" | "sidebar" | null | undefined;
+    variant?: "underline" | "segmented" | "pills" | "cards" | "sidebar" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     mobileBehavior?: "scroll" | "wrap" | "equal" | null | undefined;
     fullWidth?: boolean | null | undefined;
@@ -4572,6 +4638,7 @@ export * from './functions/table-values.js';
 export * from './components/sidebar.js';
 export * from './components/sidebarSection.js';
 export * from './components/sidebarNavItem.js';
+export * from './components/slider.js';
 ```
 
 <!-- API-REFERENCE:END -->

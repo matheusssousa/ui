@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { motion, type HTMLMotionProps } from 'framer-motion';
+import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '../utils.js';
 import { fluidTransition, motionPresets, type MotionPreset } from './motion.js';
 import { radiusClasses, type UIColor, type UIRadius } from './theme.js';
@@ -40,6 +40,7 @@ const cardVariants = cva(
         minimal: 'bg-transparent shadow-none',
         elevated: 'border-border/60 shadow-lg shadow-black/5 dark:shadow-black/20',
         glass: 'border-white/15 bg-card/75 shadow-lg backdrop-blur-xl',
+        glow: 'ui-surface-glow',
         gradient: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card',
         interactive: 'cursor-pointer shadow-sm hover:border-primary/30 hover:shadow-md',
       },
@@ -146,6 +147,11 @@ export interface CardProps
   children?: React.ReactNode;
   /** Dados para apresentar um cartão de métrica. */
   metric?: CardMetric;
+  /** Mídia lateral ou superior; reutiliza o Card para metas e destaques. */
+  media?: React.ReactNode;
+  mediaPosition?: 'top' | 'start' | 'responsive';
+  eyebrow?: React.ReactNode;
+  slotClassNames?: Partial<Record<'media' | 'content' | 'header' | 'title' | 'description' | 'footer' | 'metricValue', string>>;
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
@@ -169,37 +175,46 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
     animationDelay = 0,
     children,
     metric,
+    media,
+    mediaPosition = 'responsive',
+    eyebrow,
+    slotClassNames,
     style,
     ...props
   },
   ref,
 ) {
+  const reducedMotion = useReducedMotion();
   const preset = motionPreset ?? (animationEntrance || animationOut ? 'fade-up' : 'none');
   const variants = preset === 'none' ? undefined : motionPresets[preset];
 
   return (
     <motion.div
       ref={ref}
-      initial={variants ? 'hidden' : undefined}
+      initial={variants && !reducedMotion ? 'hidden' : false}
       animate={variants ? 'visible' : undefined}
       exit={variants ? 'exit' : undefined}
       variants={variants}
-      transition={{ ...fluidTransition, delay: animationDelay }}
-      whileHover={interactive ? { y: -3 } : undefined}
-      whileTap={interactive ? { scale: 0.995 } : undefined}
+      transition={reducedMotion ? { duration: 0 } : { ...fluidTransition, delay: animationDelay }}
+      whileHover={interactive && !reducedMotion ? { y: -3 } : undefined}
+      whileTap={interactive && !reducedMotion ? { scale: 0.995 } : undefined}
       aria-busy={loading || undefined}
       className={cn(cardVariants({ variant: interactive ? 'interactive' : variant, size, color }), variant === 'gradient' && gradient && gradientClasses[typeof gradient === 'string' ? gradient : gradient.preset].card, radiusClasses[radius], loading && 'pointer-events-none overflow-hidden', className)}
       style={variant === 'gradient' && gradient ? { ...getGradientStyle(gradient, 'subtle'), ...style } : style}
       {...props}
     >
       {loading && !metric && <span className="absolute inset-0 z-10 animate-pulse bg-muted/65 backdrop-blur-[1px]" aria-hidden="true" />}
-      {!metric && (title || description || icon || action) && (
-        <div className="flex items-center justify-between gap-4">
+      <div className={cn('ui-card-body', media && 'ui-card-with-media')} data-media-position={mediaPosition}>
+      {media && <div className={cn('ui-card-media', slotClassNames?.media)}>{media}</div>}
+      <div className={cn('flex min-w-0 flex-1 flex-col gap-3', slotClassNames?.content)}>
+      {!metric && (title || description || icon || action || eyebrow) && (
+        <div className={cn('flex flex-wrap items-center justify-between gap-3', slotClassNames?.header)}>
           <div className="flex min-w-0 items-center gap-2">
             {icon && <span className={cn('flex-shrink-0 p-2 rounded-md', toneClasses[color && color !== 'default' ? color : 'primary'].soft)}>{icon}</span>}
             <div className="min-w-0 ">
-              {title && <h3 className="font-semibold text-foreground">{title}</h3>}
-              {description && <p className="text-sm text-muted-foreground">{description}</p>}
+              {eyebrow && <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-primary-text">{eyebrow}</div>}
+              {title && <h3 className={cn('font-semibold text-foreground [overflow-wrap:anywhere]', slotClassNames?.title)}>{title}</h3>}
+              {description && <p className={cn('text-sm text-muted-foreground', slotClassNames?.description)}>{description}</p>}
             </div>
           </div>
           {action && <div className="shrink-0">{action}</div>}
@@ -212,12 +227,13 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
         </div>
         {loading ? <div className="space-y-2"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-3 w-1/2" /></div> :
           <div className="min-w-0">
-            <div className={cn('truncate text-lg font-semibold', toneClasses[metric.tone ?? 'primary'].text)}>{typeof metric.value === 'number' && metric.format === 'currency' ? formatCurrency(metric.value) : typeof metric.value === 'number' && metric.format === 'number' ? metric.value.toLocaleString('pt-BR') : metric.value}</div>
+            <div className={cn('break-words text-2xl font-semibold tabular-nums', toneClasses[metric.tone ?? 'primary'].text, slotClassNames?.metricValue)}>{typeof metric.value === 'number' && metric.format === 'currency' ? formatCurrency(metric.value) : typeof metric.value === 'number' && metric.format === 'number' ? metric.value.toLocaleString('pt-BR') : metric.value}</div>
             {metric.description && <p className="mt-0.5 truncate text-xs text-muted-foreground">{metric.description}</p>}
             {metric.change !== undefined && <p className={cn('text-xs font-medium', metric.change >= 0 ? 'text-success' : 'text-destructive')}>{metric.change >= 0 ? '+' : ''}{metric.change.toFixed(1)}% <span className="text-muted-foreground">vs anterior</span></p>}
           </div>}
       </div> : children}
-      {footer && <div className="mt-auto border-t border-border/70 pt-4">{footer}</div>}
+      {footer && <div className={cn('mt-auto border-t border-border/70 pt-4', slotClassNames?.footer)}>{footer}</div>}
+      </div></div>
     </motion.div>
   );
 });

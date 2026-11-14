@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, type HTMLMotionProps, type Transition, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type HTMLMotionProps, type Transition, type Variants } from 'framer-motion';
 import { cn } from '../utils.js';
 
 export type MotionPreset = 'none' | 'fade' | 'fade-up' | 'fade-down' | 'scale' | 'slide-left' | 'slide-right' | 'pop';
@@ -35,18 +35,19 @@ export const MotionBox = React.forwardRef<HTMLDivElement, MotionBoxProps>(functi
   { preset = 'fade-up', delay = 0, interactive = false, className, transition, variants, children, ...props },
   ref,
 ) {
+  const reducedMotion = useReducedMotion();
   const selectedVariants = variants ?? (preset === 'none' ? undefined : motionPresets[preset]);
 
   return (
     <motion.div
       ref={ref}
-      initial={selectedVariants ? 'hidden' : undefined}
+      initial={selectedVariants && !reducedMotion ? 'hidden' : false}
       animate={selectedVariants ? 'visible' : undefined}
       exit={selectedVariants ? 'exit' : undefined}
       variants={selectedVariants}
-      transition={transition ?? { ...fluidTransition, delay }}
-      whileHover={interactive ? { y: -2, scale: 1.005 } : undefined}
-      whileTap={interactive ? { scale: 0.99 } : undefined}
+      transition={reducedMotion ? { duration: 0 } : transition ?? { ...fluidTransition, delay }}
+      whileHover={interactive && !reducedMotion ? { y: -2, scale: 1.005 } : undefined}
+      whileTap={interactive && !reducedMotion ? { scale: 0.99 } : undefined}
       className={cn(className)}
       {...props}
     >
