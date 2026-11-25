@@ -4,7 +4,7 @@ Todas as mudanças relevantes de `@matheusssousa/ui` são documentadas neste arq
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto utiliza [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [0.5.0]
 
 > **BREAKING:** esta seção contém alterações incompatíveis de API pública e deve ser publicada em uma nova versão minor, como `0.5.0`, enquanto a biblioteca estiver em `0.x`.
 
