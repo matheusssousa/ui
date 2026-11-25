@@ -131,18 +131,15 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
 
     const slideVariants = {
         enter: (direction: number) => ({
-            x: direction > 0 ? 1000 : -1000,
-            opacity: 0,
+            x: direction > 0 ? '100%' : '-100%',
         }),
         center: {
             zIndex: 1,
             x: 0,
-            opacity: 1,
         },
         exit: (direction: number) => ({
             zIndex: 0,
-            x: direction < 0 ? 1000 : -1000,
-            opacity: 0,
+            x: direction < 0 ? '100%' : '-100%',
         }),
     };
 
@@ -241,7 +238,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
             onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) focusPausedRef.current = false; }}
             {...props}
         >
-            <AnimatePresence initial={false} custom={direction} mode="wait">
+            <AnimatePresence initial={false} custom={direction} mode="sync">
                 <motion.div
                     key={currentIndex}
                     custom={direction}
@@ -251,7 +248,6 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                     exit="exit"
                     transition={reducedMotion ? { duration: 0 } : {
                         x: { type: "spring", stiffness: 300, damping: 30 },
-                        opacity: { duration: 0.2 }
                     }}
                     drag={enableSwipe ? "x" : false}
                     dragConstraints={{ left: 0, right: 0 }}
