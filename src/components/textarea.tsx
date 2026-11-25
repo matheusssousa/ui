@@ -15,6 +15,7 @@ const textareaVariants = cva(
             variant: {
                 default: '',
                 outline: 'border border-border/60',
+                outlined: 'border border-border/60',
                 filled: 'bg-muted border-muted text-foreground',
             },
             validation: {

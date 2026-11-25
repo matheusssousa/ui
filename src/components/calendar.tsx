@@ -528,7 +528,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                                     key={month}
                                     type="button"
                                     className={cn(
-                                        "px-4 py-3 rounded-lg font-medium transition-colors",
+                                        "px-4 py-3 rounded-lg font-medium transition-colors hover:cursor-pointer",
                                         isCurrentMonth
                                             ? "bg-primary text-primary-foreground"
                                             : "hover:bg-accent"
@@ -566,7 +566,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                                     key={year}
                                     type="button"
                                     className={cn(
-                                        "px-4 py-3 rounded-lg font-medium transition-colors",
+                                        "px-4 py-3 rounded-lg font-medium transition-colors hover:cursor-pointer",
                                         isCurrentYear
                                             ? "bg-primary text-primary-foreground"
                                             : "hover:bg-accent"

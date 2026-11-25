@@ -7,8 +7,10 @@ import { createAxiosClient, createFetchClient, HttpError, resolveHttpError } fro
 import { useApiTable, normalizePagination } from '../dist/hooks/useApiTable.js';
 import { useSearch } from '../dist/hooks/useSearch.js';
 import { useViewModal, ViewModalUtils } from '../dist/hooks/useViewModal.js';
-import { ImageInput, validateImageFile } from '../dist/components/image-input.js';
-import { SwitchField } from '../dist/components/switch-field.js';
+import { Input, validateImageFile } from '../dist/components/input.js';
+import { Stepper } from '../dist/components/stepper.js';
+import { Timeline } from '../dist/components/timeline.js';
+import { RatingBar } from '../dist/components/rating-bar.js';
 import { ViewModal } from '../dist/components/view-modal.js';
 import { ToastProvider } from '../dist/providers/ToastProvider.js';
 import { Button } from '../dist/components/button.js';
@@ -32,6 +34,84 @@ async function mount(render) {
     dispose: async () => { await act(async () => root.unmount()); container.remove(); } };
 }
 async function tick(ms = 20) { await act(async () => { await new Promise(resolve => setTimeout(resolve, ms)); }); }
+test('stepper exposes progress, requests navigation and blocks disabled steps', async () => {
+  const changes = [];
+  let currentStep = 1;
+  let disabled = false;
+  const steps = [{ title: 'Dados' }, { title: 'Endereço' }, { title: 'Confirmar', disabled: true }];
+  const ui = await mount(() => React.createElement(Stepper, { steps, currentStep, disabled, onStepChange: index => changes.push(index) }));
+  try {
+    assert.match(ui.container.querySelector('[aria-current="step"]').textContent, /Endereço/);
+    assert.match(ui.container.querySelector('li').textContent, /Concluída/);
+    const buttons = ui.container.querySelectorAll('button');
+    await act(async () => buttons[0].click());
+    assert.deepEqual(changes, [0]);
+    assert.match(ui.container.querySelector('[aria-current="step"]').textContent, /Endereço/, 'controlled until parent updates');
+    await act(async () => buttons[2].click());
+    assert.deepEqual(changes, [0]);
+    disabled = true;
+    await ui.render();
+    assert.ok([...ui.container.querySelectorAll('button')].every(button => button.disabled));
+    currentStep = steps.length;
+    await ui.render();
+    assert.equal(ui.container.querySelector('[aria-current]'), null);
+    assert.ok([...ui.container.querySelectorAll('li')].every(item => item.textContent.includes('Concluída')));
+  } finally { await ui.dispose(); }
+});
+
+test('stepper supports a static vertical list and empty steps', async () => {
+  let steps = [{ title: 'Primeiro' }];
+  const ui = await mount(() => React.createElement(Stepper, { steps, orientation: 'vertical', currentStep: -1 }));
+  try {
+    assert.equal(ui.container.querySelector('button'), null);
+    assert.ok(ui.container.querySelector('ol').classList.contains('flex-col'));
+    assert.equal(ui.container.querySelectorAll('[aria-current="step"]').length, 1);
+    steps = [];
+    await ui.render();
+    assert.equal(ui.container.querySelectorAll('li').length, 0);
+  } finally { await ui.dispose(); }
+});
+
+test('timeline exposes chronological events and the current event', async () => {
+  const items = [
+    { title: 'Criado', date: '09:00' },
+    { title: 'Processando', status: 'current', color: 'success' },
+    { title: 'Concluido', status: 'pending' },
+  ];
+  const ui = await mount(() => React.createElement(Timeline, { items, 'aria-label': 'Historico do pedido' }));
+  try {
+    const list = ui.container.querySelector('ol');
+    assert.equal(list.getAttribute('aria-label'), 'Historico do pedido');
+    assert.equal(list.querySelectorAll('li').length, 3);
+    assert.match(list.querySelector('[aria-current="step"]').textContent, /Processando/);
+    assert.ok(list.querySelector('[data-status="pending"] span').className.includes('bg-muted'));
+  } finally { await ui.dispose(); }
+});
+
+test('rating bar supports uncontrolled, controlled and keyboard selection', async () => {
+  const changes = [];
+  let value;
+  const ui = await mount(() => React.createElement(RatingBar, {
+    value, defaultValue: 2, allowClear: true, showValue: true, label: 'Nota', onValueChange: next => changes.push(next),
+  }));
+  try {
+    let radios = ui.container.querySelectorAll('[role="radio"]');
+    assert.equal(radios.length, 5);
+    assert.equal(radios[1].getAttribute('aria-checked'), 'true');
+    await act(async () => radios[3].click());
+    assert.equal(ui.container.querySelector('output').textContent, '4/5');
+    radios = ui.container.querySelectorAll('[role="radio"]');
+    await act(async () => radios[3].click());
+    assert.equal(ui.container.querySelector('output').textContent, '0/5');
+    value = 3;
+    await ui.render();
+    const selected = ui.container.querySelector('[aria-checked="true"]');
+    await act(async () => selected.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+    assert.deepEqual(changes, [4, 0, 4]);
+    assert.equal(ui.container.querySelector('output').textContent, '3/5', 'controlled until parent updates');
+  } finally { await ui.dispose(); }
+});
+
 const page = (data = [{ id: 1 }]) => ({ data, current_page: 1, last_page: 2, total: 2, per_page: 1, from: 1, to: 1 });
 
 test('button ripple stays outside layout without theme CSS and is removed after animation', async () => {
@@ -139,17 +219,6 @@ test('search can switch from local to remote without changing hook order and deb
   } finally { await ui.dispose(); }
 });
 
-test('switch field associates label and serializes controlled and uncontrolled values', async () => {
-  const ui = await mount(() => React.createElement('form', null, React.createElement(SwitchField, { name: 'active', label: 'Ativo', defaultChecked: true })));
-  try {
-    const button = ui.container.querySelector('[role=switch]');
-    assert.equal(ui.container.querySelector('label').htmlFor, button.id);
-    assert.equal(ui.container.querySelector('input').value, '1');
-    await act(async () => button.click());
-    assert.equal(ui.container.querySelector('input').value, '0');
-  } finally { await ui.dispose(); }
-});
-
 test('icon-only buttons and links keep a square size and no label spacing', async () => {
   for (const asLink of [false, true]) {
     const ui = await mount(() => React.createElement(ToastProvider, null,
@@ -177,7 +246,7 @@ test('image input validates, previews, removes and blocks selection while loadin
   assert.ok(validateImageFile({ name: 'a.txt', type: 'text/plain', size: 1 }, 'image/*', 1));
   const changes = [];
   let loading = false;
-  const ui = await mount(() => React.createElement(ImageInput, { label: 'Foto', isLoading: loading, onChange: (...args) => changes.push(args) }));
+  const ui = await mount(() => React.createElement(Input, { type: 'image', label: 'Foto', isLoading: loading, onChange: (...args) => changes.push(args) }));
   try {
     const input = ui.container.querySelector('input');
     assert.ok(input.classList.contains('sr-only'));

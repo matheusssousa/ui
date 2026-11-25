@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "../../src/styles.css";
+@source "../../src";
+@source "../";
+@custom-variant dark (&:where(.dark, .dark *));
+
+html { scroll-behavior: smooth; }
+body { min-width: 320px; }
+::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }

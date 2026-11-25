@@ -138,10 +138,10 @@ export function EditableCell({ rowId, column, rowIndex, columnIndex, className }
             onValueChange={next => { if (!Array.isArray(next)) store.setDraftValue(rowId, column.key, next); }} />
         : editor.type === 'date'
           ? <Input {...editor.inputProps} {...field} placeholder="" id={nativeId} type="date" min={editor.min} max={editor.max} value={String(raw ?? '')}
-              onChange={event => store.setDraftValue(rowId, column.key, event.target.value)} />
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => store.setDraftValue(rowId, column.key, event.target.value)} />
           : <Input {...editor.inputProps} {...field} type={editor.type === 'money' ? 'text' : editor.inputType ?? 'text'}
               inputMode={editor.type === 'money' ? 'decimal' : undefined} value={String(raw ?? '')}
-              onChange={event => store.setDraftValue(rowId, column.key, event.target.value)} />
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => store.setDraftValue(rowId, column.key, event.target.value)} />
         : <div className={spreadsheet ? 'ui-sheet-value' : undefined}>{display}</div>}
       {spreadsheet && (dirty || error || rowError || (columnIndex === 0 && rowPending)) && <span data-table-status="" className="ui-sheet-status">
         {columnIndex === 0 && rowPending ? <span role="status" aria-label="Salvando linha">{'\u2022'}</span>

@@ -11,41 +11,43 @@ import { toneScopeStyle, type UIColor } from './theme.js'
 type DropdownSide = "top" | "right" | "bottom" | "left"
 type DropdownAlign = "start" | "center" | "end"
 
-interface DropdownMenuContextType {
+interface DropdownContextType {
   open: boolean
   setOpen: (open: boolean) => void
   triggerRef: React.RefObject<HTMLElement | null>
   contentId: string
+  keyboardOpen: React.RefObject<boolean>
 }
 
-const DropdownMenuContext = React.createContext<DropdownMenuContextType | undefined>(undefined)
+const DropdownContext = React.createContext<DropdownContextType | undefined>(undefined)
 
-function useDropdownMenu() {
-  const context = React.useContext(DropdownMenuContext)
+function useDropdown() {
+  const context = React.useContext(DropdownContext)
 
   if (!context) {
-    throw new Error("DropdownMenu components must be used within DropdownMenu")
+    throw new Error("Dropdown components must be used within Dropdown")
   }
 
   return context
 }
 
-export interface DropdownMenuProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface DropdownProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
+  /** Controla a abertura externamente; sem esta prop, inicia fechado. */
   open?: boolean
-  defaultOpen?: boolean
+  /** Recebe o próximo estado quando o usuário abre ou fecha o menu. */
   onOpenChange?: (open: boolean) => void
 }
 
-function DropdownMenu({
+function Dropdown({
   children,
   open: controlledOpen,
-  defaultOpen = false,
   onOpenChange,
   className,
   ...props
-}: DropdownMenuProps) {
-  const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
+}: DropdownProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const keyboardOpen = React.useRef(false)
   const triggerRef = React.useRef<HTMLElement>(null)
   const contentId = React.useId()
   const isControlled = controlledOpen !== undefined
@@ -71,21 +73,21 @@ function DropdownMenu({
   }, [open, setOpen])
 
   return (
-    <DropdownMenuContext.Provider value={{ open, setOpen, triggerRef, contentId }}>
+    <DropdownContext.Provider value={{ open, setOpen, triggerRef, contentId, keyboardOpen }}>
       <div className={cn("relative inline-flex", className)} {...props}>
         {children}
       </div>
-    </DropdownMenuContext.Provider>
+    </DropdownContext.Provider>
   )
 }
 
-export interface DropdownMenuTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface DropdownTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean
 }
 
-const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownMenuTriggerProps>(
-  function DropdownMenuTrigger({ className, children, asChild, onClick, onKeyDown, ...props }, forwardedRef) {
-    const { open, setOpen, triggerRef, contentId } = useDropdownMenu()
+const DropdownTrigger = React.forwardRef<HTMLButtonElement, DropdownTriggerProps>(
+  function DropdownTrigger({ className, children, asChild, onClick, onKeyDown, ...props }, forwardedRef) {
+    const { open, setOpen, triggerRef, contentId, keyboardOpen } = useDropdown()
 
     const setTriggerRef = React.useCallback((node: HTMLElement | null) => {
       triggerRef.current = node
@@ -95,7 +97,10 @@ const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownMenuTrig
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
       onClick?.(event as React.MouseEvent<HTMLButtonElement>)
-      if (!event.defaultPrevented) setOpen(!open)
+      if (!event.defaultPrevented) {
+        keyboardOpen.current = event.detail === 0
+        setOpen(!open)
+      }
     }
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -104,6 +109,7 @@ const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownMenuTrig
 
       if (["Enter", " ", "ArrowDown"].includes(event.key)) {
         event.preventDefault()
+        keyboardOpen.current = true
         setOpen(true)
       }
     }
@@ -141,7 +147,7 @@ const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownMenuTrig
         ref={setTriggerRef}
         type="button"
         className={cn(
-          "inline-flex items-center justify-center rounded-lg text-sm font-medium ring-offset-background transition-colors",
+          "inline-flex items-center justify-center rounded-lg text-sm font-medium ring-offset-background transition-colors hover:cursor-pointer",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "disabled:pointer-events-none disabled:opacity-50",
           className,
@@ -175,7 +181,7 @@ const dropdownContentVariants = cva(
   },
 )
 
-export interface DropdownMenuContentProps
+export interface DropdownContentProps
   extends Omit<HTMLMotionProps<"div">, "children">,
     VariantProps<typeof dropdownContentVariants> {
   children: React.ReactNode
@@ -187,8 +193,8 @@ export interface DropdownMenuContentProps
   matchTriggerWidth?: boolean
 }
 
-const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContentProps>(
-  function DropdownMenuContent({
+const DropdownContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
+  function DropdownContent({
     className,
     children,
     align = "end",
@@ -203,7 +209,7 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
     style,
     ...props
   }, forwardedRef) {
-    const { open, setOpen, triggerRef, contentId } = useDropdownMenu()
+    const { open, setOpen, triggerRef, contentId, keyboardOpen } = useDropdown()
     const contentRef = React.useRef<HTMLDivElement>(null)
     const reduceMotion = useReducedMotion()
     const [position, setPosition] = React.useState({ top: 0, left: 0, ready: false, side })
@@ -295,10 +301,14 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
     React.useEffect(() => {
       if (!open || !position.ready) return
       const frame = window.requestAnimationFrame(() => {
-        contentRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])')?.focus()
+        const content = contentRef.current
+        const target = keyboardOpen.current
+          ? content?.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])') ?? content
+          : content
+        target?.focus({ preventScroll: true })
       })
       return () => window.cancelAnimationFrame(frame)
-    }, [open, position.ready])
+    }, [open, position.ready, keyboardOpen])
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event)
@@ -312,7 +322,7 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
       let nextIndex = currentIndex
 
       if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % items.length
-      else if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + items.length) % items.length
+      else if (event.key === "ArrowUp") nextIndex = currentIndex < 0 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length
       else if (event.key === "Home") nextIndex = 0
       else if (event.key === "End") nextIndex = items.length - 1
       else if (event.key === "Tab") setOpen(false)
@@ -340,6 +350,7 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
             ref={contentRef}
             id={contentId}
             role="menu"
+            tabIndex={-1}
             aria-orientation="vertical"
             data-state="open"
             data-side={position.side}
@@ -392,8 +403,8 @@ const dropdownItemVariants = cva(
   },
 )
 
-/** Item de menu com ícone, descrição e seleção opcional. */
-export interface DropdownMenuItemProps
+/** Item de  com ícone, descrição e seleção opcional. */
+export interface DropdownItemProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "title">,
     VariantProps<typeof dropdownItemVariants> {
   /** Cor do item e do estado selecionado; quando informada, prevalece sobre `variant`. */
@@ -402,7 +413,7 @@ export interface DropdownMenuItemProps
   asChild?: boolean
   /** Impede a seleção do item. */
   disabled?: boolean
-  /** Fecha o menu após selecionar; padrão `true`. */
+  /** Fecha o  após selecionar; padrão `true`. */
   closeOnSelect?: boolean
   /** Ícone no início do item. */
   icon?: React.ReactNode
@@ -414,8 +425,8 @@ export interface DropdownMenuItemProps
   shortcut?: React.ReactNode
 }
 
-const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>(
-  function DropdownMenuItem({
+const DropdownItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(
+  function DropdownItem({
     className,
     inset,
     disabled,
@@ -434,7 +445,7 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
     onClick,
     ...props
   }, ref) {
-    const { setOpen } = useDropdownMenu()
+    const { setOpen } = useDropdown()
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       if (disabled) {
@@ -500,7 +511,7 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
               <span className="block truncate font-medium leading-5">{title ?? children}</span>
               {description && <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">{description}</span>}
             </span>
-            {shortcut && <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>}
+            {shortcut && <DropdownShortcut>{shortcut}</DropdownShortcut>}
           </>
         ) : children}
       </div>
@@ -508,16 +519,16 @@ const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>
   },
 )
 
-const DropdownMenuGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  function DropdownMenuGroup({ className, ...props }, ref) {
+const DropdownGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  function DropdownGroup({ className, ...props }, ref) {
     return <div ref={ref} role="group" className={cn("space-y-0.5", className)} {...props} />
   },
 )
 
-const DropdownMenuLabel = React.forwardRef<
+const DropdownLabel = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { inset?: boolean }
->(function DropdownMenuLabel({ className, inset, ...props }, ref) {
+>(function DropdownLabel({ className, inset, ...props }, ref) {
   return (
     <div
       ref={ref}
@@ -527,15 +538,15 @@ const DropdownMenuLabel = React.forwardRef<
   )
 })
 
-export interface DropdownMenuHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
+export interface DropdownHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   avatar?: React.ReactNode
   title: React.ReactNode
   description?: React.ReactNode
   action?: React.ReactNode
 }
 
-const DropdownMenuHeader = React.forwardRef<HTMLDivElement, DropdownMenuHeaderProps>(
-  function DropdownMenuHeader({ className, avatar, title, description, action, ...props }, ref) {
+const DropdownHeader = React.forwardRef<HTMLDivElement, DropdownHeaderProps>(
+  function DropdownHeader({ className, avatar, title, description, action, ...props }, ref) {
     return (
       <div ref={ref} className={cn("flex min-w-0 items-center gap-3 rounded-lg bg-muted/40 px-3 py-3", className)} {...props}>
         {avatar && <div className="shrink-0">{avatar}</div>}
@@ -549,37 +560,37 @@ const DropdownMenuHeader = React.forwardRef<HTMLDivElement, DropdownMenuHeaderPr
   },
 )
 
-const DropdownMenuSeparator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  function DropdownMenuSeparator({ className, ...props }, ref) {
+const DropdownSeparator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  function DropdownSeparator({ className, ...props }, ref) {
     return <div ref={ref} role="separator" className={cn("-mx-1 my-1.5 h-px bg-border/70", className)} {...props} />
   },
 )
 
-const DropdownMenuShortcut = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
-  function DropdownMenuShortcut({ className, ...props }, ref) {
+const DropdownShortcut = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
+  function DropdownShortcut({ className, ...props }, ref) {
     return <span ref={ref} className={cn("ml-auto shrink-0 text-[10px] font-medium tracking-wide text-muted-foreground", className)} {...props} />
   },
 )
 
-DropdownMenuTrigger.displayName = "DropdownMenuTrigger"
-DropdownMenuContent.displayName = "DropdownMenuContent"
-DropdownMenuItem.displayName = "DropdownMenuItem"
-DropdownMenuGroup.displayName = "DropdownMenuGroup"
-DropdownMenuLabel.displayName = "DropdownMenuLabel"
-DropdownMenuHeader.displayName = "DropdownMenuHeader"
-DropdownMenuSeparator.displayName = "DropdownMenuSeparator"
-DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+DropdownTrigger.displayName = "DropdownTrigger"
+DropdownContent.displayName = "DropdownContent"
+DropdownItem.displayName = "DropdownItem"
+DropdownGroup.displayName = "DropdownGroup"
+DropdownLabel.displayName = "DropdownLabel"
+DropdownHeader.displayName = "DropdownHeader"
+DropdownSeparator.displayName = "DropdownSeparator"
+DropdownShortcut.displayName = "DropdownShortcut"
 
 export {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuHeader,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
+  Dropdown,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownItem,
+  DropdownGroup,
+  DropdownLabel,
+  DropdownHeader,
+  DropdownSeparator,
+  DropdownShortcut,
   dropdownContentVariants,
   dropdownItemVariants,
 }

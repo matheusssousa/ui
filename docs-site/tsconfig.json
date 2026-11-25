@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "declaration": false,
+    "incremental": true,
+    "noEmit": true,
+    "outDir": ".next/types",
+    "plugins": [{ "name": "next" }],
+    "rootDir": ".."
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["../node_modules", "../dist"]
+}

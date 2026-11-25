@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { ImageUpload, type ImageUploadProps } from '../internal/image-upload.js';
+export { validateImageFile } from '../internal/image-upload.js';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../utils.js';
 import dynamic from 'next/dynamic.js';
@@ -27,6 +29,7 @@ const inputVariants = cva(
             variant: {
                 default: '',
                 outline: 'border border-border/60',
+                outlined: 'border border-border/60',
                 filled: 'bg-muted border-muted text-foreground',
             },
             size: {
@@ -68,8 +71,8 @@ const maskConfigs = {
 };
 
 /** Campo de entrada com variantes de texto, máscara, data, hora e moeda. */
-export interface InputProps
-    extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
+export interface TextInputProps
+    extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'>,
     VariantProps<typeof inputVariants> {
     /** Estado visual da validação, independente do tone de foco. */
     validation?: 'default' | 'error' | 'success';
@@ -82,7 +85,7 @@ export interface InputProps
     /** Ícone no fim do campo. */
     rightIcon?: React.ReactNode;
     /** Tipo nativo ou um dos modos especiais `currency` e `checkbox`. */
-    type?: React.InputHTMLAttributes<HTMLInputElement>['type'] | 'currency' | 'checkbox';
+    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color' | 'checkbox' | 'radio' | 'range' | 'file' | 'hidden' | 'button' | 'submit' | 'reset' | 'currency';
     /** Rótulo do campo. */
     label?: string;
     /** Recebe o valor interpretado pelo modo do campo. */
@@ -103,7 +106,7 @@ export interface InputProps
     isInCard?: boolean;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
+const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
     ({ className, variant, size, validation, isLoading, isPending, leftIcon, rightIcon, type = 'text', label, placeholder, onValueChange, error, rightPlaceholder, mask, color = 'primary', animationEntrance = false, animationOut = false, isInCard = false, ...props }, ref) => {
         const tableStyle = useTableStyle();
         if (tableStyle && type !== 'checkbox') className = cn(className, tableFieldClass, tableFieldSizes[tableStyle.size]);
@@ -1531,7 +1534,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     }
 );
 
-Input.displayName = 'Input';
+TextInput.displayName = 'TextInput';
+
+/** Upload de imagem com validação, prévia, arrastar e soltar e remoção. */
+export interface ImageInputProps extends ImageUploadProps {
+    /** Ativa o seletor de imagem, em vez do input HTML de submissão. */
+    type: 'image';
+}
+
+/** Props discriminadas por type; o modo image recebe callbacks de arquivo e prévia. */
+export type InputProps = TextInputProps | ImageInputProps;
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
+    if (props.type === 'image') {
+        const { type, ...imageProps } = props;
+        return <ImageUpload {...imageProps} ref={ref} />;
+    }
+    return <TextInput {...props} ref={ref} />;
+});
 
 export { Input, inputVariants };
 

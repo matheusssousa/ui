@@ -4,18 +4,49 @@ import * as React from 'react';
 import { cn } from '../utils.js';
 import { ImageIcon, UploadSimpleIcon, TrashIcon, CircleNotchIcon } from '@phosphor-icons/react/dist/ssr';
 
-export interface ImageInputProps {
+/** Configuração interna do modo de imagem de Input. */
+export interface ImageUploadProps {
+  /** URL controlada da prévia; null remove a imagem. */
   value?: string | null;
+  /** URL inicial ou atual da imagem existente. */
   currentImageUrl?: string | null;
+  /** Recebe arquivo e URL de dados; ambos null na remoção. */
   onChange?: (file: File | null, previewUrl: string | null) => void;
+  /** Recebe a URL de dados ou null na remoção. */
   onValueChange?: (previewUrl: string | null) => void;
+  /** Recebe o arquivo após validação e leitura. */
   onFileSelect?: (file: File) => void;
+  /** Executado ao remover a imagem. */
   onRemove?: () => void;
-  name?: string; id?: string; label?: string; description?: string;
-  maxSize?: number; accept?: string; disabled?: boolean; isLoading?: boolean;
-  error?: string; className?: string; required?: boolean;
-  variant?: 'circle' | 'square' | 'rectangle'; size?: 'sm' | 'md' | 'lg';
+  /** Nome do campo no formul?rio. */
+  name?: string;
+  /** Identificador do controle; gerado quando omitido. */
+  id?: string;
+  /** Rótulo acess?vel. Padrão: Imagem. */
+  label?: string;
+  /** Texto de ajuda abaixo do controle. */
+  description?: string;
+  /** Tamanho máximo em MB. Padrão: 1. */
+  maxSize?: number;
+  /** MIME types ou extensões separados por vírgula. Padrão: image/jpeg,image/png,image/webp. */
+  accept?: string;
+  /** Bloqueia seleção e remoção. */
+  disabled?: boolean;
+  /** Exibe carregamento e bloqueia alterações. */
+  isLoading?: boolean;
+  /** Mensagem externa de validação. */
+  error?: string;
+  /** Classes do contêiner. */
+  className?: string;
+  /** Exige uma imagem quando n?o h? prévia. */
+  required?: boolean;
+  /** Formato da prévia. Padrão: rectangle. */
+  variant?: 'circle' | 'square' | 'rectangle';
+  /** Largura da prévia. Padrão: md. */
+  size?: 'sm' | 'md' | 'lg';
 }
+
+/** Valida formato e tamanho; retorna uma mensagem de erro ou null. */
 
 export function validateImageFile(file: Pick<File, 'name' | 'type' | 'size'>, accept: string, maxSize: number): string | null {
   if (!file.type.startsWith('image/')) return 'Selecione um arquivo de imagem.';
@@ -28,7 +59,7 @@ export function validateImageFile(file: Pick<File, 'name' | 'type' | 'size'>, ac
   return file.size > maxSize * 1024 * 1024 ? `O arquivo deve ter no máximo ${maxSize} MB.` : null;
 }
 
-export const ImageInput = React.forwardRef<HTMLInputElement, ImageInputProps>(function ImageInput({
+export const ImageUpload = React.forwardRef<HTMLInputElement, ImageUploadProps>(function ImageUpload({
   value, currentImageUrl, onChange, onValueChange, onFileSelect, onRemove, name, id, label = 'Imagem',
   description = 'Selecione ou arraste uma imagem.', maxSize = 1,
   accept = 'image/jpeg,image/png,image/webp', disabled = false, isLoading = false, error, className,

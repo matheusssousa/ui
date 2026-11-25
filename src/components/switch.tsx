@@ -13,6 +13,7 @@ const switchVariants = cva(
             variant: {
                 default: 'bg-muted',
                 outline: 'bg-transparent border-border-foreground',
+                outlined: 'bg-transparent border-border-foreground',
                 soft: 'bg-muted',
                 success: 'bg-muted',
             },
@@ -74,6 +75,7 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
         }, [checked]);
 
         const resolvedColor = color ?? (variant === 'success' ? 'success' : 'primary');
+        const isOutlined = variant === 'outlined' || variant === 'outline';
 
         return (
             <button
@@ -83,7 +85,7 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
                 data-state={isChecked ? 'checked' : 'unchecked'}
                 className={cn(
                     switchVariants({ variant, size, state: isChecked ? 'checked' : 'unchecked' }),
-                    isChecked && (variant === 'outline' ? toneClasses[resolvedColor].outline : variant === 'soft' ? toneClasses[resolvedColor].soft : toneClasses[resolvedColor].solid),
+                    isChecked && (isOutlined ? toneClasses[resolvedColor].outline : variant === 'soft' ? toneClasses[resolvedColor].soft : toneClasses[resolvedColor].solid),
                     className,
                 )}
                 onClick={toggle}
@@ -96,7 +98,7 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
                     transition={{ type: 'spring', stiffness: 600, damping: 35 }}
                     className={cn(
                         'pointer-events-none block rounded-full shadow-sm',
-                        isChecked ? (variant === 'outline' ? 'bg-foreground' : variant === 'soft' ? toneClasses[resolvedColor].fill : thumbColors[resolvedColor]) : 'bg-background',
+                        isChecked ? (isOutlined ? 'bg-foreground' : variant === 'soft' ? toneClasses[resolvedColor].fill : thumbColors[resolvedColor]) : 'bg-background',
                         size === 'sm' ? 'size-3.5' : size === 'lg' ? 'size-6' : 'size-4.5',
                         isChecked ? 'ml-auto' : 'mr-auto',
                     )}

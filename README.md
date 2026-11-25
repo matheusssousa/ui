@@ -14,7 +14,8 @@ Biblioteca privada de componentes, hooks e funções utilitárias para projetos 
 - [Hooks e HTTP](#hooks-e-http)
 - [Contrato HTTP e compatibilidade](#contrato-http-e-compatibilidade)
 - [Tabelas remotas e busca unificada](#tabelas-remotas-e-busca-unificada)
-- [Inputs de imagem e SwitchField](#inputs-de-imagem-e-switchfield)
+- [Input de imagem](#input-de-imagem)
+- [Stepper](#stepper)
 - [Modal de detalhes configurável](#modal-de-detalhes-configurável)
 - [Referência comportamental dos demais hooks e funções](#referência-comportamental-dos-demais-hooks-e-funções)
 - [Migração dos utilitários do SaaS](#migração-dos-utilitários-do-saas)
@@ -179,7 +180,6 @@ Veja [variantes e exemplos inspirados nas referências](docs/dashboard-component
 import { useState } from 'react';
 import { Button } from '@matheusssousa/ui/components/button';
 import { Card } from '@matheusssousa/ui/components/card';
-import { FormField } from '@matheusssousa/ui/components/form-field';
 import { Input } from '@matheusssousa/ui/components/input';
 import { Select } from '@matheusssousa/ui/components/select';
 import { Switch } from '@matheusssousa/ui/components/switch';
@@ -190,9 +190,7 @@ export function ProfileForm() {
 
   return (
     <Card title="Perfil" description="Preferências da conta">
-      <FormField label="Nome" htmlFor="profile-name" required>
         <Input id="profile-name" placeholder="Seu nome" />
-      </FormField>
       <Select
         label="Plano"
         options={[{ value: 'basic', label: 'Básico' }, { value: 'pro', label: 'Pro' }]}
@@ -303,13 +301,13 @@ O valor é um `Date` normalizado para o primeiro dia do mês. Use `value` com `o
 
 | Arquivo para importar | Uso principal |
 | --- | --- |
-| `accordion`, `log-accordion` | Seções expansíveis; `LogAccordion` é o export default de `log-accordion`. |
-| `alert`, `toast`, `empty-state` | Feedback em página, aviso temporário e estado vazio. Para criar toasts, use `useToast`. |
+| `accordion` | Seções expansíveis com AccordionItem, AccordionTrigger e AccordionContent. |
+| `alert`, `toast`, `empty` | Feedback em página, aviso temporário e estado vazio. Para criar toasts, use `useToast`. |
 | `avatar`, `badge` | Pessoa, rótulo e indicador de estado. `Avatar` recebe `name`, `src` e `status`. |
 | `breadcrumbs`, `tabs`, `pagination` | Navegação hierárquica, por abas e por páginas. |
 | `button`, `speed-dial`, `bulk-actions` | Ação comum, botão flutuante e ações para seleção. |
 | `card`, `section`, `info` | Blocos de conteúdo e métricas. Use `Card` com a prop `metric`. |
-| `input`, `textarea`, `select`, `switch`, `form-field`, `search` | Campos, controles e busca. `Input` aceita `label`, `error`, `mask` e `validation`; `Select` recebe `options`. |
+| `input`, `textarea`, `select`, `switch` | Campos, controles e busca. `Input` aceita `label`, `error`, `mask` e `validation`; `Select` recebe `options`. |
 | `modal`, `dropdown-menu` | Camadas acionadas pelo usuário. `Modal` recebe `isOpen` e `onClose`. |
 | `table`, `draggable-table` | Tabelas com `columns` e `data`; a segunda permite reordenar linhas. |
 | `calendar`, `month-year-picker`, `carousel`, `gallery`, `image` | Datas e conteúdo visual. `Calendar` recebe `mode`, `selected` e `onSelect`; `MonthYearPicker` seleciona apenas mês e ano. |
@@ -810,7 +808,7 @@ const table = useApiTable<User, Result>({
 ```tsx
 'use client';
 import { useSearch } from '@matheusssousa/ui/hooks/useSearch';
-import { Search } from '@matheusssousa/ui/components/search';
+import { Input } from '@matheusssousa/ui/components/input';
 import { Table } from '@matheusssousa/ui/components/table';
 import { client } from '@/lib/http';
 
@@ -822,7 +820,7 @@ export function Users() {
       options: [{ value: 1, label: 'Sim' }, { value: 0, label: 'Não' }] }],
   });
   return <>
-    <Search {...search.searchProps} />
+    <Input type="search" value={search.searchQuery} onChange={event => search.setSearch(event.target.value)} aria-label="Pesquisar" />
     {search.error && <button onClick={search.refetchData}>Tentar novamente</button>}
     <Table {...search.tableProps} columns={[{ key: 'name', label: 'Nome', sortable: true }]} />
   </>;
@@ -831,13 +829,13 @@ export function Users() {
 
 Aceita todas as opções de useApiTable e ainda `initialSearch`, `initialFilters` (prevalecem sobre initialState), `placeholder`, `filters: Filter[]` e `onSearchChange(query, filters)`. O callback recebe o estado inicial e as alterações após debounce, mesmo em modo local. `enabled` controla apenas a consulta HTTP.
 
-Além dos retornos da tabela, expõe `searchQuery`, `filterValues`, `hasActiveFilters`, `clearAll`, `searchProps` e `tableProps`. `clearAll` equivale a clearFilters. `searchProps` conecta value, filters, filterValues, onSearch, onFilterChange e onClear ao componente Search. O debounce pertence ao hook, evitando espera duplicada no componente. `tableProps` contém data, pagination, loading, onPageChange, sortState e onSort.
+Além dos retornos da tabela, expõe `searchQuery`, `filterValues`, `hasActiveFilters`, `clearAll`, `searchProps` e `tableProps`. `clearAll` equivale a clearFilters. `searchProps` conecta value, filters, filterValues, onSearch, onFilterChange e onClear a controles de busca personalizados. O debounce pertence ao hook, evitando espera duplicada no componente. `tableProps` contém data, pagination, loading, onPageChange, sortState e onSort.
 
-## Inputs de imagem e SwitchField
+## Input de imagem
 
-### ImageInput, LogoInput e BannerInput
+### Input com type="image"
 
-Importe por `/components/image-input`, `/components/logo-input` e `/components/banner-input`. Todos compartilham `ImageInputProps` e encaminham ref ao `<input type="file">`. Selecionam **um arquivo por vez**, validam tipo/tamanho, leem uma prévia Data URL e permitem removê-la. Não enviam arquivos automaticamente.
+Importe `Input` por `/components/input` e passe `type="image"`. As props deste modo são descritas por `ImageInputProps`, e a ref aponta ao `<input type="file">`. Selecionam **um arquivo por vez**, validam tipo/tamanho, leem uma prévia Data URL e permitem removê-la. Não enviam arquivos automaticamente.
 
 | Prop | Padrão / função |
 | --- | --- |
@@ -855,12 +853,12 @@ Importe por `/components/image-input`, `/components/logo-input` e `/components/b
 | `size` | sm, md (padrão) ou lg; define largura máxima. |
 | `className` | Classes do contêiner. |
 
-`LogoInput` aplica label Logo, variant circle e size sm; `BannerInput` aplica label Banner, variant rectangle e size lg. Todas essas opções podem ser sobrescritas. `validateImageFile(file, accept, maxSize)` retorna uma mensagem ou null. Leituras anteriores são canceladas ao selecionar outro arquivo, remover, atualizar a URL externa ou desmontar.
+Para logos use variant="circle" e size="sm"; para banners use variant="rectangle" e size="lg". `validateImageFile(file, accept, maxSize)` retorna uma mensagem ou null. Leituras anteriores são canceladas ao selecionar outro arquivo, remover, atualizar a URL externa ou desmontar.
 
 ```tsx
 'use client';
 import { useState } from 'react';
-import { ImageInput } from '@matheusssousa/ui/components/image-input';
+import { Input } from '@matheusssousa/ui/components/input';
 import { client } from '@/lib/http';
 
 export function UploadPhoto() {
@@ -878,7 +876,7 @@ export function UploadPhoto() {
     finally { setSaving(false); }
   }
   return <>
-    <ImageInput name="photo" label="Foto" maxSize={5} isLoading={saving}
+    <Input type="image" name="photo" label="Foto" maxSize={5} isLoading={saving}
       onChange={selected => setFile(selected)} />
     <button type="button" onClick={save} disabled={!file || saving}>Enviar</button>
     <p role="status">{message}</p>
@@ -888,15 +886,17 @@ export function UploadPhoto() {
 
 Use o File recebido no callback para montar FormData, especialmente com drag-and-drop: o drop não popula automaticamente `input.files`. A prévia base64 é para exibição. Valide também o arquivo no servidor. Esse componente não faz recorte ou compressão.
 
-### SwitchField
+## Stepper
 
-Importação: `/components/switch-field`. Recebe `name` e `label` obrigatórios, `description` opcional e props do Switch. `checked` + `onCheckedChange` controlam o valor; `defaultChecked` define o valor inicial não controlado. O rótulo aponta para o botão e a descrição está associada por aria-describedby. `className` aplica-se ao contêiner.
+Importe de `/components/stepper`. `currentStep` é um índice iniciado em zero; use `steps.length` para concluir todas as etapas. Sem `onStepChange`, o componente apenas exibe o progresso. Com o callback, cada etapa usa um botão acessível. A aplicação decide se permite avançar após validar o formulário.
+
+`orientation`: horizontal ou vertical; `variant`: default, outlined ou soft; `size`: sm, md ou lg; `color`: cores semânticas da biblioteca. Use `disabled` no componente ou na etapa para bloquear a navegação.
 
 ```tsx
-<SwitchField name="active" label="Ativo" description="Permite acesso à conta" defaultChecked />
+const [step, setStep] = useState(0);
+<Stepper steps={[{ title: 'Dados' }, { title: 'Endereço' }, { title: 'Confirmar' }]}
+  currentStep={step} onStepChange={setStep} />
 ```
-
-Um input hidden envia `1`/`0` no formulário; disabled também desativa esse input. Prefira onCheckedChange para mudanças de valor; não substitua onClick do Switch. Para resets externos, use checked controlado.
 
 ## Modal de detalhes configurável
 
@@ -987,8 +987,7 @@ Os arquivos locais do SaaS continuam independentes: esta mudança amplia a bibli
 | `@/lib/functions/handleInputChange`, `getFieldError`, `removeMask` | `@matheusssousa/ui/functions/<nome>`; mesmos argumentos, tipos exportados. |
 | `@/hooks/useApiTable` | `@matheusssousa/ui/hooks/useApiTable`; passe client explicitamente; resposta personalizada via mapResponse. |
 | `useSearch`, `useUnifiedSearch` locais | Um hook compartilhado; defaultParams deve virar initialState/buildParams conforme a finalidade. |
-| Inputs locais de imagem | `/components/image-input`, logo-input, banner-input; configure variant/size e use callback para envio. |
-| `SwitchField` local | `/components/switch-field`; name e label continuam obrigatórios. |
+| Inputs locais de imagem | `/components/input` com type="image"; configure variant/size e use callback para envio. |
 | `ViewModal` local | `/components/view-modal`; config deve ser objeto, fetchData vira endpoint + client, permissões via can, ações via callbacks. |
 | `useViewModal` local | Passe seu registro de configurações; VIEW_CONFIGS não é importado pela biblioteca. |
 | `resolveApiErrorMessage` local | `resolveHttpError` em functions/http; revise textos específicos que sua aplicação exija. |
@@ -1283,19 +1282,6 @@ export { Badge, StatusBadge, RoleBadge, CountBadge, badgeVariants };
 </details>
 
 <details>
-<summary><code>components/banner-input</code></summary>
-
-Fonte: [components/banner-input](src/components/banner-input.tsx).
-
-```ts
-import { type ImageInputProps } from './image-input.js';
-export type BannerInputProps = ImageInputProps;
-export declare const BannerInput: import("react").ForwardRefExoticComponent<ImageInputProps & import("react").RefAttributes<HTMLInputElement>>;
-```
-
-</details>
-
-<details>
 <summary><code>components/breadcrumbs</code></summary>
 
 Fonte: [components/breadcrumbs](src/components/breadcrumbs.tsx).
@@ -1379,7 +1365,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIGradientValue } from './gradient.js';
 declare const buttonVariants: (props?: ({
-    variant?: "text" | "filled" | "icon" | "success" | "warning" | "danger" | "deleted" | "gradient" | "soft" | "ghost" | "outlined" | "iconSoft" | "edited" | "restored" | "linkSettings" | "fastAction" | null | undefined;
+    variant?: "text" | "filled" | "icon" | "success" | "warning" | "danger" | "deleted" | "gradient" | "outlined" | "soft" | "ghost" | "iconSoft" | "edited" | "restored" | "linkSettings" | "fastAction" | null | undefined;
     color?: "default" | "dark" | "blue" | "cyan" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | "amber" | "card" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | "icon" | "xs" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -1551,7 +1537,7 @@ export interface CardMetric {
     change?: number;
 }
 declare const cardVariants: (props?: ({
-    variant?: "default" | "filled" | "gradient" | "interactive" | "glow" | "elevated" | "glass" | "minimal" | "outlined" | null | undefined;
+    variant?: "default" | "filled" | "gradient" | "interactive" | "outlined" | "glow" | "elevated" | "glass" | "minimal" | null | undefined;
     size?: "none" | "sm" | "md" | "lg" | "xl" | "xs" | null | undefined;
     color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -1700,7 +1686,7 @@ Fonte: [components/chart](src/components/chart.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const chartVariants: (props?: ({
-    variant?: "default" | "filled" | "soft" | "glow" | "elevated" | "minimal" | "outlined" | null | undefined;
+    variant?: "default" | "filled" | "outlined" | "soft" | "glow" | "elevated" | "minimal" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export declare const chartPalettes: {
@@ -1804,11 +1790,11 @@ Fonte: [components/data-types](src/components/data-types.ts).
 import type * as React from 'react';
 import type { UIColor } from './theme.js';
 import type { SelectOption } from './select.js';
-import type { InputProps } from './input.js';
+import type { TextInputProps } from './input.js';
 export type CellEditorValue = string | number | undefined;
 export interface CellEditorBase<T = TableData> {
     /** Personaliza o Input preservando o valor e o salvamento da tabela. */
-    inputProps?: Omit<InputProps, 'value' | 'defaultValue' | 'onChange' | 'onValueChange' | 'type' | 'disabled'>;
+    inputProps?: Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange' | 'onValueChange' | 'type' | 'disabled'>;
     placeholder?: string;
     disabled?: boolean;
     required?: boolean;
@@ -2019,9 +2005,9 @@ export { DraggableTable, tableVariants };
 </details>
 
 <details>
-<summary><code>components/dropdown-menu</code></summary>
+<summary><code>components/dropdown</code></summary>
 
-Fonte: [components/dropdown-menu](src/components/dropdown-menu.tsx).
+Fonte: [components/dropdown](src/components/dropdown.tsx).
 
 ```ts
 import * as React from "react";
@@ -2030,22 +2016,23 @@ import { type HTMLMotionProps } from "framer-motion";
 import { type UIColor } from './theme.js';
 type DropdownSide = "top" | "right" | "bottom" | "left";
 type DropdownAlign = "start" | "center" | "end";
-export interface DropdownMenuProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface DropdownProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
+    /** Controla a abertura externamente; sem esta prop, inicia fechado. */
     open?: boolean;
-    defaultOpen?: boolean;
+    /** Recebe o próximo estado quando o usuário abre ou fecha o menu. */
     onOpenChange?: (open: boolean) => void;
 }
-declare function DropdownMenu({ children, open: controlledOpen, defaultOpen, onOpenChange, className, ...props }: DropdownMenuProps): React.JSX.Element;
-export interface DropdownMenuTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+declare function Dropdown({ children, open: controlledOpen, onOpenChange, className, ...props }: DropdownProps): React.JSX.Element;
+export interface DropdownTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     asChild?: boolean;
 }
-declare const DropdownMenuTrigger: React.ForwardRefExoticComponent<DropdownMenuTriggerProps & React.RefAttributes<HTMLButtonElement>>;
+declare const DropdownTrigger: React.ForwardRefExoticComponent<DropdownTriggerProps & React.RefAttributes<HTMLButtonElement>>;
 declare const dropdownContentVariants: (props?: ({
     variant?: "default" | "elevated" | "glass" | "minimal" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
-export interface DropdownMenuContentProps extends Omit<HTMLMotionProps<"div">, "children">, VariantProps<typeof dropdownContentVariants> {
+export interface DropdownContentProps extends Omit<HTMLMotionProps<"div">, "children">, VariantProps<typeof dropdownContentVariants> {
     children: React.ReactNode;
     align?: DropdownAlign;
     side?: DropdownSide;
@@ -2054,22 +2041,22 @@ export interface DropdownMenuContentProps extends Omit<HTMLMotionProps<"div">, "
     collisionPadding?: number;
     matchTriggerWidth?: boolean;
 }
-declare const DropdownMenuContent: React.ForwardRefExoticComponent<Omit<DropdownMenuContentProps, "ref"> & React.RefAttributes<HTMLDivElement>>;
+declare const DropdownContent: React.ForwardRefExoticComponent<Omit<DropdownContentProps, "ref"> & React.RefAttributes<HTMLDivElement>>;
 declare const dropdownItemVariants: (props?: ({
     variant?: "default" | "primary" | "success" | "destructive" | "muted" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     inset?: boolean | null | undefined;
     selected?: boolean | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
-/** Item de menu com ícone, descrição e seleção opcional. */
-export interface DropdownMenuItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title">, VariantProps<typeof dropdownItemVariants> {
+/** Item de  com ícone, descrição e seleção opcional. */
+export interface DropdownItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title">, VariantProps<typeof dropdownItemVariants> {
     /** Cor do item e do estado selecionado; quando informada, prevalece sobre `variant`. */
     color?: UIColor;
     /** Usa o elemento filho como item em vez de uma `div`. */
     asChild?: boolean;
     /** Impede a seleção do item. */
     disabled?: boolean;
-    /** Fecha o menu após selecionar; padrão `true`. */
+    /** Fecha o  após selecionar; padrão `true`. */
     closeOnSelect?: boolean;
     /** Ícone no início do item. */
     icon?: React.ReactNode;
@@ -2080,35 +2067,35 @@ export interface DropdownMenuItemProps extends Omit<React.HTMLAttributes<HTMLDiv
     /** Atalho alinhado à direita. */
     shortcut?: React.ReactNode;
 }
-declare const DropdownMenuItem: React.ForwardRefExoticComponent<DropdownMenuItemProps & React.RefAttributes<HTMLDivElement>>;
-declare const DropdownMenuGroup: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>>;
-declare const DropdownMenuLabel: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
+declare const DropdownItem: React.ForwardRefExoticComponent<DropdownItemProps & React.RefAttributes<HTMLDivElement>>;
+declare const DropdownGroup: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>>;
+declare const DropdownLabel: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & {
     inset?: boolean;
 } & React.RefAttributes<HTMLDivElement>>;
-export interface DropdownMenuHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
+export interface DropdownHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
     avatar?: React.ReactNode;
     title: React.ReactNode;
     description?: React.ReactNode;
     action?: React.ReactNode;
 }
-declare const DropdownMenuHeader: React.ForwardRefExoticComponent<DropdownMenuHeaderProps & React.RefAttributes<HTMLDivElement>>;
-declare const DropdownMenuSeparator: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>>;
-declare const DropdownMenuShortcut: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLSpanElement> & React.RefAttributes<HTMLSpanElement>>;
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuHeader, DropdownMenuSeparator, DropdownMenuShortcut, dropdownContentVariants, dropdownItemVariants, };
+declare const DropdownHeader: React.ForwardRefExoticComponent<DropdownHeaderProps & React.RefAttributes<HTMLDivElement>>;
+declare const DropdownSeparator: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>>;
+declare const DropdownShortcut: React.ForwardRefExoticComponent<React.HTMLAttributes<HTMLSpanElement> & React.RefAttributes<HTMLSpanElement>>;
+export { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownGroup, DropdownLabel, DropdownHeader, DropdownSeparator, DropdownShortcut, dropdownContentVariants, dropdownItemVariants, };
 ```
 
 </details>
 
 <details>
-<summary><code>components/empty-state</code></summary>
+<summary><code>components/empty</code></summary>
 
-Fonte: [components/empty-state](src/components/empty-state.tsx).
+Fonte: [components/empty](src/components/empty.tsx).
 
 ```ts
 import * as React from 'react';
 import { type MotionBoxProps, type MotionPreset } from './motion.js';
 /** Mensagem exibida quando uma coleção está vazia. */
-export interface EmptyStateProps extends Omit<MotionBoxProps, 'title' | 'children' | 'preset'> {
+export interface EmptyProps extends Omit<MotionBoxProps, 'title' | 'children' | 'preset'> {
     /** Ícone acima do título. */
     icon?: React.ReactNode;
     /** Título principal. */
@@ -2122,34 +2109,7 @@ export interface EmptyStateProps extends Omit<MotionBoxProps, 'title' | 'childre
     /** Preset de animação. */
     motionPreset?: MotionPreset;
 }
-export declare function EmptyState({ icon, title, description, action, compact, motionPreset, className, ...props }: EmptyStateProps): React.JSX.Element;
-```
-
-</details>
-
-<details>
-<summary><code>components/form-field</code></summary>
-
-Fonte: [components/form-field](src/components/form-field.tsx).
-
-```ts
-import * as React from 'react';
-/** Rótulo, ajuda e erro para um controle de formulário filho. */
-export interface FormFieldProps extends React.HTMLAttributes<HTMLDivElement> {
-    /** Rótulo acima do controle. */
-    label?: React.ReactNode;
-    /** ID do controle associado ao rótulo. */
-    htmlFor?: string;
-    /** Texto de ajuda quando não há erro. */
-    description?: React.ReactNode;
-    /** Mensagem de erro com `role="alert"`. */
-    error?: React.ReactNode;
-    /** Marca o campo como obrigatório. */
-    required?: boolean;
-    /** Texto para campos não obrigatórios. */
-    optionalLabel?: string;
-}
-export declare function FormField({ label, htmlFor, description, error, required, optionalLabel, className, children, ...props }: FormFieldProps): React.JSX.Element;
+export declare function Empty({ icon, title, description, action, compact, motionPreset, className, ...props }: EmptyProps): React.JSX.Element;
 ```
 
 </details>
@@ -2222,40 +2182,6 @@ export declare const gradientClasses: Record<UIGradient, {
     card: string;
     header: string;
 }>;
-```
-
-</details>
-
-<details>
-<summary><code>components/image-input</code></summary>
-
-Fonte: [components/image-input](src/components/image-input.tsx).
-
-```ts
-import * as React from 'react';
-export interface ImageInputProps {
-    value?: string | null;
-    currentImageUrl?: string | null;
-    onChange?: (file: File | null, previewUrl: string | null) => void;
-    onValueChange?: (previewUrl: string | null) => void;
-    onFileSelect?: (file: File) => void;
-    onRemove?: () => void;
-    name?: string;
-    id?: string;
-    label?: string;
-    description?: string;
-    maxSize?: number;
-    accept?: string;
-    disabled?: boolean;
-    isLoading?: boolean;
-    error?: string;
-    className?: string;
-    required?: boolean;
-    variant?: 'circle' | 'square' | 'rectangle';
-    size?: 'sm' | 'md' | 'lg';
-}
-export declare function validateImageFile(file: Pick<File, 'name' | 'type' | 'size'>, accept: string, maxSize: number): string | null;
-export declare const ImageInput: React.ForwardRefExoticComponent<ImageInputProps & React.RefAttributes<HTMLInputElement>>;
 ```
 
 </details>
@@ -2364,10 +2290,12 @@ Fonte: [components/input](src/components/input.tsx).
 
 ```ts
 import * as React from 'react';
+import { type ImageUploadProps } from '../internal/image-upload.js';
+export { validateImageFile } from '../internal/image-upload.js';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 declare const inputVariants: (props?: ({
-    variant?: "default" | "filled" | "outline" | null | undefined;
+    variant?: "default" | "filled" | "outline" | "outlined" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     validation?: "default" | "success" | "error" | null | undefined;
     hasLabel?: boolean | null | undefined;
@@ -2398,7 +2326,7 @@ declare const maskConfigs: {
     };
 };
 /** Campo de entrada com variantes de texto, máscara, data, hora e moeda. */
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, VariantProps<typeof inputVariants> {
+export interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'>, VariantProps<typeof inputVariants> {
     /** Estado visual da validação, independente do tone de foco. */
     validation?: 'default' | 'error' | 'success';
     /** Mostra o estado de carregamento. */
@@ -2410,7 +2338,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
     /** Ícone no fim do campo. */
     rightIcon?: React.ReactNode;
     /** Tipo nativo ou um dos modos especiais `currency` e `checkbox`. */
-    type?: React.InputHTMLAttributes<HTMLInputElement>['type'] | 'currency' | 'checkbox';
+    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'color' | 'checkbox' | 'radio' | 'range' | 'file' | 'hidden' | 'button' | 'submit' | 'reset' | 'currency';
     /** Rótulo do campo. */
     label?: string;
     /** Recebe o valor interpretado pelo modo do campo. */
@@ -2430,51 +2358,15 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
     /** Ajusta a apresentação dentro de um card. */
     isInCard?: boolean;
 }
+/** Upload de imagem com validação, prévia, arrastar e soltar e remoção. */
+export interface ImageInputProps extends ImageUploadProps {
+    /** Ativa o seletor de imagem, em vez do input HTML de submissão. */
+    type: 'image';
+}
+/** Props discriminadas por type; o modo image recebe callbacks de arquivo e prévia. */
+export type InputProps = TextInputProps | ImageInputProps;
 declare const Input: React.ForwardRefExoticComponent<InputProps & React.RefAttributes<HTMLInputElement>>;
 export { Input, inputVariants };
-```
-
-</details>
-
-<details>
-<summary><code>components/log-accordion</code></summary>
-
-Fonte: [components/log-accordion](src/components/log-accordion.tsx).
-
-```ts
-import * as React from 'react';
-import { type VariantProps } from 'class-variance-authority';
-declare const logAccordionVariants: (props?: ({
-    size?: "default" | "sm" | "lg" | null | undefined;
-    color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | null | undefined;
-} & import("class-variance-authority/types").ClassProp) | undefined) => string;
-type PolymorphicProps = React.HTMLProps<HTMLDivElement> & React.AnchorHTMLAttributes<HTMLAnchorElement>;
-/** Painel expansível que exibe dados de log. */
-export interface LogAccordionProps extends Omit<PolymorphicProps, 'color' | 'size'>, VariantProps<typeof logAccordionVariants> {
-    /** Substitui o ícone por indicador de carregamento e desativa a expansão. */
-    isLoading?: boolean;
-    /** Título do painel. */
-    title: string;
-    /** Data ou descrição exibida abaixo do título. */
-    description?: string;
-    /** Dados a exibir quando expandido. */
-    log: unknown;
-}
-declare const LogAccordion: React.ForwardRefExoticComponent<Omit<LogAccordionProps, "ref"> & React.RefAttributes<HTMLDivElement>>;
-export default LogAccordion;
-```
-
-</details>
-
-<details>
-<summary><code>components/logo-input</code></summary>
-
-Fonte: [components/logo-input](src/components/logo-input.tsx).
-
-```ts
-import { type ImageInputProps } from './image-input.js';
-export type LogoInputProps = ImageInputProps;
-export declare const LogoInput: import("react").ForwardRefExoticComponent<ImageInputProps & import("react").RefAttributes<HTMLInputElement>>;
 ```
 
 </details>
@@ -2768,15 +2660,41 @@ export { ProgressBar, StatsProgress };
 </details>
 
 <details>
-<summary><code>components/search</code></summary>
+<summary><code>components/rating-bar</code></summary>
 
-Fonte: [components/search](src/components/search.tsx).
+Fonte: [components/rating-bar](src/components/rating-bar.tsx).
 
 ```ts
-import type { SearchProps } from './data-types.js';
 import * as React from 'react';
-declare const Search: React.ForwardRefExoticComponent<SearchProps & React.RefAttributes<HTMLInputElement>>;
-export { Search };
+import { type UIColor } from './theme.js';
+export interface RatingBarProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
+    /** Valor controlado da avaliacao. */
+    value?: number;
+    /** Valor inicial quando o componente nao e controlado. */
+    defaultValue?: number;
+    /** Quantidade maxima de itens. Padrao: 5. */
+    max?: number;
+    /** Notifica a selecao de um novo valor. */
+    onValueChange?: (value: number) => void;
+    /** Texto acessivel do grupo. Padrao: Avaliacao. */
+    label?: string;
+    /** Formata o nome acessivel de cada opcao. */
+    getLabel?: (value: number, max: number) => string;
+    /** Permite limpar clicando novamente na opcao selecionada. */
+    allowClear?: boolean;
+    /** Impede alteracoes sem reduzir o contraste. */
+    readOnly?: boolean;
+    /** Desabilita todas as opcoes. */
+    disabled?: boolean;
+    /** Exibe o valor numerico ao lado. */
+    showValue?: boolean;
+    /** Tamanho dos icones. Padrao: md. */
+    size?: 'sm' | 'md' | 'lg';
+    /** Cor dos itens selecionados. Padrao: warning. */
+    color?: UIColor;
+}
+/** Controle de avaliacao por estrelas com suporte a mouse, toque e teclado. */
+export declare const RatingBar: React.ForwardRefExoticComponent<RatingBarProps & React.RefAttributes<HTMLDivElement>>;
 ```
 
 </details>
@@ -2819,7 +2737,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 declare const selectVariants: (props?: ({
-    variant?: "default" | "visible" | "filled" | "outline" | "times" | null | undefined;
+    variant?: "default" | "visible" | "filled" | "outline" | "outlined" | "times" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     validation?: "default" | "success" | "error" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -3257,18 +3175,49 @@ export declare function Spinner({ size, color, label, mode, visible, compact, cl
 </details>
 
 <details>
-<summary><code>components/switch-field</code></summary>
+<summary><code>components/stepper</code></summary>
 
-Fonte: [components/switch-field](src/components/switch-field.tsx).
+Fonte: [components/stepper](src/components/stepper.tsx).
 
 ```ts
-import { type SwitchProps } from './switch.js';
-export interface SwitchFieldProps extends Omit<SwitchProps, 'name'> {
-    name: string;
-    label: string;
-    description?: string;
+import * as React from 'react';
+import { type UIColor } from './theme.js';
+/** Conteúdo e disponibilidade de uma etapa. */
+export interface StepperStep {
+    /** Identificador estável; por padrão usa a posição. */
+    id?: string;
+    /** Nome da etapa. */
+    title: React.ReactNode;
+    /** Explicação opcional abaixo do título. */
+    description?: React.ReactNode;
+    /** Ícone que substitui o número da etapa. */
+    icon?: React.ReactNode;
+    /** Impede a navegação para esta etapa. */
+    disabled?: boolean;
 }
-export declare function SwitchField({ name, label, description, className, id, checked, defaultChecked, onCheckedChange, disabled, ...props }: SwitchFieldProps): import("react").JSX.Element;
+/** Indicador controlado de progresso; não valida nem submete formulários. */
+export interface StepperProps extends Omit<React.HTMLAttributes<HTMLOListElement>, 'onChange'> {
+    /** Etapas na ordem de execução. */
+    steps: StepperStep[];
+    /** Índice iniciado em zero; steps.length indica todas concluídas. Padrão: 0. */
+    currentStep?: number;
+    /** Habilita botões de navegação e recebe o índice solicitado. */
+    onStepChange?: (index: number) => void;
+    /** Direção da lista. Padrão: horizontal. */
+    orientation?: 'horizontal' | 'vertical';
+    /** Posição do texto em relação ao indicador. Padrão: right. */
+    textPosition?: 'right' | 'bottom';
+    /** Tamanho dos indicadores. Padrão: md. */
+    size?: 'sm' | 'md' | 'lg';
+    /** Aparência do indicador ativo. Padrão: default. */
+    variant?: 'default' | 'outlined' | 'soft';
+    /** Cor das etapas ativas e concluídas. Padrão: primary. */
+    color?: UIColor;
+    /** Impede toda navegação. */
+    disabled?: boolean;
+}
+/** Apresenta etapas concluídas, atual e futuras, com navegação opcional por botões. */
+export declare const Stepper: React.ForwardRefExoticComponent<StepperProps & React.RefAttributes<HTMLOListElement>>;
 ```
 
 </details>
@@ -3283,7 +3232,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 declare const switchVariants: (props?: ({
-    variant?: "default" | "success" | "outline" | "soft" | null | undefined;
+    variant?: "default" | "success" | "outline" | "outlined" | "soft" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     state?: "checked" | "unchecked" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -3453,43 +3402,6 @@ export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants, tabsTrigger
 </details>
 
 <details>
-<summary><code>components/text</code></summary>
-
-Fonte: [components/text](src/components/text.tsx).
-
-```ts
-import { VariantProps } from "class-variance-authority";
-import React from "react";
-import { type UIColor } from './theme.js';
-declare const textVariants: (props?: ({
-    variant?: "default" | "large" | "small" | "success" | "warning" | "info" | "error" | "code" | "subtle" | "muted" | "emphasis" | "lead" | "highlight" | "field" | null | undefined;
-    align?: "center" | "left" | "right" | null | undefined;
-    weight?: "light" | "normal" | "medium" | "bold" | "semibold" | null | undefined;
-    size?: "sm" | "md" | "lg" | "xl" | null | undefined;
-    lineHeight?: "normal" | "relaxed" | "snug" | "tight" | null | undefined;
-    truncate?: boolean | null | undefined;
-} & import("class-variance-authority/types").ClassProp) | undefined) => string;
-export type TextVariants = VariantProps<typeof textVariants>;
-/** Texto com estilos tipográficos e opção de ícone em `field`. */
-export interface TextProps extends React.HTMLAttributes<HTMLParagraphElement>, TextVariants {
-    /** Texto principal a ser exibido. */
-    text: string;
-    /** Texto secundário usado na variante `field`. */
-    description?: string;
-    /** Exibe um separador após o texto. */
-    textForm?: boolean;
-    /** Ícone usado na variante `field`. */
-    icon?: React.ReactNode;
-    /** Tone do texto ou do destaque em `field`; padrão da variante quando ausente. */
-    color?: UIColor;
-}
-declare const Text: React.ForwardRefExoticComponent<TextProps & React.RefAttributes<HTMLParagraphElement>>;
-export default Text;
-```
-
-</details>
-
-<details>
 <summary><code>components/textarea</code></summary>
 
 Fonte: [components/textarea](src/components/textarea.tsx).
@@ -3499,7 +3411,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 declare const textareaVariants: (props?: ({
-    variant?: "default" | "filled" | "outline" | null | undefined;
+    variant?: "default" | "filled" | "outline" | "outlined" | null | undefined;
     validation?: "default" | "success" | "warning" | "error" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement>, VariantProps<typeof textareaVariants> {
@@ -3558,6 +3470,48 @@ export declare const toneClasses: Record<UIColor, {
 }>;
 /** Aplica um tone aos componentes legados que usam utilitários `primary` em elementos internos. */
 export declare function toneScopeStyle(color: UIColor, style?: CSSProperties): CSSProperties;
+```
+
+</details>
+
+<details>
+<summary><code>components/timeline</code></summary>
+
+Fonte: [components/timeline](src/components/timeline.tsx).
+
+```ts
+import * as React from 'react';
+import { type UIColor } from './theme.js';
+export interface TimelineItem {
+    /** Identificador estavel do evento. */
+    id?: string;
+    /** Titulo principal do evento. */
+    title: React.ReactNode;
+    /** Detalhes exibidos abaixo do titulo. */
+    description?: React.ReactNode;
+    /** Data ou contexto temporal do evento. */
+    date?: React.ReactNode;
+    /** Icone exibido dentro do marcador. */
+    icon?: React.ReactNode;
+    /** Cor individual do marcador. */
+    color?: UIColor;
+    /** Estado visual do evento. */
+    status?: 'completed' | 'current' | 'pending';
+}
+export interface TimelineProps extends React.HTMLAttributes<HTMLOListElement> {
+    /** Eventos em ordem cronologica. */
+    items: TimelineItem[];
+    /** Direcao da linha do tempo. Padrao: vertical. */
+    orientation?: 'vertical' | 'horizontal';
+    /** Aparencia dos marcadores. Padrao: solid. */
+    variant?: 'solid' | 'outlined' | 'soft';
+    /** Tamanho dos marcadores. Padrao: md. */
+    size?: 'sm' | 'md' | 'lg';
+    /** Cor padrao dos eventos. */
+    color?: UIColor;
+}
+/** Exibe eventos cronologicos; para etapas navegaveis de um fluxo, use Stepper. */
+export declare const Timeline: React.ForwardRefExoticComponent<TimelineProps & React.RefAttributes<HTMLOListElement>>;
 ```
 
 </details>
@@ -4477,8 +4431,7 @@ export declare function formatTableDate(value: unknown): string;
 Fonte: [functions/utils](src/functions/utils.ts).
 
 ```ts
-import { type ClassValue } from "clsx";
-export declare function cn(...inputs: ClassValue[]): string;
+export { cn } from '../utils.js';
 ```
 
 </details>
@@ -4573,15 +4526,13 @@ export * from './components/badge.js';
 export * from './components/separator.js';
 export * from './components/theme.js';
 export * from './components/motion.js';
-export * from './components/form-field.js';
 export * from './components/section.js';
 export * from './components/spinner.js';
 export * from './components/switch.js';
 export * from './components/pagination.js';
-export * from './components/text.js';
 export * from './components/progress-bar.js';
 export * from './components/tabs.js';
-export * from './components/dropdown-menu.js';
+export * from './components/dropdown.js';
 export * from './components/button.js';
 export * from './components/input.js';
 export * from './components/textarea.js';
@@ -4591,7 +4542,7 @@ export * from './components/gradient.js';
 export * from './components/accordion.js';
 export * from './components/card.js';
 export * from './components/alert.js';
-export * from './components/empty-state.js';
+export * from './components/empty.js';
 export * from './components/select.js';
 export * from './components/bulk-actions.js';
 export * from './components/calendar.js';
@@ -4600,7 +4551,6 @@ export * from './components/carousel.js';
 export * from './components/chart.js';
 export * from './components/gallery.js';
 export * from './components/image.js';
-export * from './components/search.js';
 export { SpeedDial, speedDialVariants, buttonVariants } from './components/speed-dial.js';
 export type { SpeedDialAction, SpeedDialIcon, SpeedDialProps } from './components/speed-dial.js';
 export { SpeedDialTabs, speedDialTabsVariants } from './components/speed-dial-tabs.js';
@@ -4610,9 +4560,7 @@ export * from './components/tip.js';
 export * from './components/breadcrumbs.js';
 export { DraggableTable } from './components/draggable-table.js';
 export type * from './components/data-types.js';
-export { default as Text } from './components/text.js';
 export * from './components/avatar.js';
-export { default as LogAccordion } from './components/log-accordion.js';
 export * from './functions/formatBytes.js';
 export * from './functions/formatJson.js';
 export * from './functions/formatNumber.js';
@@ -4627,10 +4575,6 @@ export * from './functions/removeMask.js';
 export * from './hooks/useApiTable.js';
 export * from './hooks/useSearch.js';
 export * from './hooks/useViewModal.js';
-export * from './components/image-input.js';
-export * from './components/logo-input.js';
-export * from './components/banner-input.js';
-export * from './components/switch-field.js';
 export * from './components/view-modal.js';
 export * from './functions/handleCopy.js';
 export * from './functions/openDownloadUrl.js';
@@ -4639,6 +4583,9 @@ export * from './components/sidebar.js';
 export * from './components/sidebarSection.js';
 export * from './components/sidebarNavItem.js';
 export * from './components/slider.js';
+export * from './components/stepper.js';
+export * from './components/timeline.js';
+export * from './components/rating-bar.js';
 ```
 
 <!-- API-REFERENCE:END -->

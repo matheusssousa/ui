@@ -1,6 +1,7 @@
 dist/
 *.tsbuildinfo
 node_modules/
+docs-site/.next/
 .npm-cache/
 .env
 .env.*
