@@ -14,6 +14,8 @@ import { RatingBar } from '../dist/components/rating-bar.js';
 import { ViewModal } from '../dist/components/view-modal.js';
 import { ToastProvider } from '../dist/providers/ToastProvider.js';
 import { Button } from '../dist/components/button.js';
+import { toneClasses } from '../dist/components/theme.js';
+import { uiGradients } from '../dist/components/gradient.js';
 import { openDownloadUrl } from '../dist/functions/openDownloadUrl.js';
 import { getFieldError } from '../dist/functions/getFieldError.js';
 import { handleInputChange } from '../dist/functions/handleInputChange.js';
@@ -142,6 +144,104 @@ test('button ripple stays outside layout without theme CSS and is removed after 
     dom.window.HTMLElement.prototype.animate = previousAnimate;
     await ui.dispose();
   }
+});
+
+test('active button styling respects variants and colors', async () => {
+  const cases = [
+    [{ variant: 'filled', color: 'secondary' }, ['brightness-90', 'ring-secondary']],
+    [{ variant: 'soft', color: 'success' }, ['bg-success/20', 'ring-success']],
+    [{ variant: 'outline', color: 'danger' }, ['bg-destructive/15', 'ring-destructive']],
+    [{ variant: 'ghost', color: 'tertiary' }, ['bg-tertiary/15', 'ring-tertiary']],
+    [{ variant: 'icon', color: 'secondary' }, ['bg-secondary/15', 'ring-secondary']],
+    [{ gradient: 'primary-secondary', color: 'primary' }, ['saturate-125', 'ring-primary']],
+  ];
+
+  for (const [props, expectedClasses] of cases) {
+    const ui = await mount(() => React.createElement(ToastProvider, null,
+      React.createElement(Button, { ...props, active: true, motionScale: false }, 'Ação')));
+    try {
+      const classes = ui.container.querySelector('button').classList;
+      for (const expectedClass of expectedClasses) assert.ok(classes.contains(expectedClass), `${props.variant}/${props.color}: ${expectedClass}`);
+    } finally { await ui.dispose(); }
+  }
+});
+
+test('every visual button variant supports every semantic color', async () => {
+  const colors = ['default', 'primary', 'secondary', 'tertiary', 'success', 'warning', 'danger', 'info', 'neutral', 'background', 'foreground'];
+  const variants = {
+    filled: ['solid'],
+    outline: ['outline'],
+    text: ['text'],
+    ghost: ['text'],
+    soft: ['soft'],
+    icon: ['text', 'outline'],
+    iconSoft: ['soft'],
+    fastAction: ['solid'],
+  };
+  const cases = Object.entries(variants).flatMap(([variant, toneKeys]) =>
+    colors.map(color => ({ variant, color, toneKeys, key: `${variant}-${color}` })));
+  const ui = await mount(() => React.createElement(ToastProvider, null,
+    React.createElement('div', null, cases.map(item => React.createElement(Button, {
+      key: item.key, 'data-button-case': item.key, variant: item.variant, color: item.color, motionScale: false,
+    }, item.key)))));
+
+  try {
+    for (const item of cases) {
+      const classes = ui.container.querySelector(`[data-button-case="${item.key}"]`).classList;
+      const tone = toneClasses[item.color === 'default' ? 'primary' : item.color];
+      for (const toneKey of item.toneKeys) {
+        for (const expectedClass of tone[toneKey].split(' ')) {
+          assert.ok(classes.contains(expectedClass), `${item.key}: ${expectedClass}`);
+        }
+      }
+    }
+  } finally { await ui.dispose(); }
+});
+
+test('button falls back to primary when runtime color is invalid', async () => {
+  const ui = await mount(() => React.createElement(ToastProvider, null,
+    React.createElement(Button, { color: 'purple', active: true, motionScale: false }, 'Legado')));
+  try {
+    const classes = ui.container.querySelector('button').classList;
+    assert.ok(classes.contains('bg-primary'));
+    assert.ok(classes.contains('ring-primary'));
+  } finally { await ui.dispose(); }
+});
+
+test('button accepts every shared gradient preset without a gradient variant', async () => {
+  const ui = await mount(() => React.createElement(ToastProvider, null,
+    React.createElement('div', null, uiGradients.map(gradient => React.createElement(Button, {
+      key: gradient, gradient, motionScale: false, 'data-gradient': gradient,
+    }, gradient)))));
+  try {
+    for (const gradient of uiGradients) {
+      const button = ui.container.querySelector(`[data-gradient="${gradient}"]`);
+      assert.match(button.style.backgroundImage, /gradient/);
+      assert.ok(button.classList.contains('text-white'));
+    }
+  } finally { await ui.dispose(); }
+});
+
+test('button gradients preserve each visual variant', async () => {
+  const variants = ['filled', 'outline', 'text', 'ghost', 'soft', 'icon', 'iconSoft', 'fastAction'];
+  const ui = await mount(() => React.createElement(ToastProvider, null,
+    React.createElement('div', null, variants.map(variant => React.createElement(Button, {
+      key: variant, variant, gradient: 'retro', motionScale: false, 'data-gradient-variant': variant,
+    }, variant)))));
+  try {
+    const control = variant => ui.container.querySelector(`[data-gradient-variant="${variant}"]`);
+    assert.match(control('filled').style.backgroundImage, /gradient/);
+    assert.ok(control('filled').classList.contains('text-white'));
+    assert.equal(control('outline').style.backgroundClip, 'padding-box, border-box');
+    assert.match(control('outline').querySelector('.ui-button-gradient-text').style.backgroundImage, /gradient/);
+    for (const variant of ['text', 'ghost']) {
+      assert.equal(control(variant).style.backgroundImage, '');
+      assert.match(control(variant).querySelector('.ui-button-gradient-text').style.backgroundImage, /gradient/);
+    }
+    for (const variant of ['soft', 'iconSoft']) assert.match(control(variant).style.backgroundImage, /color-mix/);
+    assert.equal(control('icon').style.backgroundClip, 'padding-box, border-box');
+    assert.match(control('fastAction').style.backgroundImage, /gradient/);
+  } finally { await ui.dispose(); }
 });
 
 for (const transport of ['fetch', 'axios']) test(`table works with ${transport}, filters, sorting and pagination`, async () => {

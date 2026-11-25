@@ -219,6 +219,8 @@
 
 .minte-disable-transitions, .minte-disable-transitions * { transition: none !important; }
 
+.ui-button-gradient-text svg { color: var(--primary-text); }
+
 
 
 

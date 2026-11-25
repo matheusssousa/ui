@@ -11,6 +11,7 @@ const colorClasses: Record<UIColor, string> = {
   success: 'border-success/20 border-t-success', warning: 'border-warning/20 border-t-warning', danger: 'border-destructive/20 border-t-destructive',
   info: 'border-info/20 border-t-info', neutral: 'border-neutral/20 border-t-neutral', tertiary: 'border-tertiary/20 border-t-tertiary-text',
   background: 'border-foreground/20 border-t-foreground',
+  foreground: 'border-foreground/20 border-t-foreground',
 };
 
 /** Indicador de carregamento com nome acessível. */

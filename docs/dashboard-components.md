@@ -101,9 +101,11 @@ Importe `useState` de React e `Slider` da biblioteca. Aceita modo controlado (`v
   itemVariant="soft" animation="smooth" footer={<AvatarGroup avatars={people} label="Dan & Hannah" />}
 />
 
-<Carousel items={slides} indicatorVariant="bars" showArrows={false} />
+<Carousel items={slides} variant="stacked" indicatorVariant="bars" showArrows={false} />
 <ProgressBar value={40} variant="segmented" segments={5} label="Etapas concluídas" />
 ```
+
+A variante `stacked` adiciona duas camadas decorativas atrás do slide ativo para indicar que existe mais conteúdo.
 
 `sections`, `people` e `slides` são dados da aplicação. Indicadores do carrossel são botões de navegação; progresso segmentado é apenas informativo. `trackClassName` e `fillClassName` personalizam a barra; `indicatorsClassName` personaliza o grupo de indicadores. Gráficos já oferecem curva suave, área com gradiente, tooltip por foco/toque e redimensionamento via ResizeObserver.
 

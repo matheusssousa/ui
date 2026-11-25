@@ -17,7 +17,7 @@ import { useApi } from '../dist/hooks/useApi.js';
 import { useCep } from '../dist/hooks/useCep.js';
 import { SpeedDialTabs } from '../dist/components/speed-dial-tabs.js';
 import { Tabs, TabsList, TabsTrigger } from '../dist/components/tabs.js';
-import { toneClasses } from '../dist/components/theme.js';
+import { surfaceToneClasses, toneClasses, uiColors, uiSurfaceVariants } from '../dist/components/theme.js';
 import { MonthYearPicker } from '../dist/components/month-year-picker.js';
 import { SpeedDial } from '../dist/components/speed-dial.js';
 import { Toast } from '../dist/components/toast.js';
@@ -39,10 +39,35 @@ test('metric card renders its value and loading skeleton', () => {
   assert.match(renderToStaticMarkup(React.createElement(Card, { metric, loading: true })), /animate-pulse/);
 });
 
+test('card surface variants support every semantic color', () => {
+  assert.deepEqual(uiSurfaceVariants, ['default', 'filled', 'outline', 'soft', 'minimal', 'elevated', 'glass', 'glow']);
+  for (const color of uiColors) {
+    const filled = renderToStaticMarkup(React.createElement(Card, { variant: 'filled', color }, color));
+    for (const className of toneClasses[color].solid.split(' ')) assert.match(filled, new RegExp(className.replaceAll('/', '\\/')));
+
+    const glass = renderToStaticMarkup(React.createElement(Card, { variant: 'glass', color }, color));
+    for (const className of surfaceToneClasses[color].glass.split(' ')) assert.ok(glass.includes(className));
+
+    const glow = renderToStaticMarkup(React.createElement(Card, { variant: 'glow', color }, color));
+    for (const className of surfaceToneClasses[color].glow.split(' ')) assert.ok(glow.includes(className));
+  }
+});
+
+test('card gradients respect the selected surface variant', () => {
+  const filled = renderToStaticMarkup(React.createElement(Card, { variant: 'filled', gradient: 'retro' }, 'filled'));
+  const outline = renderToStaticMarkup(React.createElement(Card, { variant: 'outline', gradient: 'retro' }, 'outline'));
+  const soft = renderToStaticMarkup(React.createElement(Card, { variant: 'soft', gradient: 'retro' }, 'soft'));
+  const minimal = renderToStaticMarkup(React.createElement(Card, { variant: 'minimal', gradient: 'retro' }, 'minimal'));
+  assert.match(filled, /background-image:linear-gradient/);
+  assert.match(outline, /background-clip:padding-box, border-box/);
+  assert.match(soft, /color-mix/);
+  assert.doesNotMatch(minimal, /background-image/);
+});
+
 test('shared gradient system supports every visual preset and image composition', () => {
   assert.ok(uiGradients.length >= 24);
   for (const gradient of uiGradients) {
-    const markup = renderToStaticMarkup(React.createElement(Card, { variant: 'gradient', gradient }, gradient));
+    const markup = renderToStaticMarkup(React.createElement(Card, { gradient }, gradient));
     assert.match(markup, /background-image:/);
     assert.ok(getGradientStyle(gradient).backgroundImage.includes('gradient'));
   }

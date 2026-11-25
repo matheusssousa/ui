@@ -78,7 +78,13 @@ export function ComponentDemo({ slug, overrides = {} }: { slug: string; override
     case 'view-modal': content = <><Button fullWidth={false} onClick={() => setOpen(true)}>Ver registro</Button><ViewModal isOpen={open} onClose={() => setOpen(false)} data={{ name: 'Ana' }} config={{ title: 'Perfil', sections: [{ fields: [{ key: 'name', label: 'Nome' }] }] }} /></>; break;
     case 'image': content = <Image src={landscape} alt="Paisagem com cabana junto ao lago" aspectRatio="video" containerClassName="w-full max-w-2xl" />; break;
     case 'chart': content = <div className="grid w-full gap-5 md:grid-cols-2"><BarChart data={chartData} title="Barras" /><LineChart data={chartData} title="Linha" /><AreaChart data={chartData} title="Área" /><PieChart data={chartData} title="Pizza" /><DonutChart data={chartData} title="Rosca" /><RadarChart data={chartData} title="Radar" /><RadialBarChart data={chartData} title="Barras radiais" /><SparklineChart data={chartData} title="Sparkline" /></div>; break;
-    case 'button': content = <><Button fullWidth={false}>Continuar</Button><Button fullWidth={false} variant="outlined">Cancelar</Button><Button fullWidth={false} variant="gradient" gradient="retro" leftIcon={<PlusIcon />}>Criar</Button></>; break;
+    case 'button': content = (<div className='flex gap-3'>
+      <Button fullWidth={false}>Continuar</Button>
+      <Button fullWidth={false} variant="outline">Continuar</Button>
+      <Button fullWidth={false} variant="ghost">Continuar</Button>
+      <Button fullWidth={false} variant="soft">Continuar</Button>
+    </div>);
+      break;
     case 'alert': content = <div className="w-full max-w-xl space-y-3"><Alert color="info" title="Informação" description="Este é um aviso informativo." /><Alert color="success" title="Tudo certo" description="As alterações foram salvas." /></div>; break;
     case 'avatar': content = <><Avatar name="Maria Silva" status="online" /><Avatar name="João Souza" color="secondary" /><AvatarGroup avatars={[{ name: 'Ana' }, { name: 'Bruno' }, { name: 'Carla' }, { name: 'Diego' }]} /></>; break;
     case 'badge': content = <><Badge color="primary">Novo</Badge><Badge color="success" dot>Ativo</Badge><Badge color="warning" pill>Aguardando</Badge><Badge variant="gradient" gradient="retro">Premium</Badge></>; break;

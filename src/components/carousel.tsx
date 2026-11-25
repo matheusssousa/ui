@@ -17,6 +17,7 @@ const carouselVariants = cva(
             variant: {
                 default: 'rounded-lg',
                 card: 'rounded-xl shadow-lg border border-border',
+                stacked: 'rounded-xl bg-transparent',
                 full: 'rounded-none',
             },
             size: {
@@ -238,6 +239,13 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
             onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) focusPausedRef.current = false; }}
             {...props}
         >
+            {variant === 'stacked' && items.length > 1 && (
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                    <div data-carousel-layer className="absolute inset-x-6 top-1 bottom-3 rounded-xl border border-border bg-card opacity-50" />
+                    <div data-carousel-layer className="absolute inset-x-4 top-2 bottom-1 rounded-xl border border-border bg-card opacity-75 shadow-sm" />
+                </div>
+            )}
+
             <AnimatePresence initial={false} custom={direction} mode="sync">
                 <motion.div
                     key={currentIndex}
@@ -253,7 +261,10 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                     dragConstraints={{ left: 0, right: 0 }}
                     dragElastic={1}
                     onDragEnd={handleDragEnd}
-                    className="absolute inset-0 w-full h-full flex items-center justify-center"
+                    className={cn(
+                        'absolute inset-0 w-full h-full flex items-center justify-center',
+                        variant === 'stacked' && 'inset-x-3 top-4 bottom-0 w-auto h-auto overflow-hidden rounded-xl border border-border bg-card shadow-lg'
+                    )}
                 >
                     {items[Math.min(currentIndex, items.length - 1)]?.content}
                 </motion.div>

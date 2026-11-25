@@ -12,6 +12,7 @@ const { Slider } = await import('../dist/components/slider.js');
 const { Avatar, AvatarGroup } = await import('../dist/components/avatar.js');
 const { Card } = await import('../dist/components/card.js');
 const { AreaChart } = await import('../dist/components/chart.js');
+const { Carousel } = await import('../dist/components/carousel.js');
 const h = React.createElement;
 const render = (component, props) => new JSDOM(renderToStaticMarkup(h(component, props))).window.document;
 
@@ -74,4 +75,17 @@ test('media card retains content and area chart highlights only the final point'
   for (const text of ['Viagem', 'Meta', 'Economia', 'Rodapé']) assert.ok(doc.body.textContent.includes(text));
   const chart = render(AreaChart, { data: [{ label: 'Jun', value: 1 }, { label: 'Jul', value: 2 }], highlightLast: true, animate: false });
   assert.equal(chart.querySelectorAll('circle').length, 1);
+});
+
+test('stacked carousel exposes decorative depth only when more slides exist', () => {
+  const items = [
+    { id: 1, content: h('div', null, 'Primeiro') },
+    { id: 2, content: h('div', null, 'Segundo') },
+  ];
+  const stacked = render(Carousel, { items, variant: 'stacked', showArrows: false, showIndicators: false });
+  assert.equal(stacked.querySelectorAll('[data-carousel-layer]').length, 2);
+  assert.equal(stacked.querySelector('[data-carousel-layer]').parentElement.getAttribute('aria-hidden'), 'true');
+
+  const single = render(Carousel, { items: items.slice(0, 1), variant: 'stacked', showArrows: false, showIndicators: false });
+  assert.equal(single.querySelectorAll('[data-carousel-layer]').length, 0);
 });

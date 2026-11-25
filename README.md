@@ -255,7 +255,7 @@ O cabeçalho também aceita gradientes temáticos com `headerGradient`. A imagem
 O sistema de gradients é compartilhado por `Modal`, `Card`, `Button`, `Badge`, `Avatar`, `ProgressBar` e `Separator`. Os presets visuais são `irregular`, `radial-ramp`, `blurred`, `edgy`, `landscape`, `multicolor`, `retro`, `duotone`, `tricolor`, `volume-mesh`, `banding` e `gradient-image`; os presets temáticos anteriores continuam disponíveis.
 
 ```tsx
-<Button variant="gradient" gradient="retro">Continuar</Button>
+<Button gradient="retro">Continuar</Button>
 <Avatar variant="gradient" gradient="volume-mesh" name="Maria Silva" />
 <ProgressBar color="gradient" gradient="landscape" value={72} />
 
@@ -1232,7 +1232,7 @@ import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 import { type UIGradientValue } from './gradient.js';
 declare const badgeVariants: (props?: ({
-    variant?: "default" | "cyan" | "purple" | "secondary" | "success" | "warning" | "info" | "neutral" | "tertiary" | "destructive" | "scheduled" | "cancelled" | "completed" | "outline" | "gradient" | "muted" | null | undefined;
+    variant?: "default" | "cyan" | "purple" | "secondary" | "success" | "warning" | "info" | "neutral" | "tertiary" | "outline" | "destructive" | "scheduled" | "cancelled" | "completed" | "gradient" | "muted" | null | undefined;
     size?: "default" | "sm" | "lg" | "xs" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 /** Rótulo ou indicador de status; `color` aplica um tone suave ao badge. */
@@ -1363,10 +1363,11 @@ Fonte: [components/button](src/components/button.tsx).
 ```ts
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
+import { type UIColor } from './theme.js';
 import { type UIGradientValue } from './gradient.js';
 declare const buttonVariants: (props?: ({
-    variant?: "text" | "filled" | "icon" | "success" | "warning" | "danger" | "deleted" | "gradient" | "outlined" | "soft" | "ghost" | "iconSoft" | "edited" | "restored" | "linkSettings" | "fastAction" | null | undefined;
-    color?: "default" | "dark" | "blue" | "cyan" | "gray" | "green" | "orange" | "pink" | "purple" | "red" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | "amber" | "card" | null | undefined;
+    variant?: "text" | "filled" | "icon" | "outline" | "soft" | "ghost" | "iconSoft" | "fastAction" | null | undefined;
+    color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | "foreground" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | "icon" | "xs" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 type PolymorphicProps = React.ButtonHTMLAttributes<HTMLButtonElement> & React.AnchorHTMLAttributes<HTMLAnchorElement>;
@@ -1386,7 +1387,9 @@ type PolymorphicProps = React.ButtonHTMLAttributes<HTMLButtonElement> & React.An
  * @property {boolean} [active=false] - Indica se o botão está em estado ativo, aplicando estilos visuais adicionais.
  */
 /** Botão ou link com variante, tamanho, tone e estados opcionais. */
-export interface ButtonProps extends Omit<PolymorphicProps, 'color'>, VariantProps<typeof buttonVariants> {
+export interface ButtonProps extends Omit<PolymorphicProps, 'color'>, Omit<VariantProps<typeof buttonVariants>, 'color'> {
+    /** Cor semântica aplicada à variante visual. */
+    color?: UIColor;
     /** Renderiza como link usando `href`. */
     asLink?: boolean;
     /** Destino quando `asLink` está ativo. */
@@ -1411,7 +1414,7 @@ export interface ButtonProps extends Omit<PolymorphicProps, 'color'>, VariantPro
     fullWidth?: boolean;
     /** Habilita escala na interação. */
     motionScale?: boolean;
-    /** Preset compartilhado usado por `variant="gradient"`. */
+    /** Preset de `gradient.ts` aplicado ao fundo do botão. */
     gradient?: UIGradientValue;
 }
 /**
@@ -1537,9 +1540,8 @@ export interface CardMetric {
     change?: number;
 }
 declare const cardVariants: (props?: ({
-    variant?: "default" | "filled" | "gradient" | "interactive" | "outlined" | "glow" | "elevated" | "glass" | "minimal" | null | undefined;
+    variant?: "default" | "filled" | "outline" | "soft" | "minimal" | "elevated" | "glass" | "glow" | null | undefined;
     size?: "none" | "sm" | "md" | "lg" | "xl" | "xs" | null | undefined;
-    color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "neutral" | "tertiary" | "background" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 /** Superfície com cabeçalho, conteúdo e métrica opcionais. */
 export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'title' | 'children'>, VariantProps<typeof cardVariants> {
@@ -1557,7 +1559,7 @@ export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'title' | 'child
     radius?: UIRadius;
     /** Tone das superfícies coloridas e da métrica. */
     color?: UIColor;
-    /** Preset do gradiente. Usado com `variant="gradient"`. */
+    /** Preset de `gradient.ts`, aplicado conforme a variante visual. */
     gradient?: UIGradientValue;
     /** Habilita aparência interativa. */
     interactive?: boolean;
@@ -1597,7 +1599,7 @@ import React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 declare const carouselVariants: (props?: ({
-    variant?: "default" | "full" | "card" | null | undefined;
+    variant?: "default" | "full" | "card" | "stacked" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | "auto" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export interface CarouselItem {
@@ -1686,7 +1688,7 @@ Fonte: [components/chart](src/components/chart.tsx).
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 declare const chartVariants: (props?: ({
-    variant?: "default" | "filled" | "outlined" | "soft" | "glow" | "elevated" | "minimal" | null | undefined;
+    variant?: "default" | "filled" | "soft" | "minimal" | "elevated" | "glow" | "outlined" | null | undefined;
     size?: "sm" | "md" | "lg" | "xl" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export declare const chartPalettes: {
@@ -2029,7 +2031,7 @@ export interface DropdownTriggerProps extends React.ButtonHTMLAttributes<HTMLBut
 }
 declare const DropdownTrigger: React.ForwardRefExoticComponent<DropdownTriggerProps & React.RefAttributes<HTMLButtonElement>>;
 declare const dropdownContentVariants: (props?: ({
-    variant?: "default" | "elevated" | "glass" | "minimal" | null | undefined;
+    variant?: "default" | "minimal" | "elevated" | "glass" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export interface DropdownContentProps extends Omit<HTMLMotionProps<"div">, "children">, VariantProps<typeof dropdownContentVariants> {
@@ -3232,7 +3234,7 @@ import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { type UIColor } from './theme.js';
 declare const switchVariants: (props?: ({
-    variant?: "default" | "success" | "outline" | "outlined" | "soft" | null | undefined;
+    variant?: "default" | "success" | "outline" | "soft" | "outlined" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     state?: "checked" | "unchecked" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -3452,11 +3454,13 @@ Fonte: [components/theme](src/components/theme.ts).
 ```ts
 import type { CSSProperties } from 'react';
 export declare const uiSizes: readonly ["xs", "sm", "md", "lg", "xl"];
-export declare const uiColors: readonly ["default", "primary", "secondary", "success", "warning", "danger", "info", "neutral", "tertiary", "background"];
+export declare const uiColors: readonly ["default", "primary", "secondary", "success", "warning", "danger", "info", "neutral", "tertiary", "background", "foreground"];
 export declare const uiRadii: readonly ["none", "sm", "md", "lg", "xl", "full"];
+export declare const uiSurfaceVariants: readonly ["default", "filled", "outline", "soft", "minimal", "elevated", "glass", "glow"];
 export type UISize = (typeof uiSizes)[number];
 export type UIColor = (typeof uiColors)[number];
 export type UIRadius = (typeof uiRadii)[number];
+export type UISurfaceVariant = (typeof uiSurfaceVariants)[number];
 export declare const radiusClasses: Record<UIRadius, string>;
 export declare const toneClasses: Record<UIColor, {
     solid: string;
@@ -3467,6 +3471,11 @@ export declare const toneClasses: Record<UIColor, {
     text: string;
     hoverSoft: string;
     hoverOutline: string;
+}>;
+/** Efeitos de superfície coloridos reutilizáveis por componentes de contêiner. */
+export declare const surfaceToneClasses: Record<UIColor, {
+    glass: string;
+    glow: string;
 }>;
 /** Aplica um tone aos componentes legados que usam utilitários `primary` em elementos internos. */
 export declare function toneScopeStyle(color: UIColor, style?: CSSProperties): CSSProperties;

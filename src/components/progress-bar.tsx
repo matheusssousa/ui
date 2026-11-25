@@ -38,6 +38,7 @@ const progressFillVariants = cva(
                 info: 'bg-info',
                 neutral: 'bg-neutral',
                 background: 'bg-background',
+                foreground: 'bg-foreground',
                 gradient: 'bg-gradient-to-r from-primary to-secondary',
             },
         },

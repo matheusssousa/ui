@@ -39,31 +39,31 @@ export function BulkActions<T>({
             <Badge variant="info" color={color}>{selectedItems.length} selecionados</Badge>
             <div className="flex space-x-2">
                 {onBulkRestore && (
-                    <Button variant="filled" color={"green"} onClick={onBulkRestore}>
+                    <Button variant="filled" color="success" onClick={onBulkRestore}>
                         Restaurar
                     </Button>
                 )}
                 {onBulkForceDelete && (
-                    <Button variant="filled" color={"red"} onClick={onBulkForceDelete}>
+                    <Button variant="filled" color="danger" onClick={onBulkForceDelete}>
                         Forçar Exclusão
                     </Button>
                 )}
                 {onBulkDelete && (
-                    <Button variant="filled" color={"red"} onClick={onBulkDelete}>
+                    <Button variant="filled" color="danger" onClick={onBulkDelete}>
                         Excluir
                     </Button>
                 )}
                 {onBulkStatusChange && (
-                    <Button variant="filled" color={"blue"} onClick={onBulkStatusChange} className="text-nowrap">
+                    <Button variant="filled" color="info" onClick={onBulkStatusChange} className="text-nowrap">
                         Alterar Status
                     </Button>
                 )}
                 {onBulkSuspend && (
-                    <Button variant="filled" color={"amber"} onClick={onBulkSuspend} className="text-nowrap">
+                    <Button variant="filled" color="warning" onClick={onBulkSuspend} className="text-nowrap">
                         Suspender
                     </Button>
                 )}
-                <Button variant="outlined" color={color} onClick={onClearSelection} className="text-nowrap">
+                <Button variant="outline" color={color} onClick={onClearSelection} className="text-nowrap">
                     Desmarcar
                 </Button>
             </div>

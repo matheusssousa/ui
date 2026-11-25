@@ -20,37 +20,27 @@ const buttonVariants = cva(
     {
         variants: {
             variant: {
-                filled: 'bg-primary text-primary-foreground hover:brightness-95',
-                outlined: 'border border-input bg-background hover:bg-accent',
+                filled: '',
+                outline: 'border',
                 text: 'hover:drop-shadow-md',
-                ghost: 'bg-transparent hover:bg-accent',
-                soft: 'border border-transparent bg-primary/10 text-primary-text',
-                success: 'bg-success text-success-foreground hover:bg-success/90',
-                warning: 'bg-warning text-warning-foreground hover:bg-warning/90',
-                danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-                gradient: 'bg-gradient-to-b from-primary to-secondary text-white hover:from-secondary hover:to-primary dark:font-semibold',
-                icon: 'p-3 rounded-xl bg-transparent border-2 border-border/30 text-foreground transition-all duration-300 hover:scale-110 hover:shadow-lg w-auto h-auto',
-                iconSoft: 'p-2 rounded-full bg-background/20! text-foreground transition-all duration-300 hover:scale-110',
-                edited: 'bg-warning text-warning-foreground hover:bg-warning/90',
-                deleted: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-                restored: 'bg-success text-success-foreground hover:bg-success/90',
-                linkSettings: 'bg-transparent text-foreground hover:text-tertiary/80 hover:bg-background/50 px-2! justify-start',
+                ghost: 'bg-transparent',
+                soft: 'border border-transparent',
+                icon: 'p-3 rounded-xl bg-transparent border-2 transition-all duration-300 hover:scale-110 hover:shadow-lg w-auto h-auto',
+                iconSoft: 'p-2 rounded-full transition-all duration-300 hover:scale-110',
                 fastAction: 'w-25! h-25! p-2! flex flex-col items-start justify-between! text-start! gap-2!',
             },
             color: {
                 default: '',
-                primary: '', secondary: '', tertiary: '', success: '', warning: '', danger: '', info: '', neutral: '', background: '',
-                blue: 'bg-tertiary hover:bg-tertiary/80 text-tertiary-foreground',
-                red: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
-                green: 'bg-success hover:bg-success/90 text-success-foreground',
-                amber: 'bg-warning hover:bg-warning/90 text-warning-foreground',
-                purple: 'bg-violet hover:bg-violet/90 text-white',
-                orange: 'bg-orange hover:bg-orange/90 text-white',
-                cyan: 'bg-cyan hover:bg-cyan/90 text-white',
-                pink: 'bg-pink hover:bg-pink/90 text-white',
-                gray: 'bg-neutral hover:bg-neutral/90 text-neutral-foreground',
-                card: 'bg-card text-card-foreground border border-border hover:bg-muted hover:border-foreground/20',
-                dark: 'bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-background dark:text-foreground dark:hover:bg-accent dark:hover:text-accent-foreground border border-input',
+                primary: '',
+                secondary: '',
+                tertiary: '',
+                success: '',
+                warning: '',
+                danger: '',
+                info: '',
+                neutral: '',
+                background: '',
+                foreground: '',
             },
             size: {
                 xs: 'h-6 px-1 rounded-xl text-xs',
@@ -61,220 +51,6 @@ const buttonVariants = cva(
                 icon: 'size-10 p-0 rounded-xl',
             },
         },
-        compoundVariants: [
-            {
-                variant: 'outlined',
-                color: 'blue',
-                className: 'text-tertiary-text border-tertiary hover:bg-tertiary/10',
-            },
-            {
-                variant: 'outlined',
-                color: 'red',
-                className: 'text-destructive border-destructive hover:bg-destructive/10',
-            },
-            {
-                variant: 'outlined',
-                color: 'green',
-                className: 'text-success border-success hover:bg-success/10',
-            },
-            {
-                variant: 'outlined',
-                color: 'amber',
-                className: 'text-warning border-warning hover:bg-warning/10',
-            },
-            {
-                variant: 'outlined',
-                color: 'orange',
-                className: 'text-orange border-orange hover:bg-orange/10',
-            },
-            {
-                variant: 'text',
-                color: 'blue',
-                className: 'text-tertiary-text hover:bg-tertiary/10',
-            },
-            {
-                variant: 'text',
-                color: 'red',
-                className: 'text-destructive bg-destructive/10 hover:bg-destructive/15',
-            },
-            {
-                variant: 'text',
-                color: 'green',
-                className: 'text-success bg-success/10 hover:bg-success/15',
-            },
-            {
-                variant: 'text',
-                color: 'amber',
-                className: 'text-warning bg-warning/10 hover:bg-warning/15',
-            },
-            // Icon variant color overrides
-            {
-                variant: 'icon',
-                color: 'default',
-                className: 'hover:text-primary hover:border-primary/50 hover:bg-primary/50 ',
-            },
-            {
-                variant: 'icon',
-                color: 'blue',
-                className: 'bg-transparent! border-info/40! text-info! hover:border-info/70! hover:bg-info/10!',
-            },
-            {
-                variant: 'icon',
-                color: 'red',
-                className: 'bg-transparent! border-destructive/40! text-destructive! hover:border-destructive/70! hover:bg-destructive/10!',
-            },
-            {
-                variant: 'icon',
-                color: 'green',
-                className: 'bg-transparent! border-success/40! text-success! hover:border-success/70! hover:bg-success/10!',
-            },
-            {
-                variant: 'icon',
-                color: 'amber',
-                className: 'bg-transparent! border-warning/40! text-warning! hover:border-warning/70! hover:bg-warning/10!',
-            },
-            {
-                variant: 'icon',
-                color: 'purple',
-                className: 'bg-transparent! border-violet/40! text-violet! hover:border-violet/70! hover:bg-violet/10!',
-            },
-            {
-                variant: 'icon',
-                className: 'hover:border-primary/50 hover:bg-primary/5',
-            },
-            // IconSoft variant color overrides
-            {
-                variant: 'iconSoft',
-                color: 'default',
-                className: 'hover:text-primary hover:bg-primary/20',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'blue',
-                className: 'text-info! hover:bg-info/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'red',
-                className: 'text-destructive! hover:bg-destructive/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'green',
-                className: 'text-success! hover:bg-success/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'amber',
-                className: 'text-warning! hover:bg-warning/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'purple',
-                className: 'text-violet! hover:bg-violet/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'orange',
-                className: 'text-orange! hover:bg-orange/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'card',
-                className: 'text-card-foreground! hover:bg-card/10!',
-            },
-            {
-                variant: 'iconSoft',
-                color: 'dark',
-                className: 'text-foreground! hover:bg-background/10!',
-            },
-            // Fast Action variant overrides
-            {
-                variant: 'fastAction',
-                color: 'default',
-                className: 'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90',
-            },
-            {
-                variant: 'fastAction',
-                color: 'blue',
-                className: 'bg-tertiary text-tertiary-foreground hover:bg-tertiary/80 dark:bg-tertiary dark:hover:bg-tertiary/80',
-            },
-            {
-                variant: 'fastAction',
-                color: 'red',
-                className: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-            },
-            {
-                variant: 'fastAction',
-                color: 'green',
-                className: 'bg-success text-success-foreground hover:bg-success/90',
-            },
-            {
-                variant: 'fastAction',
-                color: 'amber',
-                className: 'bg-warning text-warning-foreground hover:bg-warning/90',
-            },
-            {
-                variant: 'fastAction',
-                color: 'purple',
-                className: 'bg-violet text-white hover:bg-violet/90',
-            },
-            {
-                variant: 'fastAction',
-                color: 'orange',
-                className: 'bg-orange text-white hover:bg-orange/90',
-            },
-            {
-                variant: 'fastAction',
-                color: 'card',
-                className: 'bg-card text-card-foreground border border-border hover:bg-muted hover:border-foreground/20',
-            },
-            {
-                variant: 'soft',
-                color: 'default',
-                className: 'bg-primary/10 text-primary-text hover:bg-primary/15',
-            },
-            {
-                variant: 'soft',
-                color: 'blue',
-                className: 'bg-tertiary/10 text-tertiary-text hover:bg-tertiary/15',
-            },
-            {
-                variant: 'soft',
-                color: 'red',
-                className: 'bg-destructive/10 text-destructive hover:bg-destructive/15',
-            },
-            {
-                variant: 'soft',
-                color: 'green',
-                className: 'bg-success/10 text-success hover:bg-success/15',
-            },
-            {
-                variant: 'soft',
-                color: 'amber',
-                className: 'bg-warning/10 text-warning hover:bg-warning/15',
-            },
-            {
-                variant: 'soft',
-                color: 'purple',
-                className: 'bg-violet/10 text-violet hover:bg-violet/15',
-            },
-            {
-                variant: 'soft',
-                color: 'orange',
-                className: 'bg-orange/10 text-orange hover:bg-orange/15',
-            },
-            {
-                variant: 'soft',
-                color: 'card',
-                className: 'bg-card/10 text-card-foreground hover:bg-card/15',
-            },
-            {
-                variant: 'soft',
-                color: 'dark',
-                className: 'bg-background/10 text-foreground hover:bg-background/15 dark:bg-background/10 dark:text-foreground dark:hover:bg-background/15',
-            },
-        ],
         defaultVariants: {
             variant: 'filled',
             size: 'md',
@@ -304,7 +80,9 @@ type PolymorphicProps = React.ButtonHTMLAttributes<HTMLButtonElement> & React.An
 /** Botão ou link com variante, tamanho, tone e estados opcionais. */
 export interface ButtonProps
     extends Omit<PolymorphicProps, 'color'>,
-    VariantProps<typeof buttonVariants> {
+    Omit<VariantProps<typeof buttonVariants>, 'color'> {
+    /** Cor semântica aplicada à variante visual. */
+    color?: UIColor;
     /** Renderiza como link usando `href`. */
     asLink?: boolean;
     /** Destino quando `asLink` está ativo. */
@@ -329,7 +107,7 @@ export interface ButtonProps
     fullWidth?: boolean;
     /** Habilita escala na interação. */
     motionScale?: boolean;
-    /** Preset compartilhado usado por `variant="gradient"`. */
+    /** Preset de `gradient.ts` aplicado ao fundo do botão. */
     gradient?: UIGradientValue;
 };
 
@@ -484,9 +262,9 @@ const Button = React.forwardRef<
                             </span>
                         )}
 
-                        <span className={cn('relative', loading && 'opacity-75')}>
+                        <span className={cn('relative flex gap-3', loading && 'opacity-75')}>
                             {loading && (
-                                <CircleNotchIcon className="absolute right-full top-1/2 mr-2 -translate-y-1/2 animate-spin" size={iconSizeClass} aria-hidden="true" />
+                                <CircleNotchIcon className="animate-spin" size={iconSizeClass} aria-hidden="true" />
                             )}
                             {children}
                         </span>
@@ -501,41 +279,60 @@ const Button = React.forwardRef<
             </>
         );
 
+        const resolvedVariant = variant ?? 'filled';
+        const resolvedColor: UIColor = color && color !== 'default' && color in toneClasses ? color : 'primary';
+        const tone = toneClasses[resolvedColor] ?? toneClasses.primary;
+        const isSolidVariant = resolvedVariant === 'filled' || resolvedVariant === 'fastAction';
+        const hasGradient = Boolean(gradient);
+        const hasGradientBorder = hasGradient && (resolvedVariant === 'outline' || resolvedVariant === 'icon');
+        const hasGradientText = hasGradient && ['outline', 'text', 'ghost'].includes(resolvedVariant);
+
         const getActiveClasses = () => {
             if (!active) return '';
-            if (color && color !== 'default' && color in toneClasses) {
-                const toneRings: Record<UIColor, string> = {
-                    default: 'ring-foreground', primary: 'ring-primary', secondary: 'ring-secondary',
-                    tertiary: 'ring-tertiary', success: 'ring-success', warning: 'ring-warning',
-                    danger: 'ring-destructive', info: 'ring-info', neutral: 'ring-neutral', background: 'ring-foreground',
-                };
-                return cn('ring-2 ring-offset-2 ring-offset-background', toneRings[color as UIColor]);
-            }
-            
-            const activeColorMap: Record<string, string> = {
-                default: 'ring-2 ring-primary ring-offset-2 ring-offset-background',
-                blue: 'ring-2 ring-tertiary ring-offset-2 ring-offset-background',
-                red: 'ring-2 ring-destructive ring-offset-2 ring-offset-background',
-                green: 'ring-2 ring-success ring-offset-2 ring-offset-background',
-                amber: 'ring-2 ring-warning ring-offset-2 ring-offset-background',
-                purple: 'ring-2 ring-violet ring-offset-2 ring-offset-background',
-                orange: 'ring-2 ring-orange ring-offset-2 ring-offset-background',
-                card: 'ring-2 ring-border-foreground ring-offset-2 ring-offset-background',
+            const activeColorMap: Record<UIColor, { ring: string; soft: string; strong: string }> = {
+                default: { ring: 'ring-primary', soft: 'bg-primary/15', strong: 'bg-primary/20' },
+                primary: { ring: 'ring-primary', soft: 'bg-primary/15', strong: 'bg-primary/20' },
+                secondary: { ring: 'ring-secondary', soft: 'bg-secondary/15', strong: 'bg-secondary/20' },
+                tertiary: { ring: 'ring-tertiary', soft: 'bg-tertiary/15', strong: 'bg-tertiary/20' },
+                success: { ring: 'ring-success', soft: 'bg-success/15', strong: 'bg-success/20' },
+                warning: { ring: 'ring-warning', soft: 'bg-warning/15', strong: 'bg-warning/20' },
+                danger: { ring: 'ring-destructive', soft: 'bg-destructive/15', strong: 'bg-destructive/20' },
+                info: { ring: 'ring-info', soft: 'bg-info/15', strong: 'bg-info/20' },
+                neutral: { ring: 'ring-neutral', soft: 'bg-neutral/15', strong: 'bg-neutral/20' },
+                background: { ring: 'ring-foreground', soft: 'bg-foreground/10', strong: 'bg-foreground/15' },
+                foreground: { ring: 'ring-background', soft: 'bg-background/10', strong: 'bg-background/15' },
             };
-            
-            return activeColorMap[color || 'default'] || activeColorMap.default;
+            const activeColor = activeColorMap[resolvedColor] ?? activeColorMap.primary;
+
+            return cn(
+                'ring-2 ring-offset-2 ring-offset-background',
+                activeColor.ring,
+                hasGradient && 'brightness-90 saturate-125 shadow-inner',
+                !hasGradient && isSolidVariant && 'brightness-90 shadow-inner',
+                !hasGradient && resolvedVariant === 'outline' && cn(activeColor.soft, 'shadow-inner'),
+                !hasGradient && resolvedVariant === 'soft' && cn(activeColor.strong, 'shadow-inner'),
+                !hasGradient && ['text', 'ghost', 'icon', 'iconSoft'].includes(resolvedVariant) && activeColor.soft,
+            );
         };
+        const gradientClassesByVariant = cn(
+            isSolidVariant && 'text-white hover:brightness-95 dark:font-semibold',
+            resolvedVariant === 'outline' && 'border border-transparent bg-transparent',
+            (resolvedVariant === 'text' || resolvedVariant === 'ghost') && 'bg-transparent',
+            (resolvedVariant === 'soft' || resolvedVariant === 'iconSoft') && 'text-foreground',
+            resolvedVariant === 'icon' && 'border-2 border-transparent bg-transparent text-primary-text',
+        );
+        const toneClassesByVariant = hasGradient ? gradientClassesByVariant : cn(
+            isSolidVariant && cn(tone.solid, 'hover:brightness-95'),
+            resolvedVariant === 'outline' && cn('border bg-transparent', tone.outline, tone.hoverSoft),
+            (resolvedVariant === 'text' || resolvedVariant === 'ghost') && cn('bg-transparent', tone.text, tone.hoverSoft),
+            resolvedVariant === 'soft' && cn(tone.soft, tone.hoverSoft),
+            resolvedVariant === 'icon' && cn('bg-transparent', tone.text, tone.outline, tone.hoverSoft),
+            resolvedVariant === 'iconSoft' && cn(tone.soft, tone.hoverSoft),
+        );
 
         const buttonClasses = cn(
             buttonVariants({ variant, size, color }),
-            variant === 'outlined' && 'bg-background',
-            (variant === 'text' || variant === 'ghost') && 'bg-transparent',
-            color && color !== 'default' && color in toneClasses && (
-                variant === 'soft' ? cn(toneClasses[color as UIColor].soft, toneClasses[color as UIColor].hoverSoft)
-                    : variant === 'outlined' ? cn(toneClasses[color as UIColor].outline, toneClasses[color as UIColor].hoverSoft)
-                    : variant === 'text' || variant === 'ghost' || variant === 'icon' ? cn(toneClasses[color as UIColor].text, toneClasses[color as UIColor].hoverSoft)
-                    : variant === 'filled' || variant === 'fastAction' ? toneClasses[color as UIColor].solid : undefined
-            ),
+            toneClassesByVariant,
             !fullWidth && 'w-auto',
             size === 'icon' && 'h-10 w-10 shrink-0 p-0',
             loading && 'cursor-wait',
@@ -544,7 +341,31 @@ const Button = React.forwardRef<
         );
 
         const isDisabled = loading || props.disabled;
-        const gradientStyle = variant === 'gradient' && gradient ? { ...getGradientStyle(gradient), ...style } : style;
+        const baseGradientStyle = gradient ? getGradientStyle(gradient) : undefined;
+        const gradientImage = baseGradientStyle?.backgroundImage;
+        const gradientStyle: React.CSSProperties | undefined = !gradient
+            ? style
+            : hasGradientBorder
+                ? {
+                    borderColor: 'transparent',
+                    backgroundImage: `linear-gradient(var(--background), var(--background)), ${gradientImage}`,
+                    backgroundOrigin: 'border-box',
+                    backgroundClip: 'padding-box, border-box',
+                    ...style,
+                }
+                : resolvedVariant === 'soft' || resolvedVariant === 'iconSoft'
+                    ? { ...getGradientStyle(gradient, 'subtle'), ...style }
+                    : resolvedVariant === 'text' || resolvedVariant === 'ghost'
+                        ? style
+                        : { ...baseGradientStyle, ...style };
+        const gradientTextStyle: React.CSSProperties | undefined = hasGradientText ? {
+            backgroundImage: gradientImage,
+            backgroundPosition: baseGradientStyle?.backgroundPosition,
+            backgroundSize: baseGradientStyle?.backgroundSize,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            color: 'transparent',
+        } : undefined;
 
         // Animações do Framer Motion
         const animationProps = (animationEntrance || animationOut) ? {
@@ -566,7 +387,9 @@ const Button = React.forwardRef<
                 style={gradientStyle}
                 {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
             >
-                {content}
+                <span className={cn('inline-flex items-center justify-center', hasGradientText && 'ui-button-gradient-text')} style={gradientTextStyle}>
+                    {content}
+                </span>
             </button>
         );
 
@@ -587,7 +410,9 @@ const Button = React.forwardRef<
                 style={gradientStyle}
                 {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
             >
-                {content}
+                <span className={cn('inline-flex items-center justify-center', hasGradientText && 'ui-button-gradient-text')} style={gradientTextStyle}>
+                    {content}
+                </span>
             </Link>
         );
 

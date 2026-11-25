@@ -39,6 +39,7 @@ const thumbColors: Record<UIColor, string> = {
     tertiary: 'bg-tertiary-foreground', success: 'bg-success-foreground', warning: 'bg-warning-foreground',
     danger: 'bg-destructive-foreground', info: 'bg-info-foreground', neutral: 'bg-neutral-foreground',
     background: 'bg-foreground',
+    foreground: 'bg-background',
 };
 
 /** Controle liga/desliga; `color` define o tone quando ativado. */

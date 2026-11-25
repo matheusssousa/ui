@@ -1,12 +1,14 @@
 import type { CSSProperties } from 'react';
 
 export const uiSizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
-export const uiColors = ['default', 'primary', 'secondary', 'success', 'warning', 'danger', 'info', 'neutral', 'tertiary', 'background'] as const;
+export const uiColors = ['default', 'primary', 'secondary', 'success', 'warning', 'danger', 'info', 'neutral', 'tertiary', 'background', 'foreground'] as const;
 export const uiRadii = ['none', 'sm', 'md', 'lg', 'xl', 'full'] as const;
+export const uiSurfaceVariants = ['default', 'filled', 'outline', 'soft', 'minimal', 'elevated', 'glass', 'glow'] as const;
 
 export type UISize = (typeof uiSizes)[number];
 export type UIColor = (typeof uiColors)[number];
 export type UIRadius = (typeof uiRadii)[number];
+export type UISurfaceVariant = (typeof uiSurfaceVariants)[number];
 
 export const radiusClasses: Record<UIRadius, string> = {
   none: 'rounded-none',
@@ -88,6 +90,61 @@ export const toneClasses: Record<UIColor, { solid: string; fill: string; onSolid
     outline: 'border-border text-foreground',
     text: 'text-foreground',
   },
+  foreground: {
+    solid: 'bg-foreground text-background',
+    fill: 'bg-foreground', onSolid: 'text-background', hoverSoft: 'hover:bg-muted/70', hoverOutline: 'hover:border-border',
+    soft: 'bg-muted text-foreground',
+    outline: 'border-border text-foreground',
+    text: 'text-foreground',
+  },
+};
+
+/** Efeitos de superfície coloridos reutilizáveis por componentes de contêiner. */
+export const surfaceToneClasses: Record<UIColor, { glass: string; glow: string }> = {
+  default: {
+    glass: 'border-border/60 bg-card/75 text-card-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--foreground)]',
+  },
+  primary: {
+    glass: 'border-primary/25 bg-primary/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--primary)]',
+  },
+  secondary: {
+    glass: 'border-secondary/25 bg-secondary/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--secondary)]',
+  },
+  tertiary: {
+    glass: 'border-tertiary/25 bg-tertiary/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--tertiary)]',
+  },
+  success: {
+    glass: 'border-success/25 bg-success/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--success)]',
+  },
+  warning: {
+    glass: 'border-warning/25 bg-warning/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--warning)]',
+  },
+  danger: {
+    glass: 'border-destructive/25 bg-destructive/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--destructive)]',
+  },
+  info: {
+    glass: 'border-info/25 bg-info/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--info)]',
+  },
+  neutral: {
+    glass: 'border-neutral/25 bg-neutral/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--neutral)]',
+  },
+  background: {
+    glass: 'border-border/60 bg-background/75 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--background)]',
+  },
+  foreground: {
+    glass: 'border-foreground/25 bg-foreground/5 text-foreground shadow-lg backdrop-blur-xl',
+    glow: 'ui-surface-glow text-foreground [--surface-glow-color:var(--foreground)]',
+  },
 };
 const toneTokens: Record<UIColor, readonly [string, string, string]> = {
   default: ['foreground', 'background', 'foreground'],
@@ -100,6 +157,7 @@ const toneTokens: Record<UIColor, readonly [string, string, string]> = {
   info: ['info', 'info-foreground', 'info'],
   neutral: ['neutral', 'neutral-foreground', 'neutral'],
   background: ['background', 'foreground', 'foreground'],
+  foreground: ['foreground', 'background', 'foreground'],
 };
 
 /** Aplica um tone aos componentes legados que usam utilitários `primary` em elementos internos. */

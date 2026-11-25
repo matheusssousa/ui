@@ -14,7 +14,7 @@ function Example({ slug, property, value }: { slug: string; property: string; va
   const overrides: Record<string, unknown> = { [property]: value };
   if (property === 'gradient') {
     if (slug === 'progress-bar') overrides.color = 'gradient';
-    else overrides.variant = 'gradient';
+    else if (slug !== 'button') overrides.variant = 'gradient';
     if (value === 'gradient-image') overrides.gradient = { preset: value, image: 'https://images.unsplash.com/photo-1499696010180-025ef6e1a8f9?auto=format&fit=crop&w=1000&q=80' };
   }
   return <section className="space-y-3">

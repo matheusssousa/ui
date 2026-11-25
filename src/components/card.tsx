@@ -5,11 +5,10 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '../utils.js';
 import { fluidTransition, motionPresets, type MotionPreset } from './motion.js';
-import { radiusClasses, type UIColor, type UIRadius } from './theme.js';
-import { toneClasses } from './theme.js';
+import { radiusClasses, surfaceToneClasses, toneClasses, type UIColor, type UIRadius, type UISurfaceVariant } from './theme.js';
 import { Skeleton } from './skeleton.js';
 import { formatCurrency } from '../functions/formatCurrency.js';
-import { getGradientStyle, gradientClasses, type UIGradientValue } from './gradient.js';
+import { getGradientStyle, type UIGradientValue } from './gradient.js';
 
 /** Dados apresentados quando `Card` recebe a prop `metric`. */
 export interface CardMetric {
@@ -35,14 +34,13 @@ const cardVariants = cva(
     variants: {
       variant: {
         default: 'shadow-sm',
-        outlined: 'border-input shadow-none',
-        filled: 'border-transparent bg-muted text-foreground',
-        minimal: 'bg-transparent shadow-none',
+        filled: '',
+        outline: 'bg-transparent shadow-none',
+        soft: 'border-transparent shadow-none',
+        minimal: 'border-transparent bg-transparent shadow-none',
         elevated: 'border-border/60 shadow-lg shadow-black/5 dark:shadow-black/20',
-        glass: 'border-white/15 bg-card/75 shadow-lg backdrop-blur-xl',
-        glow: 'ui-surface-glow',
-        gradient: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card',
-        interactive: 'cursor-pointer shadow-sm hover:border-primary/30 hover:shadow-md',
+        glass: '',
+        glow: '',
       },
       size: {
         none: 'p-0',
@@ -52,62 +50,8 @@ const cardVariants = cva(
         lg: 'gap-5 p-8',
         xl: 'gap-6 p-10',
       },
-      color: {
-        default: '',
-        primary: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card',
-        secondary: 'border-secondary/20 bg-gradient-to-br from-secondary/12 via-card to-card',
-        success: 'border-success/20 bg-gradient-to-br from-success/12 via-card to-card',
-        warning: 'border-warning/20 bg-gradient-to-br from-warning/12 via-card to-card',
-        danger: 'border-destructive/20 bg-gradient-to-br from-destructive/12 via-card to-card',
-        info: 'border-info/20 bg-gradient-to-br from-info/12 via-card to-card',
-        neutral: 'border-neutral/20 bg-gradient-to-br from-neutral/12 via-card to-card',
-        tertiary: 'border-tertiary/20 bg-gradient-to-br from-tertiary/12 via-card to-card',
-        background: 'border-transparent bg-background text-foreground',
-      },
     },
-    defaultVariants: { variant: 'default', size: 'md', color: 'default' },
-    compoundVariants: [
-      { variant: 'gradient', color: 'default', className: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card' },
-      { variant: 'gradient', color: 'primary', className: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card' },
-      { variant: 'gradient', color: 'secondary', className: 'border-secondary/20 bg-gradient-to-br from-secondary/12 via-card to-card' },
-      { variant: 'gradient', color: 'success', className: 'border-success/20 bg-gradient-to-br from-success/12 via-card to-card' },
-      { variant: 'gradient', color: 'warning', className: 'border-warning/20 bg-gradient-to-br from-warning/12 via-card to-card' },
-      { variant: 'gradient', color: 'danger', className: 'border-destructive/20 bg-gradient-to-br from-destructive/12 via-card to-card' },
-      { variant: 'gradient', color: 'info', className: 'border-info/20 bg-gradient-to-br from-info/12 via-card to-card' },
-      { variant: 'gradient', color: 'neutral', className: 'border-neutral/20 bg-gradient-to-br from-neutral/12 via-card to-card' },
-      { variant: 'gradient', color: 'tertiary', className: 'border-tertiary/20 bg-gradient-to-br from-tertiary/12 via-card to-card' },
-      { variant: 'gradient', color: 'background', className: 'border-transparent bg-background text-foreground' },
-      { variant: 'interactive', color: 'default', className: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card' },
-      { variant: 'interactive', color: 'primary', className: 'border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card' },
-      { variant: 'interactive', color: 'secondary', className: 'border-secondary/20 bg-gradient-to-br from-secondary/12 via-card to-card' },
-      { variant: 'interactive', color: 'success', className: 'border-success/20 bg-gradient-to-br from-success/12 via-card to-card' },
-      { variant: 'interactive', color: 'warning', className: 'border-warning/20 bg-gradient-to-br from-warning/12 via-card to-card' },
-      { variant: 'interactive', color: 'danger', className: 'border-destructive/20 bg-gradient-to-br from-destructive/12 via-card to-card' },
-      { variant: 'interactive', color: 'info', className: 'border-info/20 bg-gradient-to-br from-info/12 via-card to-card' },
-      { variant: 'interactive', color: 'neutral', className: 'border-neutral/20 bg-gradient-to-br from-neutral/12 via-card to-card' },
-      { variant: 'interactive', color: 'tertiary', className: 'border-tertiary/20 bg-gradient-to-br from-tertiary/12 via-card to-card' },
-      { variant: 'interactive', color: 'background', className: 'border-transparent bg-background text-foreground' },
-      { variant: 'glass', color: 'default', className: 'border-white/15 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'primary', className: 'border-primary/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'secondary', className: 'border-secondary/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'success', className: 'border-success/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'warning', className: 'border-warning/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'danger', className: 'border-destructive/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'info', className: 'border-info/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'neutral', className: 'border-neutral/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'glass', color: 'tertiary', className: 'border-tertiary/20 bg-card/75 shadow-lg backdrop-blur-xl' },
-      { variant: 'filled', color: 'default', className: 'border-transparent bg-muted text-foreground' },
-      { variant: 'filled', color: 'primary', className: 'border-transparent bg-primary/10 text-primary-text' },
-      { variant: 'filled', color: 'secondary', className: 'border-transparent bg-secondary/15 text-secondary-text' },
-      { variant: 'filled', color: 'success', className: 'border-transparent bg-success/10 text-success' },
-      { variant: 'filled', color: 'warning', className: 'border-transparent bg-warning/10 text-warning' },
-      { variant: 'filled', color: 'danger', className: 'border-transparent bg-destructive/10 text-destructive' },
-      { variant: 'filled', color: 'info', className: 'border-transparent bg-info/10 text-info' },
-      { variant: 'filled', color: 'neutral', className: 'border-transparent bg-neutral/10 text-neutral' },
-      { variant: 'filled', color: 'tertiary', className: 'border-transparent bg-tertiary/10 text-tertiary-text' },
-      { variant: 'filled', color: 'background', className: 'border-transparent bg-background text-foreground' },
-      { variant: 'outlined', color: 'background', className: 'border-border text-foreground' },
-    ],
+    defaultVariants: { variant: 'default', size: 'md' },
   },
 );
 
@@ -129,7 +73,7 @@ export interface CardProps
   radius?: UIRadius;
   /** Tone das superfícies coloridas e da métrica. */
   color?: UIColor;
-  /** Preset do gradiente. Usado com `variant="gradient"`. */
+  /** Preset de `gradient.ts`, aplicado conforme a variante visual. */
   gradient?: UIGradientValue;
   /** Habilita aparência interativa. */
   interactive?: boolean;
@@ -187,6 +131,37 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
   const reducedMotion = useReducedMotion();
   const preset = motionPreset ?? (animationEntrance || animationOut ? 'fade-up' : 'none');
   const variants = preset === 'none' ? undefined : motionPresets[preset];
+  const resolvedVariant: UISurfaceVariant = variant ?? 'default';
+  const resolvedColor: UIColor = color && color in toneClasses ? color : 'default';
+  const tone = toneClasses[resolvedColor];
+  const surfaceTone = surfaceToneClasses[resolvedColor];
+  const colorClasses = cn(
+    resolvedVariant === 'filled' && tone.solid,
+    resolvedVariant === 'outline' && cn(tone.outline, 'bg-transparent'),
+    resolvedVariant === 'soft' && tone.soft,
+    resolvedVariant === 'minimal' && tone.text,
+    resolvedVariant === 'glass' && surfaceTone.glass,
+    resolvedVariant === 'glow' && surfaceTone.glow,
+    resolvedVariant === 'default' && color && color !== 'default' && cn(tone.soft, tone.outline),
+    resolvedVariant === 'elevated' && color && color !== 'default' && tone.outline,
+  );
+  const baseGradientStyle = gradient ? getGradientStyle(gradient) : undefined;
+  const gradientStyle = !gradient
+    ? style
+    : resolvedVariant === 'outline'
+      ? {
+          borderColor: 'transparent',
+          backgroundImage: `linear-gradient(var(--card), var(--card)), ${baseGradientStyle?.backgroundImage}`,
+          backgroundOrigin: 'border-box',
+          backgroundClip: 'padding-box, border-box',
+          ...style,
+        }
+      : resolvedVariant === 'minimal'
+        ? style
+        : {
+            ...getGradientStyle(gradient, resolvedVariant === 'filled' ? 'vibrant' : 'subtle'),
+            ...style,
+          };
 
   return (
     <motion.div
@@ -199,8 +174,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
       whileHover={interactive && !reducedMotion ? { y: -3 } : undefined}
       whileTap={interactive && !reducedMotion ? { scale: 0.995 } : undefined}
       aria-busy={loading || undefined}
-      className={cn(cardVariants({ variant: interactive ? 'interactive' : variant, size, color }), variant === 'gradient' && gradient && gradientClasses[typeof gradient === 'string' ? gradient : gradient.preset].card, radiusClasses[radius], loading && 'pointer-events-none overflow-hidden', className)}
-      style={variant === 'gradient' && gradient ? { ...getGradientStyle(gradient, 'subtle'), ...style } : style}
+      className={cn(cardVariants({ variant: resolvedVariant, size }), colorClasses, gradient && resolvedVariant === 'filled' && 'text-white', interactive && 'cursor-pointer hover:border-primary/30 hover:shadow-md', radiusClasses[radius], loading && 'pointer-events-none overflow-hidden', className)}
+      style={gradientStyle}
       {...props}
     >
       {loading && !metric && <span className="absolute inset-0 z-10 animate-pulse bg-muted/65 backdrop-blur-[1px]" aria-hidden="true" />}
@@ -213,8 +188,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
             {icon && <span className={cn('flex-shrink-0 p-2 rounded-md', toneClasses[color && color !== 'default' ? color : 'primary'].soft)}>{icon}</span>}
             <div className="min-w-0 ">
               {eyebrow && <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-primary-text">{eyebrow}</div>}
-              {title && <h3 className={cn('font-semibold text-foreground [overflow-wrap:anywhere]', slotClassNames?.title)}>{title}</h3>}
-              {description && <p className={cn('text-sm text-muted-foreground', slotClassNames?.description)}>{description}</p>}
+              {title && <h3 className={cn('font-semibold text-current [overflow-wrap:anywhere]', slotClassNames?.title)}>{title}</h3>}
+              {description && <p className={cn('text-sm text-current opacity-75', slotClassNames?.description)}>{description}</p>}
             </div>
           </div>
           {action && <div className="shrink-0">{action}</div>}
@@ -222,13 +197,13 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
       )}
       {metric ? <div className="flex min-h-24 flex-col justify-between gap-3">
         <div className="flex items-start justify-between gap-3">
-          <span className="min-w-0 truncate text-xs font-medium text-foreground">{metric.label}</span>
+          <span className="min-w-0 truncate text-xs font-medium text-current">{metric.label}</span>
           {metric.icon && <span className={cn('grid size-9 shrink-0 place-items-center rounded-xl', toneClasses[metric.tone ?? 'primary'].soft)}>{metric.icon}</span>}
         </div>
         {loading ? <div className="space-y-2"><Skeleton className="h-6 w-2/3" /><Skeleton className="h-3 w-1/2" /></div> :
           <div className="min-w-0">
             <div className={cn('break-words text-2xl font-semibold tabular-nums', toneClasses[metric.tone ?? 'primary'].text, slotClassNames?.metricValue)}>{typeof metric.value === 'number' && metric.format === 'currency' ? formatCurrency(metric.value) : typeof metric.value === 'number' && metric.format === 'number' ? metric.value.toLocaleString('pt-BR') : metric.value}</div>
-            {metric.description && <p className="mt-0.5 truncate text-xs text-muted-foreground">{metric.description}</p>}
+            {metric.description && <p className="mt-0.5 truncate text-xs text-current opacity-75">{metric.description}</p>}
             {metric.change !== undefined && <p className={cn('text-xs font-medium', metric.change >= 0 ? 'text-success' : 'text-destructive')}>{metric.change >= 0 ? '+' : ''}{metric.change.toFixed(1)}% <span className="text-muted-foreground">vs anterior</span></p>}
           </div>}
       </div> : children}
