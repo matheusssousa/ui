@@ -269,8 +269,8 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
         >
             {variant === 'stacked' && items.length > 1 && (
                 <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-                    <div data-carousel-layer className="absolute inset-x-6 top-1 bottom-3 rounded-xl border border-border bg-card opacity-50" />
-                    <div data-carousel-layer className="absolute inset-x-4 top-2 bottom-1 rounded-xl border border-border bg-card opacity-75 shadow-sm" />
+                    <div data-carousel-layer className="absolute inset-x-4 top-1 bottom-3 rounded-xl border border-border bg-card opacity-50" />
+                    <div data-carousel-layer className="absolute inset-x-2 top-2 bottom-1 rounded-xl border border-border bg-card opacity-75 shadow-sm" />
                 </div>
             )}
 
@@ -297,7 +297,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                     onDragEnd={handleDragEnd}
                     className={cn(
                         'absolute inset-0 w-full h-full flex items-center justify-center touch-pan-y',
-                        variant === 'stacked' && 'inset-x-3 top-4 bottom-0 w-auto h-auto overflow-hidden rounded-xl border border-border bg-card shadow-lg'
+                        variant === 'stacked' && 'inset-x-0 top-4 bottom-0 w-auto h-auto overflow-hidden rounded-xl border border-border bg-card shadow-lg'
                     )}
                 >
                     {items[Math.min(currentIndex, items.length - 1)]?.content}
