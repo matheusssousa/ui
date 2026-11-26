@@ -4,6 +4,14 @@ Todas as mudanças relevantes de `@matheusssousa/ui` são documentadas neste arq
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto utiliza [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.5.3] - 2026-11-26
+
+### Adicionado
+
+- Componente `ListItem` com suporte a ícone, título, descrição, badge e ação.
+- Variantes visuais `default`, `outlined`, `soft` e `ghost`, tamanhos `sm`, `md` e `lg` e customização dos slots internos.
+- Aplicação de cores semânticas ao ícone, ao fundo transparente do contêiner do ícone e ao título.
+
 ## [0.5.1] - 2026-11-25
 
 ### Alterado
