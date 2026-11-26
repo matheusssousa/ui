@@ -44,6 +44,8 @@ export interface PaginationProps {
   siblingCount?: number;
   /** Cor da página ativa; padrão `default`. */
   color?: UIColor;
+  /** Desabilita todos os controles, por exemplo, durante uma busca. */
+  disabled?: boolean;
   /** Classes adicionais no contêiner. */
   className?: string;
 }
@@ -56,6 +58,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
     showPreviousNext = true,
     siblingCount = 1,
     color = 'default',
+    disabled = false,
     className,
     ...props 
   }, ref) => {
@@ -124,8 +127,10 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
         {/* Previous Button */}
         {showPreviousNext && (
           <button
+            type="button"
             onClick={handlePrevious}
-            disabled={currentPage === 1}
+            aria-label="Página anterior"
+            disabled={disabled || currentPage === 1}
             className={cn(
               paginationVariants({ variant: 'ghost', size: 'default' }),
               'gap-2 cursor-pointer'
@@ -145,7 +150,11 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
               </span>
             ) : (
               <button
+                type="button"
                 onClick={() => handlePageClick(page)}
+                disabled={disabled}
+                aria-label={`Ir para a página ${page}`}
+                aria-current={currentPage === page ? 'page' : undefined}
                 className={cn(
                   paginationVariants({
                     variant: currentPage === page ? 'active' : 'default',
@@ -162,8 +171,10 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
         {/* Next Button */}
         {showPreviousNext && (
           <button
+            type="button"
             onClick={handleNext}
-            disabled={currentPage === totalPages}
+            aria-label="Próxima página"
+            disabled={disabled || currentPage === totalPages}
             className={cn(
               paginationVariants({ variant: 'ghost', size: 'default' }),
               'gap-2 cursor-pointer'

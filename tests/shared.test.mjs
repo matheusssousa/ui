@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { createAxiosClient, createFetchClient, HttpError, resolveHttpError } from '../dist/functions/http.js';
 import { useApiTable, normalizePagination } from '../dist/hooks/useApiTable.js';
 import { useSearch } from '../dist/hooks/useSearch.js';
+import { useFetch } from '../dist/hooks/useFetch.js';
 import { useViewModal, ViewModalUtils } from '../dist/hooks/useViewModal.js';
 import { Input, validateImageFile } from '../dist/components/input.js';
 import { Stepper } from '../dist/components/stepper.js';
@@ -14,6 +15,7 @@ import { RatingBar } from '../dist/components/rating-bar.js';
 import { ViewModal } from '../dist/components/view-modal.js';
 import { ToastProvider } from '../dist/providers/ToastProvider.js';
 import { Button } from '../dist/components/button.js';
+import { Pagination } from '../dist/components/pagination.js';
 import { toneClasses } from '../dist/components/theme.js';
 import { uiGradients } from '../dist/components/gradient.js';
 import { openDownloadUrl } from '../dist/functions/openDownloadUrl.js';
@@ -115,6 +117,59 @@ test('rating bar supports uncontrolled, controlled and keyboard selection', asyn
 });
 
 const page = (data = [{ id: 1 }]) => ({ data, current_page: 1, last_page: 2, total: 2, per_page: 1, from: 1, to: 1 });
+
+test('useFetch connects paginated requests to Pagination and notifies results', async () => {
+  const calls = [];
+  const notifications = [];
+  let fetchState;
+  let resolveSecond;
+  const fetchPage = pageNumber => {
+    calls.push(pageNumber);
+    if (pageNumber === 2) return new Promise(resolve => { resolveSecond = resolve; });
+    return Promise.resolve({ data: [{ id: pageNumber }], current_page: pageNumber, last_page: 3 });
+  };
+  const notifier = {
+    success: (title, message) => notifications.push(['success', title, message]),
+    error: (title, message) => notifications.push(['error', title, message]),
+  };
+  function Fixture() {
+    fetchState = useFetch(fetchPage, { pagination: true, immediate: true, notifier, successMessage: 'Resultados carregados.' });
+    return React.createElement(Pagination, fetchState.paginationProps);
+  }
+  const ui = await mount(() => React.createElement(Fixture));
+  try {
+    await tick();
+    assert.deepEqual(calls, [1]);
+    assert.equal(fetchState.totalPages, 3);
+    assert.equal(ui.container.querySelector('[aria-current="page"]').textContent, '1');
+    assert.deepEqual(notifications, [['success', 'Sucesso', 'Resultados carregados.']]);
+
+    await act(async () => ui.container.querySelector('[aria-label="Ir para a página 2"]').click());
+    assert.deepEqual(calls, [1, 2]);
+    assert.equal(fetchState.page, 2);
+    assert.ok([...ui.container.querySelectorAll('button')].every(button => button.disabled));
+
+    await act(async () => resolveSecond({ data: [{ id: 2 }], current_page: 2, last_page: 3 }));
+    assert.equal(fetchState.data.data[0].id, 2);
+    assert.equal(ui.container.querySelector('[aria-current="page"]').textContent, '2');
+  } finally { await ui.dispose(); }
+});
+
+test('useFetch sends resolved errors to its notifier', async () => {
+  const notifications = [];
+  let fetchState;
+  const notifier = { success() {}, error: (title, message) => notifications.push([title, message]) };
+  function Fixture() {
+    fetchState = useFetch(async () => { throw new Error('Falha de rede'); }, { notifier });
+    return null;
+  }
+  const ui = await mount(() => React.createElement(Fixture));
+  try {
+    await act(async () => { await fetchState.execute(); });
+    assert.equal(fetchState.error, 'Falha de rede');
+    assert.deepEqual(notifications, [['Erro', 'Falha de rede']]);
+  } finally { await ui.dispose(); }
+});
 
 test('button ripple stays outside layout without theme CSS and is removed after animation', async () => {
   const previousAnimate = dom.window.HTMLElement.prototype.animate;

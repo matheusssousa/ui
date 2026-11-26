@@ -12,6 +12,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Variantes visuais `default`, `outlined`, `soft` e `ghost`, tamanhos `sm`, `md` e `lg` e customização dos slots internos.
 - Aplicação de cores semânticas ao ícone, ao fundo transparente do contêiner do ícone e ao título.
 
+### Alterado
+
+- `useFetch` agora aceita notifier, mensagens e controle de toasts, além de oferecer modo paginado compatível diretamente com o componente `Pagination`.
+- `Pagination` agora permite desabilitar todos os controles durante carregamentos e expõe rótulos e estado da página atual para tecnologias assistivas.
+
 ## [0.5.1] - 2026-11-25
 
 ### Alterado

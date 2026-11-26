@@ -956,7 +956,7 @@ export function UserDetails({ user }: { user: User }) {
 | API | Parâmetros, retorno e observações |
 | --- | --- |
 | `useApi(client, notifier?)` | Retorna request, get, post, put, delete, execute e isLoading. get(url, params?, options?); demais verbos(url, data?, options?); request(method, url, data?, options?); execute(fn, options?). Opções incluem successMessage, errorMessage, showSuccessToast e showErrorToast. Toast de sucesso é padrão em mutações; erro é padrão em todos. Use request para PATCH. Operações concorrentes mantêm loading até a última terminar. |
-| `useFetch(fetchFn, options?)` | options: immediate=false, initialData=null, onSuccess(data), onError(message). Retorna data, loading, error, execute(...args), reset e setData. Falhas retornam null; somente a execução mais recente atualiza o estado. immediate chama a função sem argumentos. reset invalida resultados pendentes sem abortar o transporte. |
+| `useFetch(fetchFn, options?)` | options: immediate=false, initialData=null, notifier, successMessage, errorMessage, showSuccessToast, showErrorToast, onSuccess(data), onError(message) e pagination. Retorna data, loading, error, execute(...args), reset e setData. No modo paginado, `fetchFn(page, ...args)` recebe a página primeiro e o retorno inclui page, totalPages, setPage e paginationProps, pronto para `<Pagination {...paginationProps} />`. Reconhece respostas Laravel diretas, Resources paginados e mapeadores personalizados. Falhas retornam null; somente a execução mais recente atualiza o estado. |
 | `useAction(action, options?)` | action(previousState, FormData) deve retornar ActionResponse. options: notifier, successMessage, errorMessage, onSuccess(data), onError(message). Retorna state, formAction, pending, isSuccess, isError, data, error, errors e clearFieldError(field). Use formAction em form action. Resposta: success, data, error, errors, message e flags de toast opcionais. |
 | `useCep(fetcher?)` | Retorna loading, error e fetchAddress(cep, signal?). Exige 8 dígitos, consulta ViaCEP e retorna CepData ou null. Usa fetch, inclusive quando o restante da aplicação usa Axios; fetcher permite injeção para testes. |
 | `useDebounce(value, delay)` | Retorna o valor após delay em ms; cancela o timer anterior em alterações/desmontagem. |
@@ -2617,6 +2617,8 @@ export interface PaginationProps {
     siblingCount?: number;
     /** Cor da página ativa; padrão `default`. */
     color?: UIColor;
+    /** Desabilita todos os controles, por exemplo, durante uma busca. */
+    disabled?: boolean;
     /** Classes adicionais no contêiner. */
     className?: string;
 }
@@ -3877,20 +3879,55 @@ export declare function useDebounce<T>(value: T, delay: number): T;
 Fonte: [hooks/useFetch](src/hooks/useFetch.ts).
 
 ```ts
+import { type Dispatch, type SetStateAction } from 'react';
+import type { ApiNotifier } from './useApi.js';
+export interface UseFetchPaginationOptions<T> {
+    /** Página usada antes da primeira resposta; padrão `1`. */
+    initialPage?: number;
+    /** Extrai a página atual quando a resposta não segue o formato Laravel. */
+    getCurrentPage?: (data: T) => number;
+    /** Extrai o total de páginas quando a resposta não segue o formato Laravel. */
+    getTotalPages?: (data: T) => number;
+}
 export interface UseFetchOptions<T> {
     immediate?: boolean;
     initialData?: T | null;
+    notifier?: ApiNotifier;
+    successMessage?: string;
+    errorMessage?: string;
+    showSuccessToast?: boolean;
+    showErrorToast?: boolean;
     onSuccess?: (data: T) => void;
     onError?: (message: string) => void;
+    /** Habilita paginação. Nesse modo, `fetchFn` recebe a página como primeiro argumento. */
+    pagination?: boolean | UseFetchPaginationOptions<T>;
 }
-export declare function useFetch<T, Args extends unknown[] = []>(fetchFn: (...args: Args) => Promise<T | null>, options?: UseFetchOptions<T>): {
+export interface UseFetchPaginationProps {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    disabled: boolean;
+}
+export interface UseFetchResult<T, Args extends unknown[]> {
     data: T | null;
     loading: boolean;
     error: string | null;
     execute: (...args: Args) => Promise<T | null>;
     reset: () => void;
-    setData: import("react").Dispatch<import("react").SetStateAction<T | null>>;
-};
+    setData: Dispatch<SetStateAction<T | null>>;
+}
+export interface UsePaginatedFetchResult<T, Args extends unknown[]> extends UseFetchResult<T, Args> {
+    page: number;
+    totalPages: number;
+    setPage: (page: number) => void;
+    paginationProps: UseFetchPaginationProps;
+}
+export declare function useFetch<T, Args extends unknown[] = []>(fetchFn: (page: number, ...args: Args) => Promise<T | null>, options: UseFetchOptions<T> & {
+    pagination: true | UseFetchPaginationOptions<T>;
+}): UsePaginatedFetchResult<T, Args>;
+export declare function useFetch<T, Args extends unknown[] = []>(fetchFn: (...args: Args) => Promise<T | null>, options?: UseFetchOptions<T> & {
+    pagination?: false | undefined;
+}): UseFetchResult<T, Args>;
 ```
 
 </details>
