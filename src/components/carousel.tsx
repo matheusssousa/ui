@@ -98,8 +98,9 @@ export interface CarouselProps extends VariantProps<typeof carouselVariants> {
 }
 
 const swipeConfidenceThreshold = 10000;
+const swipeOffsetThreshold = 50;
 const swipePower = (offset: number, velocity: number) => {
-    return Math.abs(offset) * velocity;
+    return Math.abs(offset) * Math.abs(velocity);
 };
 
 export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
@@ -130,7 +131,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
     const focusPausedRef = useRef(false);
     useEffect(() => { setCurrentIndex(index => Math.max(0, Math.min(index, items.length - 1))); }, [items.length]);
 
-    const slideVariants = {
+    const horizontalSlideVariants = {
         enter: (direction: number) => ({
             x: direction > 0 ? '100%' : '-100%',
         }),
@@ -144,8 +145,35 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
         }),
     };
 
+    const stackedSlideVariants = {
+        enter: {
+            zIndex: 0,
+            x: 0,
+            y: 16,
+            scale: 0.94,
+            opacity: 0.65,
+        },
+        center: {
+            zIndex: 1,
+            x: 0,
+            y: 0,
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+        },
+        exit: (direction: number) => ({
+            zIndex: 2,
+            x: direction > 0 ? '110%' : '-110%',
+            y: -8,
+            scale: 0.98,
+            opacity: 0,
+            rotate: direction > 0 ? 4 : -4,
+        }),
+    };
+
     const swipeConfidence = (velocity: number, offset: number) => {
-        return swipePower(offset, velocity) > swipeConfidenceThreshold;
+        return Math.abs(offset) >= swipeOffsetThreshold
+            || swipePower(offset, velocity) > swipeConfidenceThreshold;
     };
 
     const paginate = useCallback((newDirection: number) => {
@@ -175,7 +203,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
         const swipe = swipeConfidence(velocity.x, offset.x);
 
         if (swipe) {
-            paginate(offset.x > 0 ? -1 : 1);
+            paginate(offset.x > 0 ? 1 : -1);
         }
     };
 
@@ -250,19 +278,25 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(({
                 <motion.div
                     key={currentIndex}
                     custom={direction}
-                    variants={reducedMotion ? { enter: { opacity: 1 }, center: { opacity: 1 }, exit: { opacity: 1 } } : slideVariants}
+                    variants={reducedMotion
+                        ? { enter: { opacity: 1 }, center: { opacity: 1 }, exit: { opacity: 1 } }
+                        : variant === 'stacked' ? stackedSlideVariants : horizontalSlideVariants}
                     initial="enter"
                     animate="center"
                     exit="exit"
                     transition={reducedMotion ? { duration: 0 } : {
                         x: { type: "spring", stiffness: 300, damping: 30 },
+                        y: { type: "spring", stiffness: 340, damping: 32 },
+                        scale: { type: "spring", stiffness: 340, damping: 32 },
+                        opacity: { duration: 0.2 },
+                        rotate: { type: "spring", stiffness: 300, damping: 30 },
                     }}
                     drag={enableSwipe ? "x" : false}
                     dragConstraints={{ left: 0, right: 0 }}
                     dragElastic={1}
                     onDragEnd={handleDragEnd}
                     className={cn(
-                        'absolute inset-0 w-full h-full flex items-center justify-center',
+                        'absolute inset-0 w-full h-full flex items-center justify-center touch-pan-y',
                         variant === 'stacked' && 'inset-x-3 top-4 bottom-0 w-auto h-auto overflow-hidden rounded-xl border border-border bg-card shadow-lg'
                     )}
                 >
