@@ -27,6 +27,7 @@ export * from './components/button.js';
 export * from './components/input.js';
 export * from './components/textarea.js';
 export * from './components/info.js';
+export * from './components/list-item.js';
 export * from './components/modal.js';
 export * from './components/gradient.js';
 export * from './components/accordion.js';

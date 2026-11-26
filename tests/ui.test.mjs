@@ -23,6 +23,28 @@ import { SpeedDial } from '../dist/components/speed-dial.js';
 import { Toast } from '../dist/components/toast.js';
 import { Textarea } from '../dist/components/textarea.js';
 import { Switch } from '../dist/components/switch.js';
+import { ListItem } from '../dist/components/list-item.js';
+
+test('list item renders its optional content and visual variants', () => {
+  const markup = renderToStaticMarkup(React.createElement(ListItem, {
+    icon: React.createElement('svg'),
+    title: 'Despesas',
+    description: 'Pagamentos repetidos com o mesmo valor e categoria.',
+    badge: React.createElement(Badge, { variant: 'destructive', size: 'xs' }, '1'),
+    action: React.createElement('button', { type: 'button' }, 'Abrir'),
+    variant: 'soft',
+    size: 'sm',
+    color: 'danger',
+  }));
+
+  assert.match(markup, /Despesas/);
+  assert.match(markup, /Pagamentos repetidos/);
+  assert.match(markup, /Abrir/);
+  assert.match(markup, /bg-muted\/50/);
+  assert.match(markup, /bg-destructive\/10/);
+  assert.match(markup, /text-destructive[^>]*>Despesas/);
+  assert.match(markup, /aria-hidden="true"/);
+});
 
 test('consolidated loading and status have accessible labels', () => {
   const spinner = renderToStaticMarkup(React.createElement(Spinner, { mode: 'block', label: 'Carregando dados' }));

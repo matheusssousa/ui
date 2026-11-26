@@ -39,6 +39,7 @@ export const components: ComponentDoc[] = [
   doc('Badge', 'badge', 'Conteúdo', 'Rótulos e indicadores de estado.'),
   doc('Card', 'card', 'Conteúdo', 'Superfície para conteúdo, mídia e métricas.'),
   doc('Info', 'info', 'Conteúdo', 'Apresentação estruturada de rótulo e valor.'),
+  doc('ListItem', 'list-item', 'Conteúdo', 'Item de lista com ícone, título, descrição, badge e ação.'),
   doc('Section', 'section', 'Conteúdo', 'Agrupamento semântico com cabeçalho.'),
   doc('Separator', 'separator', 'Conteúdo', 'Divisor visual horizontal ou vertical.'),
   doc('Modal', 'modal', 'Overlays', 'Janela modal com cabeçalho e ações.'),

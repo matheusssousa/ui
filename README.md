@@ -2374,6 +2374,42 @@ export { Input, inputVariants };
 </details>
 
 <details>
+<summary><code>components/list-item</code></summary>
+
+Fonte: [components/list-item](src/components/list-item.tsx).
+
+```ts
+import * as React from 'react';
+import { type VariantProps } from 'class-variance-authority';
+import { type UIColor } from './theme.js';
+export declare const listItemVariants: (props?: ({
+    variant?: "default" | "soft" | "outlined" | "ghost" | null | undefined;
+    size?: "sm" | "md" | "lg" | null | undefined;
+} & import("class-variance-authority/types").ClassProp) | undefined) => string;
+/** Item de lista com ícone, título, descrição, badge e ação opcionais. */
+export interface ListItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>, VariantProps<typeof listItemVariants> {
+    /** Ícone exibido no início do item. */
+    icon?: React.ReactNode;
+    /** Título principal do item. */
+    title?: React.ReactNode;
+    /** Texto auxiliar abaixo do título. */
+    description?: React.ReactNode;
+    /** Badge exibido ao lado do título. */
+    badge?: React.ReactNode;
+    /** Ação exibida no final do item. */
+    action?: React.ReactNode;
+    /** Tone aplicado ao contêiner do ícone; padrão `default`. */
+    color?: UIColor;
+    /** Classes personalizadas para as partes internas do item. */
+    slotClassNames?: Partial<Record<'icon' | 'content' | 'title' | 'description' | 'badge' | 'action', string>>;
+}
+declare const ListItem: React.ForwardRefExoticComponent<ListItemProps & React.RefAttributes<HTMLDivElement>>;
+export { ListItem };
+```
+
+</details>
+
+<details>
 <summary><code>components/modal</code></summary>
 
 Fonte: [components/modal](src/components/modal.tsx).
@@ -2694,6 +2730,8 @@ export interface RatingBarProps extends Omit<React.HTMLAttributes<HTMLDivElement
     size?: 'sm' | 'md' | 'lg';
     /** Cor dos itens selecionados. Padrao: warning. */
     color?: UIColor;
+    /** Icone a ser exibido. Padrao: StarIcon. */
+    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 /** Controle de avaliacao por estrelas com suporte a mouse, toque e teclado. */
 export declare const RatingBar: React.ForwardRefExoticComponent<RatingBarProps & React.RefAttributes<HTMLDivElement>>;
@@ -4546,6 +4584,7 @@ export * from './components/button.js';
 export * from './components/input.js';
 export * from './components/textarea.js';
 export * from './components/info.js';
+export * from './components/list-item.js';
 export * from './components/modal.js';
 export * from './components/gradient.js';
 export * from './components/accordion.js';
